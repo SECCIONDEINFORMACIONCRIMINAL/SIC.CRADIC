@@ -982,7 +982,108 @@
             .seccion.activa { display: block !important; }
             .seccion:not(.activa) { display: none !important; }
         }
-    </style>
+    
+    /* ===== Módulo Reconocimiento Facial ===== */
+    .rf-container { display: flex; gap: 20px; flex-wrap: wrap; }
+    .rf-panel { flex: 1; min-width: 320px; background: #fff; border-radius: 10px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+    .rf-panel h3 { color: #00529b; margin-bottom: 12px; font-size: 16px; }
+    .rf-webcam-area { width: 100%; max-width: 480px; aspect-ratio: 4/3; background: #111; border-radius: 8px; overflow: hidden; position: relative; margin: 0 auto 12px; }
+    .rf-webcam-area video, .rf-webcam-area canvas, .rf-webcam-area img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .rf-upload-area { border: 2px dashed #00529b; border-radius: 8px; padding: 20px; text-align: center; margin-bottom: 12px; cursor: pointer; transition: background 0.2s; }
+    .rf-upload-area:hover { background: #eaf2f8; }
+    .rf-upload-area p { color: #00529b; font-weight: bold; margin: 4px 0; }
+    .rf-upload-area .sub { color: #888; font-size: 12px; }
+    .rf-btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 22px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: all 0.2s; margin: 4px; }
+    .rf-btn-primary { background: #00529b; color: #fff; }
+    .rf-btn-primary:hover { background: #003d73; }
+    .rf-btn-primary:disabled { background: #aaa; cursor: not-allowed; }
+    .rf-btn-secondary { background: #eaf2f8; color: #00529b; }
+    .rf-btn-secondary:hover { background: #d4e6f1; }
+    .rf-btn-danger { background: #c0392b; color: #fff; }
+    .rf-btn-danger:hover { background: #96281b; }
+    .rf-status { padding: 10px 16px; border-radius: 6px; margin-bottom: 12px; font-weight: bold; font-size: 13px; }
+    .rf-status-loading { background: #fef9e7; color: #7d6608; border: 1px solid #f9e79f; }
+    .rf-status-ready { background: #eafaf1; color: #1e8449; border: 1px solid #abebc6; }
+    .rf-status-error { background: #fdedec; color: #c0392b; border: 1px solid #f5b7b1; }
+    .rf-status-info { background: #eaf2f8; color: #00529b; border: 1px solid #aed6f1; }
+    .rf-progress { width: 100%; height: 6px; background: #e0e0e0; border-radius: 3px; margin-bottom: 12px; overflow: hidden; }
+    .rf-progress-fill { height: 100%; background: #00529b; border-radius: 3px; transition: width 0.3s; }
+    .rf-results { max-height: 500px; overflow-y: auto; }
+    .rf-result-card { display: flex; gap: 12px; padding: 12px; background: #f8f9fa; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid #00529b; align-items: center; transition: transform 0.15s; }
+    .rf-result-card:hover { transform: translateX(4px); box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+    .rf-result-card.rf-match-high { border-left-color: #27ae60; }
+    .rf-result-card.rf-match-medium { border-left-color: #f39c12; }
+    .rf-result-card.rf-match-low { border-left-color: #e74c3c; }
+    .rf-result-photo { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; border: 2px solid #00529b; }
+    .rf-result-info { flex: 1; }
+    .rf-result-name { font-weight: bold; color: #00529b; font-size: 15px; }
+    .rf-result-detail { color: #555; font-size: 12px; margin-top: 2px; }
+    .rf-result-score { font-size: 18px; font-weight: bold; min-width: 60px; text-align: center; }
+    .rf-result-score.high { color: #27ae60; }
+    .rf-result-score.medium { color: #f39c12; }
+    .rf-result-score.low { color: #e74c3c; }
+    .rf-capture-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; z-index: 2; }
+    .rf-face-box { position: absolute; border: 2px solid #27ae60; border-radius: 4px; z-index: 1; }
+    .rf-migrate-section { background: #fef9e7; border: 1px solid #f9e79f; border-radius: 8px; padding: 16px; margin-top: 16px; }
+    .rf-migrate-section h4 { color: #7d6608; margin-bottom: 8px; }
+    .rf-migrate-stats { display: flex; gap: 20px; margin-bottom: 12px; }
+    .rf-migrate-stat { text-align: center; }
+    .rf-migrate-stat .num { font-size: 28px; font-weight: bold; color: #00529b; }
+    .rf-migrate-stat .label { font-size: 11px; color: #888; }
+    .rf-no-results { text-align: center; padding: 30px; color: #999; }
+    .rf-no-results .icon { font-size: 48px; margin-bottom: 10px; }
+
+    
+/* === ENHANCEMENT: Photos Grid, Family Dynamic, Tattoo Photos, Vinculaciones === */
+.fotos-grid-container { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 15px; }
+.fotos-grid-container .foto-item { border: 1px solid #2a3a5c; border-radius: 6px; padding: 10px; background: #0d1b2a; text-align: center; }
+.fotos-grid-container .foto-item label { display: block; font-size: 12px; color: #8a9bb5; margin-bottom: 6px; font-weight: bold; }
+.fotos-grid-container .foto-item input[type="file"] { font-size: 11px; color: #cbd5e1; }
+.fotos-grid-container .foto-preview { width: 100%; min-height: 100px; max-height: 160px; display: flex; align-items: center; justify-content: center; font-size: 40px; border-radius: 6px; margin-top: 8px; background: #111827; overflow: hidden; }
+.fotos-grid-container .foto-preview img { max-width: 100%; max-height: 150px; border-radius: 4px; }
+.fotos-ficha-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+.fotos-ficha-grid .foto-ficha { width: 100%; min-height: 100px; max-height: 160px; display: flex; align-items: center; justify-content: center; font-size: 36px; border-radius: 6px; overflow: hidden; }
+.fotos-ficha-grid .foto-ficha img { max-width: 100%; max-height: 150px; border-radius: 4px; }
+
+.familiar-row { border: 1px solid #2a3a5c; border-radius: 6px; padding: 10px; margin-bottom: 10px; background: #0d1b2a; display: grid; grid-template-columns: 1fr 1fr 1fr 1fr auto; gap: 8px; align-items: end; }
+.btn-quitar-familiar { background: #dc2626; color: white; border: none; border-radius: 4px; cursor: pointer; padding: 8px 12px; font-size: 14px; margin-bottom: 2px; }
+.btn-quitar-familiar:hover { background: #ef4444; }
+.btn-agregar-familiar { background: #1e40af; color: white; border: none; border-radius: 6px; padding: 8px 18px; cursor: pointer; font-size: 13px; margin-bottom: 15px; }
+.btn-agregar-familiar:hover { background: #2563eb; }
+.familiares-list .familiar-item-vista { padding: 4px 0; font-size: 12px; border-bottom: 1px solid #1e293b; }
+
+.tatuaje-row { border: 1px solid #2a3a5c; border-radius: 6px; padding: 10px; margin-bottom: 10px; background: #0d1b2a; display: grid; grid-template-columns: 1fr 1fr 1fr auto auto; gap: 8px; align-items: end; }
+.tatuaje-foto-preview { width: 70px; height: 70px; display: flex; align-items: center; justify-content: center; font-size: 28px; border-radius: 6px; background: #111827; border: 1px solid #2a3a5c; overflow: hidden; margin-bottom: 2px; }
+.tatuaje-foto-preview img { max-width: 65px; max-height: 65px; border-radius: 4px; }
+.btn-quitar-tatuaje { background: #dc2626; color: white; border: none; border-radius: 4px; cursor: pointer; padding: 8px 12px; font-size: 14px; margin-bottom: 2px; }
+.btn-quitar-tatuaje:hover { background: #ef4444; }
+.btn-agregar-tatuaje { background: #1e40af; color: white; border: none; border-radius: 6px; padding: 8px 18px; cursor: pointer; font-size: 13px; margin-bottom: 15px; }
+.btn-agregar-tatuaje:hover { background: #2563eb; }
+.tatuajes-fotos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; margin-top: 6px; }
+.tatuajes-fotos-grid .tatuaje-vista-item { border: 1px solid #2a3a5c; border-radius: 6px; padding: 6px; background: #0d1b2a; text-align: center; font-size: 11px; }
+.tatuajes-fotos-grid .tatuaje-vista-item img { max-width: 100%; max-height: 90px; border-radius: 4px; }
+.tatuajes-fotos-grid .tatuaje-vista-item .tat-ubic-label { color: #8a9bb5; font-weight: bold; margin-top: 4px; }
+
+.vinculacion-container { margin-bottom: 15px; }
+.btn-agregar-vinc { background: #1e40af; color: white; border: none; border-radius: 6px; padding: 8px 18px; cursor: pointer; font-size: 13px; margin-bottom: 10px; }
+.btn-agregar-vinc:hover { background: #2563eb; }
+.vinculados-list .vinc-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; margin-bottom: 6px; background: #0d1b2a; border: 1px solid #2a3a5c; border-radius: 6px; font-size: 12px; color: #cbd5e1; }
+.vinculados-list .vinc-item .vinc-info { flex: 1; }
+.vinculados-list .vinc-item .btn-quitar-vinc { background: #dc2626; color: white; border: none; border-radius: 4px; cursor: pointer; padding: 4px 10px; font-size: 12px; }
+.vinculados-list .vinc-item .btn-quitar-vinc:hover { background: #ef4444; }
+.vinculados-vista .vinc-vista-item { padding: 4px 0; font-size: 12px; border-bottom: 1px solid #1e293b; color: #cbd5e1; }
+.vinculados-list .pdf-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; margin-bottom: 6px; background: #0d1b2a; border: 1px solid #2a3a5c; border-radius: 6px; font-size: 12px; color: #cbd5e1; }
+.vinculados-list .pdf-item .pdf-name { flex: 1; }
+.vinculados-list .pdf-item .btn-quitar-vinc { background: #dc2626; color: white; border: none; border-radius: 4px; cursor: pointer; padding: 4px 10px; font-size: 12px; }
+
+@media print {
+  .btn-quitar-familiar, .btn-quitar-tatuaje, .btn-agregar-familiar, .btn-agregar-tatuaje,
+  .btn-agregar-vinc, .btn-quitar-vinc, #pdfInput, #vehiculos-vinculados-container input,
+  #extorsivos-vinculados-container input, .tatuaje-foto-input, .fotos-grid-container input[type="file"] {
+    display: none !important;
+  }
+}
+</style>
 </head>
 <body>
 
@@ -1023,6 +1124,7 @@
             <button class="nav-btn" id="btn-tab-usuarios" onclick="cambiarModulo('usuarios')">👤 USUARIOS</button>
             <button class="nav-btn" id="btn-tab-seccion" onclick="cambiarModulo('seccion')">🏢 SECCIÓN</button>
             <button class="nav-btn" id="btn-tab-biblioteca" onclick="cambiarModulo('biblioteca')">📚 BIBLIOTECA</button>
+            <button class="nav-btn" id="btn-tab-reconocimiento-facial" onclick="cambiarModulo('reconocimiento-facial')">🔍 RECONOCIMIENTO FACIAL</button>
         </nav>
 
         <div class="contenedor-principal">
@@ -1044,12 +1146,13 @@
                         <label>Tipo de Operativo</label>
                         <select id="id_operativo">
                             <option value="">Seleccione...</option>
-                            <option value="Allanamiento">Allanamiento</option>
-                            <option value="Entrada al centro carcelario">Entrada al centro carcelario</option>
-                            <option value="Requisa">Requisa</option>
-                            <option value="Puesto de control vehicular">Puesto de control vehicular</option>
-                            <option value="Desalojo">Desalojo</option>
-                            <option value="Multisectorial">Multisectorial</option>
+                            <option value="Allanamiento">ALLANAMIENTO</option>
+                            <option value="Entrada al centro carcelario">ENTRADA AL CENTRO CARCELARIO</option>
+                            <option value="Entrada al centro carcelario">SALIDA DEL CENTRO CARCELARIO</option>
+                            <option value="Requisa">REQUISA</option>
+                            <option value="Puesto de control vehicular">PUESTO DE CONTROL VEHICULAR</option>
+                            <option value="Desalojo">DESALOJO</option>
+                            <option value="Multisectorial">MULTISECTORIAL</option>
                         </select>
                     </div>
 
@@ -1069,23 +1172,23 @@
                         <label>Sexo</label>
                         <select id="g_sexo">
                             <option value="">Seleccione...</option>
-                            <option value="Masculino">Masculino</option>
-                            <option value="Femenino">Femenino</option>
+                            <option value="Masculino">MASCULINO</option>
+                            <option value="Femenino">FEMENINO</option>
                         </select>
                     </div>
                     <div class="grupo-form">
                         <label>Comunidad LGTBIQ+</label>
                         <select id="g_lgtbiq">
-                            <option value="No">No</option>
-                            <option value="Si">Si</option>
+                            <option value="No">NO</option>
+                            <option value="Si">SI</option>
                         </select>
                     </div>
                     <div class="grupo-form">
                         <label>Estado Civil</label>
                         <select id="g_ecivil">
                             <option value="">Seleccione...</option>
-                            <option value="Soltero">Soltero</option>
-                            <option value="Casado">Casado</option>
+                            <option value="Soltero">SOLTERO</option>
+                            <option value="Casado">CASADO</option>
                         </select>
                     </div>
                     <div class="grupo-form"><label>NIT</label><input type="text" id="g_nit"></div>
@@ -1097,17 +1200,17 @@
                     <div class="grupo-form">
                         <label>Situación Actual</label>
                         <select id="g_situacion">
-                            <option value="Vivo">Vivo</option>
-                            <option value="Muerto">Muerto</option>
-                            <option value="Desaparecido">Desaparecido</option>
+                            <option value="Vivo">VIVO</option>
+                            <option value="Muerto">MUERTO</option>
+                            <option value="Desaparecido">DESAPARECIDO</option>
                         </select>
                     </div>
                     <div class="grupo-form"><label>Tipo Licencia Conducir</label><input type="text" id="g_tiplicencia"></div>
                     <div class="grupo-form">
                         <label>Estatus Licencia</label>
                         <select id="g_estlicencia">
-                            <option value="Vigente">Vigente</option>
-                            <option value="No vigente">No vigente</option>
+                            <option value="Vigente">VIGENTE</option>
+                            <option value="No vigente">NO VIGENTE</option>
                         </select>
                     </div>
 
@@ -1131,9 +1234,16 @@
 
                     <!-- 5. INFORMACIÓN FAMILIAR -->
                     <div class="seccion-form-titulo">5. Información Familiar</div>
-                    <div class="grupo-form"><label>Nombre Familiar</label><input type="text" id="fam_nombre"></div>
-                    <div class="grupo-form"><label>Parentesco</label><input type="text" id="fam_parentesco"></div>
-                    <div class="grupo-form"><label>DPI Familiar</label><input type="text" id="fam_dpi"></div>
+                    <div id="familiares-container">
+                        <div class="familiar-row" data-index="0">
+                            <div class="grupo-form"><label>Nombre Familiar</label><input type="text" class="fam-nombre"></div>
+                            <div class="grupo-form"><label>Parentesco</label><input type="text" class="fam-parentesco"></div>
+                            <div class="grupo-form"><label>DPI Familiar</label><input type="text" class="fam-dpi"></div>
+                            <div class="grupo-form"><label>Teléfono Familiar</label><input type="text" class="fam-telefono" placeholder="+502 ..."></div>
+                            <button type="button" class="btn-quitar-familiar" onclick="quitarFamiliar(this)" title="Quitar familiar">✖</button>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-agregar-familiar" onclick="agregarFamiliar()">➕ Agregar Familiar</button>
 
                     <!-- 6. CARACTERÍSTICAS FÍSICAS -->
                     <div class="seccion-form-titulo">6. Características Físicas</div>
@@ -1259,6 +1369,43 @@
                     <div class="grupo-form"><label>Número Causa</label><input type="text" id="crim_causa"></div>
                     <div class="grupo-form"><label>Colaboradores (DPI, Nombre, Actividad)</label><textarea id="crim_colaboradores"></textarea></div>
 
+                    <!-- 12B. REGISTRO DE TATUAJES CON FOTOGRAFÍA -->
+                    <div class="seccion-form-titulo">12B. Registro de Tatuajes con Fotografía</div>
+                    <div id="tatuajes-container">
+                        <div class="tatuaje-row" data-index="0">
+                            <div class="grupo-form"><label>Ubicación del Tatuaje</label>
+                                <select class="tatuaje-ubicacion">
+                                    <option value="">Seleccione ubicación...</option>
+                                    <option value="ROSTRO">ROSTRO</option>
+                                    <option value="CUELLO">CUELLO</option>
+                                    <option value="PECHO">PECHO</option>
+                                    <option value="ESPALDA">ESPALDA</option>
+                                    <option value="ABDOMEN">ABDOMEN</option>
+                                    <option value="BRAZO DERECHO">BRAZO DERECHO</option>
+                                    <option value="BRAZO IZQUIERDO">BRAZO IZQUIERDO</option>
+                                    <option value="ANTEBRAZO DERECHO">ANTEBRAZO DERECHO</option>
+                                    <option value="ANTEBRAZO IZQUIERDO">ANTEBRAZO IZQUIERDO</option>
+                                    <option value="MANO DERECHA">MANO DERECHA</option>
+                                    <option value="MANO IZQUIERDA">MANO IZQUIERDA</option>
+                                    <option value="PIERNA DERECHA">PIERNA DERECHA</option>
+                                    <option value="PIERNA IZQUIERDA">PIERNA IZQUIERDA</option>
+                                    <option value="PIE DERECHO">PIE DERECHO</option>
+                                    <option value="PIE IZQUIERDO">PIE IZQUIERDO</option>
+                                    <option value="HOMBRO DERECHO">HOMBRO DERECHO</option>
+                                    <option value="HOMBRO IZQUIERDO">HOMBRO IZQUIERDO</option>
+                                    <option value="COSTADO DERECHO">COSTADO DERECHO</option>
+                                    <option value="COSTADO IZQUIERDO">COSTADO IZQUIERDO</option>
+                                    <option value="OTRO">OTRO</option>
+                                </select>
+                            </div>
+                            <div class="grupo-form"><label>Descripción del Tatuaje</label><input type="text" class="tatuaje-descripcion" placeholder="Ej: Virgen de Guadalupe, Calavera, etc."></div>
+                            <div class="grupo-form"><label>Fotografía del Tatuaje</label><input type="file" class="tatuaje-foto-input" accept="image/*"></div>
+                            <div class="tatuaje-foto-preview">📷</div>
+                            <button type="button" class="btn-quitar-tatuaje" onclick="quitarTatuaje(this)" title="Quitar tatuaje">✖</button>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-agregar-tatuaje" onclick="agregarTatuaje()">➕ Agregar Tatuaje</button>
+
                     <!-- 13. HISTORIAL PENITENCIARIO -->
                     <div class="seccion-form-titulo">13. Historial Penitenciario</div>
                     <div class="grupo-form"><label>Centro de Reclusión</label><input type="text" id="pen_centro"></div>
@@ -1286,7 +1433,28 @@
 
                     <!-- 15. HISTORIAL FOTOGRÁFICO -->
                     <div class="seccion-form-titulo">15. Historial Fotográfico</div>
-                    <div class="grupo-form"><label>Subir Fotografía Persona</label><input type="file" id="fotoInput" accept="image/*"></div>
+                    <div class="fotos-grid-container">
+                        <div class="foto-item">
+                            <label>Fotografía 1 (Principal)</label>
+                            <input type="file" id="fotoInput1" accept="image/*">
+                            <div class="foto-preview" id="vistaFoto1">📷</div>
+                        </div>
+                        <div class="foto-item">
+                            <label>Fotografía 2</label>
+                            <input type="file" id="fotoInput2" accept="image/*">
+                            <div class="foto-preview" id="vistaFoto2">📷</div>
+                        </div>
+                        <div class="foto-item">
+                            <label>Fotografía 3</label>
+                            <input type="file" id="fotoInput3" accept="image/*">
+                            <div class="foto-preview" id="vistaFoto3">📷</div>
+                        </div>
+                        <div class="foto-item">
+                            <label>Fotografía 4</label>
+                            <input type="file" id="fotoInput4" accept="image/*">
+                            <div class="foto-preview" id="vistaFoto4">📷</div>
+                        </div>
+                    </div>
                     <div class="grupo-form"><label>Tatuajes (Tipo, Ubicación, Desc.)</label><textarea id="foto_tatuajes"></textarea></div>
                     <div class="grupo-form"><label>Grafitis / Vehículos Desc.</label><textarea id="foto_grafitis"></textarea></div>
 
@@ -1303,6 +1471,36 @@
                     <div class="grupo-form"><label>Fuentes Abiertas (Redes, Periodistas)</label><textarea id="fue_abiertas"></textarea></div>
                     <div class="grupo-form"><label>Fuentes Cerradas (Sistemas de Info)</label><textarea id="fue_cerradas"></textarea></div>
 
+                    <!-- 18. VINCULACIÓN DE VEHÍCULOS -->
+                    <div class="seccion-form-titulo">18. Vinculación de Vehículos</div>
+                    <div id="vehiculos-vinculados-container" class="vinculacion-container">
+                        <div class="grupo-form"><label>Buscar Vehículo por Placa</label>
+                            <input type="text" id="vinc_vehiculo_placa" placeholder="Escriba la placa del vehículo..." list="datalist-placas">
+                            <datalist id="datalist-placas"></datalist>
+                        </div>
+                        <button type="button" class="btn-agregar-vinc" onclick="vincularVehiculo()">🔗 Vincular Vehículo</button>
+                        <div id="vehiculos-vinculados-list" class="vinculados-list"></div>
+                    </div>
+
+                    <!-- 19. VINCULACIÓN NÚMEROS EXTORSIVOS -->
+                    <div class="seccion-form-titulo">19. Vinculación de Números Extorsivos</div>
+                    <div id="extorsivos-vinculados-container" class="vinculacion-container">
+                        <div class="grupo-form"><label>Buscar por Teléfono Extorsionista</label>
+                            <input type="text" id="vinc_ext_telefono" placeholder="Escriba el número extorsivo..." list="datalist-extorsivos">
+                            <datalist id="datalist-extorsivos"></datalist>
+                        </div>
+                        <button type="button" class="btn-agregar-vinc" onclick="vincularExtorsivo()">🔗 Vincular Número Extorsivo</button>
+                        <div id="extorsivos-vinculados-list" class="vinculados-list"></div>
+                    </div>
+
+                    <!-- 20. ARCHIVOS PDF ADJUNTOS -->
+                    <div class="seccion-form-titulo">20. Archivos PDF Adjuntos / Vinculaciones</div>
+                    <div id="pdfs-container" class="vinculacion-container">
+                        <div class="grupo-form"><label>Subir Archivo PDF</label><input type="file" id="pdfInput" accept="application/pdf" multiple></div>
+                        <button type="button" class="btn-agregar-vinc" onclick="agregarPDF()">📎 Agregar PDF</button>
+                        <div id="pdfs-list" class="vinculados-list"></div>
+                    </div>
+
                     <div class="botones">
                         <button class="btn-guardar" id="btn-guardar-persona" onclick="guardarFichaConsolidada()">💾 Guardar / Actualizar -SIC-</button>
                         <button onclick="exportarAExcel()" class="btn-excel">📊 Exportar a Excel</button>
@@ -1318,7 +1516,12 @@
                         <div class="ficha-cabecera">FICHA DE IDENTIFICACIÓN DE PERSONAS </div>
                         <div class="ficha-auditoria">REGISTRO C.R.A.D.I.C CONFIDENCIAL</div>
                         <div class="ficha-contenido">
-                            <div class="foto-ficha" id="vistaFoto">📷</div>
+                            <div class="fotos-ficha-grid" id="vistaFotosGrid">
+                                <div class="foto-ficha" id="vistaFoto1">📷</div>
+                                <div class="foto-ficha" id="vistaFoto2">📷</div>
+                                <div class="foto-ficha" id="vistaFoto3">📷</div>
+                                <div class="foto-ficha" id="vistaFoto4">📷</div>
+                            </div>
                             <br>
                             <div class="ficha-seccion-titulo" style="text-align: left;">1. Tipo de Identificación</div>
                             <div class="fila"><div class="celda-etiqueta">Operativo / Tipo:</div><div class="celda-dato" id="v-id_operativo"></div></div>
@@ -1344,7 +1547,7 @@
                             <div class="fila"><div class="celda-etiqueta">Ubicación:</div><div class="celda-dato" id="v-dir_ubicacion"></div></div>
 
                             <div class="ficha-seccion-titulo" style="text-align: left;">5. Información Familiar</div>
-                            <div class="fila"><div class="celda-etiqueta">Familiar / Parentesco / DPI:</div><div class="celda-dato" id="v-fam_info"></div></div>
+                            <div id="v-familiares-list" class="familiares-list"></div>
 
                             <div class="ficha-seccion-titulo" style="text-align: left;">6. Características Físicas</div>
                             <div class="fila"><div class="celda-etiqueta">Rasgos Principales:</div><div class="celda-dato" id="v-fis_rasgos"></div></div>
@@ -1376,13 +1579,23 @@
                             <div class="fila"><div class="celda-etiqueta">Motivo / Fecha / Países / Transporte:</div><div class="celda-dato" id="v-mig_info"></div></div>
 
                             <div class="ficha-seccion-titulo" style="text-align: left;">15. Historial Fotográfico & Tatuajes</div>
-                            <div class="fila"><div class="celda-etiqueta">Tatuajes / Grafitis:</div><div class="celda-dato" id="v-foto_info"></div></div>
+                            <div class="fila"><div class="celda-etiqueta">Tatuajes (Texto) / Grafitis:</div><div class="celda-dato" id="v-foto_info"></div></div>
+                            <div id="v-tatuajes-fotos" class="tatuajes-fotos-grid"></div>
 
                             <div class="ficha-seccion-titulo" style="text-align: left;">16. Datos Financieros</div>
                             <div class="fila"><div class="celda-etiqueta">Banco / Cuenta / Actividad:</div><div class="celda-dato" id="v-fin_info"></div></div>
 
                             <div class="ficha-seccion-titulo" style="text-align: left;">17. Fuentes Consultadas</div>
                             <div class="fila"><div class="celda-etiqueta">Fuentes Abiertas / Cerradas:</div><div class="celda-dato" id="v-fue_info"></div></div>
+
+                            <div class="ficha-seccion-titulo" style="text-align: left;">18. Vehículos Vinculados</div>
+                            <div id="v-vehiculos-vinc" class="vinculados-vista"></div>
+
+                            <div class="ficha-seccion-titulo" style="text-align: left;">19. Números Extorsivos Vinculados</div>
+                            <div id="v-extorsivos-vinc" class="vinculados-vista"></div>
+
+                            <div class="ficha-seccion-titulo" style="text-align: left;">20. Archivos PDF Adjuntos</div>
+                            <div id="v-pdfs-vinc" class="vinculados-vista"></div>
                         </div>
                         <div class="pie-ficha">
                             <div class="fila-pie">
@@ -1431,7 +1644,58 @@
       display: none !important;
     }
   }
-</style>
+
+    /* ===== Módulo Reconocimiento Facial ===== */
+    .rf-container { display: flex; gap: 20px; flex-wrap: wrap; }
+    .rf-panel { flex: 1; min-width: 320px; background: #fff; border-radius: 10px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+    .rf-panel h3 { color: #00529b; margin-bottom: 12px; font-size: 16px; }
+    .rf-webcam-area { width: 100%; max-width: 480px; aspect-ratio: 4/3; background: #111; border-radius: 8px; overflow: hidden; position: relative; margin: 0 auto 12px; }
+    .rf-webcam-area video, .rf-webcam-area canvas, .rf-webcam-area img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .rf-upload-area { border: 2px dashed #00529b; border-radius: 8px; padding: 20px; text-align: center; margin-bottom: 12px; cursor: pointer; transition: background 0.2s; }
+    .rf-upload-area:hover { background: #eaf2f8; }
+    .rf-upload-area p { color: #00529b; font-weight: bold; margin: 4px 0; }
+    .rf-upload-area .sub { color: #888; font-size: 12px; }
+    .rf-btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 22px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: all 0.2s; margin: 4px; }
+    .rf-btn-primary { background: #00529b; color: #fff; }
+    .rf-btn-primary:hover { background: #003d73; }
+    .rf-btn-primary:disabled { background: #aaa; cursor: not-allowed; }
+    .rf-btn-secondary { background: #eaf2f8; color: #00529b; }
+    .rf-btn-secondary:hover { background: #d4e6f1; }
+    .rf-btn-danger { background: #c0392b; color: #fff; }
+    .rf-btn-danger:hover { background: #96281b; }
+    .rf-status { padding: 10px 16px; border-radius: 6px; margin-bottom: 12px; font-weight: bold; font-size: 13px; }
+    .rf-status-loading { background: #fef9e7; color: #7d6608; border: 1px solid #f9e79f; }
+    .rf-status-ready { background: #eafaf1; color: #1e8449; border: 1px solid #abebc6; }
+    .rf-status-error { background: #fdedec; color: #c0392b; border: 1px solid #f5b7b1; }
+    .rf-status-info { background: #eaf2f8; color: #00529b; border: 1px solid #aed6f1; }
+    .rf-progress { width: 100%; height: 6px; background: #e0e0e0; border-radius: 3px; margin-bottom: 12px; overflow: hidden; }
+    .rf-progress-fill { height: 100%; background: #00529b; border-radius: 3px; transition: width 0.3s; }
+    .rf-results { max-height: 500px; overflow-y: auto; }
+    .rf-result-card { display: flex; gap: 12px; padding: 12px; background: #f8f9fa; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid #00529b; align-items: center; transition: transform 0.15s; }
+    .rf-result-card:hover { transform: translateX(4px); box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+    .rf-result-card.rf-match-high { border-left-color: #27ae60; }
+    .rf-result-card.rf-match-medium { border-left-color: #f39c12; }
+    .rf-result-card.rf-match-low { border-left-color: #e74c3c; }
+    .rf-result-photo { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; border: 2px solid #00529b; }
+    .rf-result-info { flex: 1; }
+    .rf-result-name { font-weight: bold; color: #00529b; font-size: 15px; }
+    .rf-result-detail { color: #555; font-size: 12px; margin-top: 2px; }
+    .rf-result-score { font-size: 18px; font-weight: bold; min-width: 60px; text-align: center; }
+    .rf-result-score.high { color: #27ae60; }
+    .rf-result-score.medium { color: #f39c12; }
+    .rf-result-score.low { color: #e74c3c; }
+    .rf-capture-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; z-index: 2; }
+    .rf-face-box { position: absolute; border: 2px solid #27ae60; border-radius: 4px; z-index: 1; }
+    .rf-migrate-section { background: #fef9e7; border: 1px solid #f9e79f; border-radius: 8px; padding: 16px; margin-top: 16px; }
+    .rf-migrate-section h4 { color: #7d6608; margin-bottom: 8px; }
+    .rf-migrate-stats { display: flex; gap: 20px; margin-bottom: 12px; }
+    .rf-migrate-stat { text-align: center; }
+    .rf-migrate-stat .num { font-size: 28px; font-weight: bold; color: #00529b; }
+    .rf-migrate-stat .label { font-size: 11px; color: #888; }
+    .rf-no-results { text-align: center; padding: 30px; color: #999; }
+    .rf-no-results .icon { font-size: 48px; margin-bottom: 10px; }
+
+    </style>
                     </div>
                     <div class="ficha">
                         <div class="ficha-cabecera">Detalle General -CRADIC-</div>
@@ -1616,7 +1880,58 @@
       display: none !important;
     }
   }
-</style>
+
+    /* ===== Módulo Reconocimiento Facial ===== */
+    .rf-container { display: flex; gap: 20px; flex-wrap: wrap; }
+    .rf-panel { flex: 1; min-width: 320px; background: #fff; border-radius: 10px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+    .rf-panel h3 { color: #00529b; margin-bottom: 12px; font-size: 16px; }
+    .rf-webcam-area { width: 100%; max-width: 480px; aspect-ratio: 4/3; background: #111; border-radius: 8px; overflow: hidden; position: relative; margin: 0 auto 12px; }
+    .rf-webcam-area video, .rf-webcam-area canvas, .rf-webcam-area img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .rf-upload-area { border: 2px dashed #00529b; border-radius: 8px; padding: 20px; text-align: center; margin-bottom: 12px; cursor: pointer; transition: background 0.2s; }
+    .rf-upload-area:hover { background: #eaf2f8; }
+    .rf-upload-area p { color: #00529b; font-weight: bold; margin: 4px 0; }
+    .rf-upload-area .sub { color: #888; font-size: 12px; }
+    .rf-btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 22px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: all 0.2s; margin: 4px; }
+    .rf-btn-primary { background: #00529b; color: #fff; }
+    .rf-btn-primary:hover { background: #003d73; }
+    .rf-btn-primary:disabled { background: #aaa; cursor: not-allowed; }
+    .rf-btn-secondary { background: #eaf2f8; color: #00529b; }
+    .rf-btn-secondary:hover { background: #d4e6f1; }
+    .rf-btn-danger { background: #c0392b; color: #fff; }
+    .rf-btn-danger:hover { background: #96281b; }
+    .rf-status { padding: 10px 16px; border-radius: 6px; margin-bottom: 12px; font-weight: bold; font-size: 13px; }
+    .rf-status-loading { background: #fef9e7; color: #7d6608; border: 1px solid #f9e79f; }
+    .rf-status-ready { background: #eafaf1; color: #1e8449; border: 1px solid #abebc6; }
+    .rf-status-error { background: #fdedec; color: #c0392b; border: 1px solid #f5b7b1; }
+    .rf-status-info { background: #eaf2f8; color: #00529b; border: 1px solid #aed6f1; }
+    .rf-progress { width: 100%; height: 6px; background: #e0e0e0; border-radius: 3px; margin-bottom: 12px; overflow: hidden; }
+    .rf-progress-fill { height: 100%; background: #00529b; border-radius: 3px; transition: width 0.3s; }
+    .rf-results { max-height: 500px; overflow-y: auto; }
+    .rf-result-card { display: flex; gap: 12px; padding: 12px; background: #f8f9fa; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid #00529b; align-items: center; transition: transform 0.15s; }
+    .rf-result-card:hover { transform: translateX(4px); box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+    .rf-result-card.rf-match-high { border-left-color: #27ae60; }
+    .rf-result-card.rf-match-medium { border-left-color: #f39c12; }
+    .rf-result-card.rf-match-low { border-left-color: #e74c3c; }
+    .rf-result-photo { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; border: 2px solid #00529b; }
+    .rf-result-info { flex: 1; }
+    .rf-result-name { font-weight: bold; color: #00529b; font-size: 15px; }
+    .rf-result-detail { color: #555; font-size: 12px; margin-top: 2px; }
+    .rf-result-score { font-size: 18px; font-weight: bold; min-width: 60px; text-align: center; }
+    .rf-result-score.high { color: #27ae60; }
+    .rf-result-score.medium { color: #f39c12; }
+    .rf-result-score.low { color: #e74c3c; }
+    .rf-capture-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; z-index: 2; }
+    .rf-face-box { position: absolute; border: 2px solid #27ae60; border-radius: 4px; z-index: 1; }
+    .rf-migrate-section { background: #fef9e7; border: 1px solid #f9e79f; border-radius: 8px; padding: 16px; margin-top: 16px; }
+    .rf-migrate-section h4 { color: #7d6608; margin-bottom: 8px; }
+    .rf-migrate-stats { display: flex; gap: 20px; margin-bottom: 12px; }
+    .rf-migrate-stat { text-align: center; }
+    .rf-migrate-stat .num { font-size: 28px; font-weight: bold; color: #00529b; }
+    .rf-migrate-stat .label { font-size: 11px; color: #888; }
+    .rf-no-results { text-align: center; padding: 30px; color: #999; }
+    .rf-no-results .icon { font-size: 48px; margin-bottom: 10px; }
+
+    </style>
                       </div>
                     <div id="detalle-vehiculo-consultado"></div>
                 </div>
@@ -1785,12 +2100,122 @@
                 </div>
             </div>
 
+            <!-- ===== MÓDULO RECONOCIMIENTO FACIAL ===== -->
+            <div id="modulo-reconocimiento-facial" class="card-modulo oculto" style="width:100%;">
+                <h2>🔍 Reconocimiento Facial - SIC</h2>
+
+                <!-- Estado de carga de modelos -->
+                <div id="rf-model-status" class="rf-status rf-status-loading">
+                    ⏳ Cargando modelos de reconocimiento facial...
+                </div>
+
+                <div class="rf-container">
+                    <!-- Panel Izquierdo: Captura / Subida -->
+                    <div class="rf-panel">
+                        <h3>📸 Captura o Sube una Foto</h3>
+
+                        <!-- Zona de webcam -->
+                        <div class="rf-webcam-area" id="rf-webcam-area">
+                            <video id="rf-webcam-video" autoplay playsinline muted style="display:none;"></video>
+                            <canvas id="rf-webcam-canvas" style="display:none;"></canvas>
+                            <img id="rf-preview-img" style="display:none;" alt="Vista previa">
+                            <div id="rf-webcam-placeholder" style="display:flex;align-items:center;justify-content:center;height:100%;color:#aaa;font-size:48px;">
+                                📷
+                            </div>
+                            <div id="rf-face-overlay" style="display:none;position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;"></div>
+                        </div>
+
+                        <!-- Botones de webcam -->
+                        <div style="text-align:center;margin-bottom:12px;">
+                            <button class="rf-btn rf-btn-secondary" id="rf-btn-webcam" onclick="rfIniciarWebcam()">📷 Activar Cámara</button>
+                            <button class="rf-btn rf-btn-primary" id="rf-btn-capture" onclick="rfCapturarFoto()" style="display:none;">📸 Capturar Foto</button>
+                            <button class="rf-btn rf-btn-danger" id="rf-btn-stop-webcam" onclick="rfDetenerWebcam()" style="display:none;">⏹ Cerrar Cámara</button>
+                        </div>
+
+                        <!-- Subida de imagen -->
+                        <div class="rf-upload-area" id="rf-upload-area" onclick="document.getElementById('rf-file-input').click()">
+                            <p>📁 O arrastra una foto aquí</p>
+                            <p class="sub">Click para seleccionar archivo (JPG, PNG)</p>
+                        </div>
+                        <input type="file" id="rf-file-input" accept="image/*" style="display:none;" onchange="rfCargarImagenArchivo(event)">
+
+                        <!-- Barra de progreso -->
+                        <div class="rf-progress" id="rf-progress-bar" style="display:none;">
+                            <div class="rf-progress-fill" id="rf-progress-fill" style="width:0%;"></div>
+                        </div>
+
+                        <!-- Botón de búsqueda -->
+                        <div style="text-align:center;margin-top:12px;">
+                            <button class="rf-btn rf-btn-primary" id="rf-btn-search" onclick="rfBuscarPorRostro()" disabled>🔍 Buscar por Rostro</button>
+                            <button class="rf-btn rf-btn-secondary" onclick="rfLimpiarBusqueda()">🗑 Limpiar</button>
+                        </div>
+
+                        <!-- Umbral de coincidencia -->
+                        <div style="margin-top:12px;padding:10px;background:#f8f9fa;border-radius:6px;">
+                            <label style="font-size:12px;color:#00529b;font-weight:bold;">
+                                Umbral de coincidencia: <span id="rf-threshold-value">0.55</span>
+                            </label>
+                            <input type="range" id="rf-threshold" min="0.3" max="0.8" step="0.05" value="0.55" 
+                                   style="width:100%;margin-top:4px;" oninput="document.getElementById('rf-threshold-value').textContent=this.value">
+                            <div style="display:flex;justify-content:space-between;font-size:10px;color:#888;">
+                                <span>Más estricto</span><span>Más flexible</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Panel Derecho: Resultados -->
+                    <div class="rf-panel">
+                        <h3>📋 Resultados de Búsqueda</h3>
+                        <div id="rf-search-status" class="rf-status rf-status-info" style="display:none;"></div>
+                        <div class="rf-results" id="rf-results-container">
+                            <div class="rf-no-results">
+                                <div class="icon">🔎</div>
+                                <p>Captura o sube una foto y presiona<br>"Buscar por Rostro" para iniciar la búsqueda</p>
+                            </div>
+                        </div>
+
+                        <!-- Sección de Migración -->
+                        <div class="rf-migrate-section" id="rf-migrate-section">
+                            <h4>🔄 Migrar Descriptores de Fotos Existentes</h4>
+                            <p style="font-size:12px;color:#666;margin-bottom:8px;">
+                                Las fichas que ya tienen foto pero no tienen descriptor facial necesitan ser procesadas para habilitar la búsqueda por rostro.
+                            </p>
+                            <div class="rf-migrate-stats" id="rf-migrate-stats">
+                                <div class="rf-migrate-stat">
+                                    <div class="num" id="rf-migrate-total">0</div>
+                                    <div class="label">Total fichas</div>
+                                </div>
+                                <div class="rf-migrate-stat">
+                                    <div class="num" id="rf-migrate-con-foto">0</div>
+                                    <div class="label">Con foto</div>
+                                </div>
+                                <div class="rf-migrate-stat">
+                                    <div class="num" id="rf-migrate-sin-descriptor">0</div>
+                                    <div class="label">Sin descriptor</div>
+                                </div>
+                                <div class="rf-migrate-stat">
+                                    <div class="num" id="rf-migrate-procesadas">0</div>
+                                    <div class="label">Procesadas</div>
+                                </div>
+                            </div>
+                            <button class="rf-btn rf-btn-primary" id="rf-btn-migrate" onclick="rfMigrarDescriptores()" disabled>🚀 Iniciar Migración</button>
+                            <div class="rf-progress" id="rf-migrate-progress" style="display:none;">
+                                <div class="rf-progress-fill" id="rf-migrate-progress-fill" style="width:0%;"></div>
+                            </div>
+                            <div id="rf-migrate-log" style="max-height:120px;overflow-y:auto;font-size:11px;color:#555;margin-top:8px;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 
 <!-- SDKs de Firebase Compatibles para la Web -->
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+    <!-- face-api.js para Reconocimiento Facial -->
+    <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
 
 
 <script>
@@ -1876,6 +2301,7 @@ db.ref('numerosExtorsivos').on('value', snapshot => {
     }
     extorsivosCargados = true;
     actualizarEstadisticasExtorsivos();
+    llenarDatalistExtorsivos();
     // Si el módulo extorsivos está activo, refrescar tabla
     const modExt = document.getElementById('modulo-extorsivos');
     if (modExt && !modExt.classList.contains('oculto')) {
@@ -1996,7 +2422,7 @@ function cerrarSesion() {
 function cambiarModulo(modulo) {
     if (!usuarioSesionActual) return;
 
-    const modulos = ['crear', 'fichas', 'crear-vehiculo', 'fichas-vehiculos', 'extorsivos', 'usuarios', 'seccion', 'biblioteca'];
+    const modulos = ['crear', 'fichas', 'crear-vehiculo', 'fichas-vehiculos', 'extorsivos', 'usuarios', 'seccion', 'biblioteca', 'reconocimiento-facial'];
     modulos.forEach(m => {
         const el = document.getElementById(`modulo-${m}`);
         if (el) el.classList.add('oculto');
@@ -2022,6 +2448,7 @@ function cambiarModulo(modulo) {
     if (modulo === 'extorsivos') { cargarNumerosExtorsivos(); }
     if (modulo === 'usuarios') renderizarTablaUsuarios();
     if (modulo === 'biblioteca') cargarDocumentosBiblioteca();
+    if (modulo === 'reconocimiento-facial') rfInicializarModulo();
 }
 
 // USUARIOS
@@ -2083,22 +2510,296 @@ function eliminarUsuario(key) {
 
 function actualizarContadores() {
     const hFichas = obtenerHistorial();
-    document.getElementById('contador-fichas').textContent = `Fichas -SIC-: ${hFichas.length} | Vehículos: ${historialVehiculosGlobal.length}`;
+    document.getElementById('contador-fichas').textContent = 'Fichas -SIC-: ' + hFichas.length + ' | Vehículos: ' + historialVehiculosGlobal.length;
+    llenarDatalistPlacas();
 }
 
 // LOGICA DE DATOS Y CAPTURA -SIC-
-let fotoBase64 = "";
-document.getElementById('fotoInput').addEventListener('change', function(e) {
-    const archivo = e.target.files[0];
-    if (archivo) {
+let fotosPersonaBase64 = ["", "", "", ""]; // 4 fotos
+let descriptorFacialActual = null; // Float32Array(128) del rostro de la ficha actual
+
+// Handlers for 4 photo inputs
+for (let i = 1; i <= 4; i++) {
+    (function(idx) {
+        document.getElementById('fotoInput' + idx).addEventListener('change', function(e) {
+            const archivo = e.target.files[0];
+            if (archivo) {
+                const lector = new FileReader();
+                lector.onload = function(ev) {
+                    fotosPersonaBase64[idx - 1] = ev.target.result;
+                    document.getElementById('vistaFoto' + idx).innerHTML = '<img src="' + ev.target.result + '">';
+                    if (idx === 1 && rfModelosCargados) {
+                        const img = new Image();
+                        img.src = ev.target.result;
+                        img.onload = async function() {
+                            const desc = await rfExtraerDescriptor(img);
+                            if (desc) {
+                                descriptorFacialActual = desc;
+                                console.log('[RF] Descriptor extra\u00eddo de foto 1.');
+                            } else {
+                                descriptorFacialActual = null;
+                                console.log('[RF] No se detect\u00f3 rostro en foto 1.');
+                            }
+                        };
+                    }
+                };
+                lector.readAsDataURL(archivo);
+            }
+        });
+    })(i);
+}
+
+// ===== DYNAMIC FAMILY =====
+let familiarCounter = 1;
+function agregarFamiliar() {
+    const container = document.getElementById('familiares-container');
+    const row = document.createElement('div');
+    row.className = 'familiar-row';
+    row.dataset.index = familiarCounter;
+    row.innerHTML = '<div class="grupo-form"><label>Nombre Familiar</label><input type="text" class="fam-nombre"></div>' +
+        '<div class="grupo-form"><label>Parentesco</label><input type="text" class="fam-parentesco"></div>' +
+        '<div class="grupo-form"><label>DPI Familiar</label><input type="text" class="fam-dpi"></div>' +
+        '<div class="grupo-form"><label>Tel\u00e9fono Familiar</label><input type="text" class="fam-telefono" placeholder="+502 ..."></div>' +
+        '<button type="button" class="btn-quitar-familiar" onclick="quitarFamiliar(this)" title="Quitar familiar">\u2716</button>';
+    container.appendChild(row);
+    familiarCounter++;
+    row.querySelectorAll('input').forEach(inp => inp.addEventListener('input', actualizarFicha));
+}
+function quitarFamiliar(btn) {
+    btn.closest('.familiar-row').remove();
+    actualizarFicha();
+}
+function obtenerFamiliares() {
+    const rows = document.querySelectorAll('#familiares-container .familiar-row');
+    const list = [];
+    rows.forEach(row => {
+        list.push({
+            nombre: row.querySelector('.fam-nombre') ? row.querySelector('.fam-nombre').value : '',
+            parentesco: row.querySelector('.fam-parentesco') ? row.querySelector('.fam-parentesco').value : '',
+            dpi: row.querySelector('.fam-dpi') ? row.querySelector('.fam-dpi').value : '',
+            telefono: row.querySelector('.fam-telefono') ? row.querySelector('.fam-telefono').value : ''
+        });
+    });
+    return list;
+}
+function cargarFamiliares(familiares) {
+    const container = document.getElementById('familiares-container');
+    container.innerHTML = '';
+    familiarCounter = 0;
+    if (!familiares || familiares.length === 0) { agregarFamiliar(); return; }
+    familiares.forEach(function(fam) {
+        const row = document.createElement('div');
+        row.className = 'familiar-row';
+        row.dataset.index = familiarCounter;
+        row.innerHTML = '<div class="grupo-form"><label>Nombre Familiar</label><input type="text" class="fam-nombre" value="' + (fam.nombre||'').replace(/"/g,'&quot;') + '"></div>' +
+            '<div class="grupo-form"><label>Parentesco</label><input type="text" class="fam-parentesco" value="' + (fam.parentesco||'').replace(/"/g,'&quot;') + '"></div>' +
+            '<div class="grupo-form"><label>DPI Familiar</label><input type="text" class="fam-dpi" value="' + (fam.dpi||'').replace(/"/g,'&quot;') + '"></div>' +
+            '<div class="grupo-form"><label>Tel\u00e9fono Familiar</label><input type="text" class="fam-telefono" value="' + (fam.telefono||'').replace(/"/g,'&quot;') + '" placeholder="+502 ..."></div>' +
+            '<button type="button" class="btn-quitar-familiar" onclick="quitarFamiliar(this)" title="Quitar familiar">\u2716</button>';
+        container.appendChild(row);
+        row.querySelectorAll('input').forEach(inp => inp.addEventListener('input', actualizarFicha));
+        familiarCounter++;
+    });
+}
+
+// ===== DYNAMIC TATTOO PHOTOS =====
+var tattooUbicationOpts = '<option value="">Seleccione ubicaci\u00f3n...</option>' +
+    '<option value="ROSTRO">ROSTRO</option><option value="CUELLO">CUELLO</option>' +
+    '<option value="PECHO">PECHO</option><option value="ESPALDA">ESPALDA</option>' +
+    '<option value="ABDOMEN">ABDOMEN</option>' +
+    '<option value="BRAZO DERECHO">BRAZO DERECHO</option><option value="BRAZO IZQUIERDO">BRAZO IZQUIERDO</option>' +
+    '<option value="ANTEBRAZO DERECHO">ANTEBRAZO DERECHO</option><option value="ANTEBRAZO IZQUIERDO">ANTEBRAZO IZQUIERDO</option>' +
+    '<option value="MANO DERECHA">MANO DERECHA</option><option value="MANO IZQUIERDA">MANO IZQUIERDA</option>' +
+    '<option value="PIERNA DERECHA">PIERNA DERECHA</option><option value="PIERNA IZQUIERDA">PIERNA IZQUIERDA</option>' +
+    '<option value="PIE DERECHO">PIE DERECHO</option><option value="PIE IZQUIERDO">PIE IZQUIERDO</option>' +
+    '<option value="HOMBRO DERECHO">HOMBRO DERECHO</option><option value="HOMBRO IZQUIERDO">HOMBRO IZQUIERDO</option>' +
+    '<option value="COSTADO DERECHO">COSTADO DERECHO</option><option value="COSTADO IZQUIERDO">COSTADO IZQUIERDO</option>' +
+    '<option value="OTRO">OTRO</option>';
+let tatuajeCounter = 1;
+function agregarTatuaje() {
+    const container = document.getElementById('tatuajes-container');
+    const row = document.createElement('div');
+    row.className = 'tatuaje-row';
+    row.dataset.index = tatuajeCounter;
+    row.innerHTML = '<div class="grupo-form"><label>Ubicaci\u00f3n del Tatuaje</label><select class="tatuaje-ubicacion">' + tattooUbicationOpts + '</select></div>' +
+        '<div class="grupo-form"><label>Descripci\u00f3n del Tatuaje</label><input type="text" class="tatuaje-descripcion" placeholder="Ej: Virgen de Guadalupe, Calavera, etc."></div>' +
+        '<div class="grupo-form"><label>Fotograf\u00eda del Tatuaje</label><input type="file" class="tatuaje-foto-input" accept="image/*"></div>' +
+        '<div class="tatuaje-foto-preview">\U0001f4f7</div>' +
+        '<button type="button" class="btn-quitar-tatuaje" onclick="quitarTatuaje(this)" title="Quitar tatuaje">\u2716</button>';
+    container.appendChild(row);
+    tatuajeCounter++;
+    const fotoInput = row.querySelector('.tatuaje-foto-input');
+    const preview = row.querySelector('.tatuaje-foto-preview');
+    fotoInput.addEventListener('change', function(e) {
+        const archivo = e.target.files[0];
+        if (archivo) {
+            const lector = new FileReader();
+            lector.onload = function(ev) { preview.innerHTML = '<img src="' + ev.target.result + '">'; };
+            lector.readAsDataURL(archivo);
+        }
+    });
+    row.querySelectorAll('input, select').forEach(el => el.addEventListener('change', actualizarFicha));
+    row.querySelectorAll('input[type="text"]').forEach(el => el.addEventListener('input', actualizarFicha));
+}
+function quitarTatuaje(btn) {
+    btn.closest('.tatuaje-row').remove();
+    actualizarFicha();
+}
+function obtenerTatuajes() {
+    const rows = document.querySelectorAll('#tatuajes-container .tatuaje-row');
+    const list = [];
+    rows.forEach(row => {
+        const fotoImg = row.querySelector('.tatuaje-foto-preview img');
+        list.push({
+            ubicacion: row.querySelector('.tatuaje-ubicacion') ? row.querySelector('.tatuaje-ubicacion').value : '',
+            descripcion: row.querySelector('.tatuaje-descripcion') ? row.querySelector('.tatuaje-descripcion').value : '',
+            foto: fotoImg ? fotoImg.src : ''
+        });
+    });
+    return list;
+}
+function cargarTatuajes(tatuajes) {
+    const container = document.getElementById('tatuajes-container');
+    container.innerHTML = '';
+    tatuajeCounter = 0;
+    if (!tatuajes || tatuajes.length === 0) { agregarTatuaje(); return; }
+    tatuajes.forEach(function(tat) {
+        const row = document.createElement('div');
+        row.className = 'tatuaje-row';
+        row.dataset.index = tatuajeCounter;
+        row.innerHTML = '<div class="grupo-form"><label>Ubicaci\u00f3n del Tatuaje</label><select class="tatuaje-ubicacion">' + tattooUbicationOpts + '</select></div>' +
+            '<div class="grupo-form"><label>Descripci\u00f3n del Tatuaje</label><input type="text" class="tatuaje-descripcion" value="' + (tat.descripcion||'').replace(/"/g,'&quot;') + '" placeholder="Ej: Virgen de Guadalupe, Calavera, etc."></div>' +
+            '<div class="grupo-form"><label>Fotograf\u00eda del Tatuaje</label><input type="file" class="tatuaje-foto-input" accept="image/*"></div>' +
+            '<div class="tatuaje-foto-preview">' + (tat.foto ? '<img src="' + tat.foto + '">' : '\U0001f4f7') + '</div>' +
+            '<button type="button" class="btn-quitar-tatuaje" onclick="quitarTatuaje(this)" title="Quitar tatuaje">\u2716</button>';
+        container.appendChild(row);
+        const sel = row.querySelector('.tatuaje-ubicacion');
+        if (sel) sel.value = tat.ubicacion || '';
+        const fotoInput = row.querySelector('.tatuaje-foto-input');
+        const preview = row.querySelector('.tatuaje-foto-preview');
+        fotoInput.addEventListener('change', function(e) {
+            const archivo = e.target.files[0];
+            if (archivo) {
+                const lector = new FileReader();
+                lector.onload = function(ev) { preview.innerHTML = '<img src="' + ev.target.result + '">'; };
+                lector.readAsDataURL(archivo);
+            }
+        });
+        row.querySelectorAll('input, select').forEach(el => el.addEventListener('change', actualizarFicha));
+        row.querySelectorAll('input[type="text"]').forEach(el => el.addEventListener('input', actualizarFicha));
+        tatuajeCounter++;
+    });
+}
+
+// ===== VEHICLE VINCULACI\u00d3N =====
+let vehiculosVinculados = [];
+function vincularVehiculo() {
+    const placa = document.getElementById('vinc_vehiculo_placa').value.trim();
+    if (!placa) { alert('\u26a0\ufe0f Ingrese una placa de veh\u00edculo.'); return; }
+    const vehiculo = historialVehiculosGlobal.find(v => v.v_placa && v.v_placa.toUpperCase() === placa.toUpperCase());
+    if (!vehiculo) { alert('\u26a0\ufe0f No se encontr\u00f3 un veh\u00edculo con esa placa.\nRegistre el veh\u00edculo primero.'); return; }
+    if (vehiculosVinculados.find(v => v.placa.toUpperCase() === placa.toUpperCase())) { alert('\u26a0\ufe0f Este veh\u00edculo ya est\u00e1 vinculado.'); return; }
+    vehiculosVinculados.push({ placa: vehiculo.v_placa, tipo: vehiculo.v_tipo||'', marca: vehiculo.v_marca||'', color: vehiculo.v_color||'', _key: vehiculo._key||'' });
+    document.getElementById('vinc_vehiculo_placa').value = '';
+    renderVehiculosVinculados();
+    actualizarFicha();
+}
+function quitarVehiculoVinculado(idx) {
+    vehiculosVinculados.splice(idx, 1);
+    renderVehiculosVinculados();
+    actualizarFicha();
+}
+function renderVehiculosVinculados() {
+    const list = document.getElementById('vehiculos-vinculados-list');
+    list.innerHTML = '';
+    vehiculosVinculados.forEach(function(v, i) {
+        list.innerHTML += '<div class="vinc-item"><div class="vinc-info"><b>Placa:</b> ' + v.placa + ' | <b>Tipo:</b> ' + v.tipo + ' | <b>Marca:</b> ' + v.marca + ' | <b>Color:</b> ' + v.color + '</div><button class="btn-quitar-vinc" onclick="quitarVehiculoVinculado(' + i + ')">\u2716 Quitar</button></div>';
+    });
+}
+function llenarDatalistPlacas() {
+    const dl = document.getElementById('datalist-placas');
+    if (!dl) return;
+    dl.innerHTML = '';
+    historialVehiculosGlobal.forEach(function(v) {
+        if (v.v_placa) {
+            const opt = document.createElement('option');
+            opt.value = v.v_placa;
+            opt.textContent = v.v_placa + ' - ' + (v.v_marca||'') + ' ' + (v.v_linea||'') + ' (' + (v.v_color||'') + ')';
+            dl.appendChild(opt);
+        }
+    });
+}
+
+// ===== EXTORSIVOS VINCULACI\u00d3N =====
+let extorsivosVinculados = [];
+function vincularExtorsivo() {
+    const telefono = document.getElementById('vinc_ext_telefono').value.trim();
+    if (!telefono) { alert('\u26a0\ufe0f Ingrese un n\u00famero de tel\u00e9fono extorsivo.'); return; }
+    const caso = numerosExtorsivosGlobal.find(c => c.telefonoExtorsionista && c.telefonoExtorsionista === telefono);
+    if (!caso) { alert('\u26a0\ufe0f No se encontr\u00f3 un caso extorsivo con ese tel\u00e9fono.\nRegistre el caso primero.'); return; }
+    if (extorsivosVinculados.find(e => e.telefonoExtorsionista === telefono)) { alert('\u26a0\ufe0f Este n\u00famero ya est\u00e1 vinculado.'); return; }
+    extorsivosVinculados.push({ telefonoExtorsionista: caso.telefonoExtorsionista, casoNo: caso.casoNo||'', orgCriminalAtribuye: caso.orgCriminalAtribuye||'', _key: caso._key||'' });
+    document.getElementById('vinc_ext_telefono').value = '';
+    renderExtorsivosVinculados();
+    actualizarFicha();
+}
+function quitarExtorsivoVinculado(idx) {
+    extorsivosVinculados.splice(idx, 1);
+    renderExtorsivosVinculados();
+    actualizarFicha();
+}
+function renderExtorsivosVinculados() {
+    const list = document.getElementById('extorsivos-vinculados-list');
+    list.innerHTML = '';
+    extorsivosVinculados.forEach(function(e, i) {
+        list.innerHTML += '<div class="vinc-item"><div class="vinc-info"><b>Tel\u00e9fono:</b> ' + e.telefonoExtorsionista + ' | <b>Caso No.:</b> ' + e.casoNo + ' | <b>Org. Criminal:</b> ' + e.orgCriminalAtribuye + '</div><button class="btn-quitar-vinc" onclick="quitarExtorsivoVinculado(' + i + ')">\u2716 Quitar</button></div>';
+    });
+}
+function llenarDatalistExtorsivos() {
+    const dl = document.getElementById('datalist-extorsivos');
+    if (!dl) return;
+    dl.innerHTML = '';
+    numerosExtorsivosGlobal.forEach(function(c) {
+        if (c.telefonoExtorsionista) {
+            const opt = document.createElement('option');
+            opt.value = c.telefonoExtorsionista;
+            opt.textContent = c.telefonoExtorsionista + ' - Caso: ' + (c.casoNo||'S/N') + ' (' + (c.orgCriminalAtribuye||'S/O') + ')';
+            dl.appendChild(opt);
+        }
+    });
+}
+
+// ===== PDF ATTACHMENTS =====
+let pdfsAdjuntos = [];
+function agregarPDF() {
+    const input = document.getElementById('pdfInput');
+    const archivos = input.files;
+    if (!archivos || archivos.length === 0) { alert('\u26a0\ufe0f Seleccione al menos un archivo PDF.'); return; }
+    Array.from(archivos).forEach(function(archivo) {
+        if (archivo.type !== 'application/pdf') { alert('\u26a0\ufe0f Solo se permiten archivos PDF. Archivo omitido: ' + archivo.name); return; }
+        if (archivo.size > 5 * 1024 * 1024) { alert('\u26a0\ufe0f El archivo "' + archivo.name + '" excede 5MB.'); return; }
         const lector = new FileReader();
         lector.onload = function(e) {
-            fotoBase64 = e.target.result;
-            document.getElementById('vistaFoto').innerHTML = `<img src="${fotoBase64}">`;
+            pdfsAdjuntos.push({ nombre: archivo.name, base64: e.target.result });
+            renderPDFsAdjuntos();
+            actualizarFicha();
         };
         lector.readAsDataURL(archivo);
-    }
-});
+    });
+    input.value = '';
+}
+function quitarPDFAdjunto(idx) {
+    pdfsAdjuntos.splice(idx, 1);
+    renderPDFsAdjuntos();
+    actualizarFicha();
+}
+function renderPDFsAdjuntos() {
+    const list = document.getElementById('pdfs-list');
+    list.innerHTML = '';
+    pdfsAdjuntos.forEach(function(p, i) {
+        list.innerHTML += '<div class="pdf-item"><div class="pdf-name">\U0001f4c4 ' + p.nombre + '</div><button class="btn-quitar-vinc" onclick="quitarPDFAdjunto(' + i + ')">\u2716 Quitar</button></div>';
+    });
+}
 
 // Eventos de dinamismo para Ficha Personas
 document.querySelectorAll('#modulo-crear input, #modulo-crear textarea, #modulo-crear select').forEach(input => {
@@ -2120,7 +2821,7 @@ function obtenerDatosFormulario() {
         dir_exacta: v('dir_exacta'), dir_pais: v('dir_pais'), dir_depto: v('dir_depto'),
         dir_muni: v('dir_muni'), dir_sector: v('dir_sector'), dir_zona: v('dir_zona'),
         dir_calle: v('dir_calle'), dir_numcasa: v('dir_numcasa'), dir_contador: v('dir_contador'),
-        fam_nombre: v('fam_nombre'), fam_parentesco: v('fam_parentesco'), fam_dpi: v('fam_dpi'),
+        familiares: obtenerFamiliares(),
         fis_estatura: v('fis_estatura'), fis_complexion: v('fis_complexion'), fis_piel: v('fis_piel'),
         fis_colcabello: v('fis_colcabello'), fis_estcabello: v('fis_estcabello'), fis_ojos: v('fis_ojos'),
         fis_orejas: v('fis_orejas'), fis_labios: v('fis_labios'), fis_nariz: v('fis_nariz'),
@@ -2143,7 +2844,14 @@ function obtenerDatosFormulario() {
         pen_fsalida: v('pen_fsalida'), pen_expediente: v('pen_expediente'), pen_oj: v('pen_oj'),
         mig_motivo: v('mig_motivo'), mig_fecha: v('mig_fecha'), mig_destino: v('mig_destino'),
         mig_procedencia: v('mig_procedencia'), mig_transporte: v('mig_transporte'), mig_arraigo: v('mig_arraigo'),
-        foto_tatuajes: v('foto_tatuajes'), foto_grafitis: v('foto_grafitis'), foto: fotoBase64,
+        foto_tatuajes: v('foto_tatuajes'), foto_grafitis: v('foto_grafitis'),
+        fotosPersona: fotosPersonaBase64,
+        foto: fotosPersonaBase64[0] || "",
+        descriptorFacial: descriptorFacialActual ? rfDescriptorToArray(descriptorFacialActual) : null,
+        tatuajesConFoto: obtenerTatuajes(),
+        vehiculosVinculados: vehiculosVinculados,
+        extorsivosVinculados: extorsivosVinculados,
+        pdfsAdjuntos: pdfsAdjuntos.map(function(p){ return {nombre: p.nombre, base64: p.base64}; }),
         fin_banco: v('fin_banco'), fin_cuenta: v('fin_cuenta'), fin_monto: v('fin_monto'),
         fin_actividad: v('fin_actividad'), fin_obs: v('fin_obs'),
         fue_abiertas: v('fue_abiertas'), fue_cerradas: v('fue_cerradas'),
@@ -2174,7 +2882,15 @@ function actualizarFicha() {
     document.getElementById('v-dir_exacta').textContent = d.dir_exacta;
     document.getElementById('v-dir_ubicacion').textContent = `${d.dir_sector}, Zona ${d.dir_zona}, ${d.dir_muni}, ${d.dir_depto}, ${d.dir_pais}. Contador: ${d.dir_contador}`;
 
-    document.getElementById('v-fam_info').textContent = `${d.fam_nombre} (${d.fam_parentesco}) - DPI: ${d.fam_dpi}`;
+    // Render family list
+    const famList = document.getElementById('v-familiares-list');
+    if (famList) {
+        const fams = d.familiares || [];
+        famList.innerHTML = fams.map(f =>
+            '<div class="familiar-item-vista"><b>' + (f.nombre||'') + '</b> (' + (f.parentesco||'') + ') - DPI: ' + (f.dpi||'') + (f.telefono ? ' | Tel: ' + f.telefono : '') + '</div>'
+        ).join('');
+        if (fams.length === 0) famList.innerHTML = '<div style="color:#777;padding:4px;">Sin familiares registrados</div>';
+    }
 
     document.getElementById('v-fis_rasgos').textContent = `Estatura: ${d.fis_estatura} | Complexión: ${d.fis_complexion} | Piel: ${d.fis_piel} | Ojos: ${d.fis_ojos} | Cabello: ${d.fis_colcabello} (${d.fis_estcabello})`;
     document.getElementById('v-fis_otros').textContent = `Cicatrices: ${d.fis_cicatrices} | Discapacidad: ${d.fis_discapacidad} | Otros: ${d.fis_otros}`;
@@ -2196,14 +2912,64 @@ function actualizarFicha() {
 
     document.getElementById('v-mig_info').textContent = `Motivo: ${d.mig_motivo} | Fecha: ${d.mig_fecha} | Destino: ${d.mig_destino} | Origen: ${d.mig_procedencia} | Transp: ${d.mig_transporte}`;
 
-    document.getElementById('v-foto_info').textContent = `Tatuajes: ${d.foto_tatuajes} | Grafitis/Vehículos: ${d.foto_grafitis}`;
+    document.getElementById('v-foto_info').textContent = 'Tatuajes: ' + (d.foto_tatuajes||'') + ' | Grafitis/Vehículos: ' + (d.foto_grafitis||'');
+
+    // Render 4 photos in vista previa
+    for (let i = 1; i <= 4; i++) {
+        const fotoEl = document.getElementById('vistaFoto' + i);
+        if (fotoEl) {
+            if (d.fotosPersona && d.fotosPersona[i-1]) {
+                fotoEl.innerHTML = '<img src="' + d.fotosPersona[i-1] + '">';
+            } else {
+                fotoEl.innerHTML = '📷';
+            }
+        }
+    }
+
+    // Render tattoo photos grid in vista
+    const tatGrid = document.getElementById('v-tatuajes-fotos');
+    if (tatGrid) {
+        const tats = d.tatuajesConFoto || [];
+        const tatsWithFoto = tats.filter(t => t.foto);
+        tatGrid.innerHTML = tatsWithFoto.map(t =>
+            '<div class="tatuaje-vista-item"><img src="' + t.foto + '"><div class="tat-ubic-label">' + (t.ubicacion||'') + '</div><div>' + (t.descripcion||'') + '</div></div>'
+        ).join('');
+        if (tatsWithFoto.length === 0) tatGrid.innerHTML = '<div style="color:#777;padding:4px;">Sin fotografías de tatuajes</div>';
+    }
+
+    // Render vehicles vinculados vista
+    const vVeh = document.getElementById('v-vehiculos-vinc');
+    if (vVeh) {
+        const vehs = d.vehiculosVinculados || [];
+        vVeh.innerHTML = vehs.length ? vehs.map(v =>
+            '<div class="vinc-vista-item">🚗 Placa: <b>' + v.placa + '</b> | Tipo: ' + v.tipo + ' | Marca: ' + v.marca + ' | Color: ' + v.color + '</div>'
+        ).join('') : '<div style="color:#777;padding:4px;">Sin vehículos vinculados</div>';
+    }
+
+    // Render extorsivos vinculados vista
+    const vExt = document.getElementById('v-extorsivos-vinc');
+    if (vExt) {
+        const exts = d.extorsivosVinculados || [];
+        vExt.innerHTML = exts.length ? exts.map(e =>
+            '<div class="vinc-vista-item">📞 Tel: <b>' + e.telefonoExtorsionista + '</b> | Caso: ' + e.casoNo + ' | Org: ' + e.orgCriminalAtribuye + '</div>'
+        ).join('') : '<div style="color:#777;padding:4px;">Sin números extorsivos vinculados</div>';
+    }
+
+    // Render PDFs vista
+    const vPdf = document.getElementById('v-pdfs-vinc');
+    if (vPdf) {
+        const pdfs = d.pdfsAdjuntos || [];
+        vPdf.innerHTML = pdfs.length ? pdfs.map(p =>
+            '<div class="vinc-vista-item">📄 ' + p.nombre + '</div>'
+        ).join('') : '<div style="color:#777;padding:4px;">Sin archivos PDF adjuntos</div>';
+    }
 
     document.getElementById('v-fin_info').textContent = `Banco: ${d.fin_banco} | Cuenta: ${d.fin_cuenta} | Monto: ${d.fin_monto} | Obs: ${d.fin_obs}`;
 
     document.getElementById('v-fue_info').textContent = `Abiertas: ${d.fue_abiertas} | Cerradas: ${d.fue_cerradas}`;
 
     document.getElementById('v-usuario').textContent = d.usuario;
-    if (d.foto) document.getElementById('vistaFoto').innerHTML = `<img src="${d.foto}">`;
+    // Photo updates handled in 4-photo grid rendering
 }
 
 function guardarFichaConsolidada() {
@@ -2278,9 +3044,14 @@ function CargarPersonaParaEditar(ficha) {
     setV('dir_numcasa', ficha.dir_numcasa);
     setV('dir_contador', ficha.dir_contador);
 
-    setV('fam_nombre', ficha.fam_nombre);
-    setV('fam_parentesco', ficha.fam_parentesco);
-    setV('fam_dpi', ficha.fam_dpi);
+    // Cargar familiares dinámicos
+    if (ficha.familiares && Array.isArray(ficha.familiares)) {
+        cargarFamiliares(ficha.familiares);
+    } else if (ficha.fam_nombre) {
+        cargarFamiliares([{nombre: ficha.fam_nombre||'', parentesco: ficha.fam_parentesco||'', dpi: ficha.fam_dpi||'', telefono: ''}]);
+    } else {
+        cargarFamiliares([]);
+    }
 
     setV('fis_estatura', ficha.fis_estatura);
     setV('fis_complexion', ficha.fis_complexion);
@@ -2364,12 +3135,44 @@ function CargarPersonaParaEditar(ficha) {
     setV('fue_abiertas', ficha.fue_abiertas);
     setV('fue_cerradas', ficha.fue_cerradas);
 
-    fotoBase64 = ficha.foto || "";
-    if (fotoBase64) {
-        document.getElementById('vistaFoto').innerHTML = `<img src="${fotoBase64}">`;
-    } else {
-        document.getElementById('vistaFoto').innerHTML = '📷';
+    // Restaurar 4 fotos
+    fotosPersonaBase64 = ficha.fotosPersona || ["", "", "", ""];
+    if ((!ficha.fotosPersona || ficha.fotosPersona.length === 0) && ficha.foto) {
+        fotosPersonaBase64 = [ficha.foto, "", "", ""];
     }
+    for (let i = 1; i <= 4; i++) {
+        const el = document.getElementById('vistaFoto' + i);
+        if (el) {
+            el.innerHTML = fotosPersonaBase64[i-1] ? '<img src="' + fotosPersonaBase64[i-1] + '">' : '📷';
+        }
+    }
+
+    // Restaurar descriptor facial
+    descriptorFacialActual = (ficha.descriptorFacial && Array.isArray(ficha.descriptorFacial))
+        ? rfArrayToDescriptor(ficha.descriptorFacial) : null;
+
+    // Restaurar tatuajes con foto
+    if (ficha.tatuajesConFoto && Array.isArray(ficha.tatuajesConFoto)) {
+        cargarTatuajes(ficha.tatuajesConFoto);
+    } else {
+        cargarTatuajes([]);
+    }
+
+    // Restaurar vehículos vinculados
+    vehiculosVinculados = ficha.vehiculosVinculados || [];
+    renderVehiculosVinculados();
+
+    // Restaurar extorsivos vinculados
+    extorsivosVinculados = ficha.extorsivosVinculados || [];
+    renderExtorsivosVinculados();
+
+    // Restaurar PDFs adjuntos
+    pdfsAdjuntos = (ficha.pdfsAdjuntos || []).map(function(p){ return {nombre: p.nombre||'', base64: p.base64||''}; });
+    renderPDFsAdjuntos();
+
+    // Llenar datalists
+    llenarDatalistPlacas();
+    llenarDatalistExtorsivos();
 
     document.getElementById('titulo-form-persona').textContent = '✏️ Editando Ficha Persona -SIC-';
     actualizarFicha();
@@ -2423,7 +3226,7 @@ function mostrarFichaConsultada(d) {
         <div class="fila"><div class="celda-etiqueta">2. Nombre Completo:</div><div class="celda-dato"><b>${nomComp}</b> | DPI: ${d.g_dpi || ''} | Apodo: ${d.g_apodo || ''}</div></div>
         <div class="fila"><div class="celda-etiqueta">3. Teléfono / IMEI:</div><div class="celda-dato">${d.tel_linea || ''} | IMEI: ${d.tel_imei || ''}</div></div>
         <div class="fila"><div class="celda-etiqueta">4. Dirección Exacta:</div><div class="celda-dato">${d.dir_exacta || ''}, Zona ${d.dir_zona || ''}, ${d.dir_muni || ''}</div></div>
-        <div class="fila"><div class="celda-etiqueta">5. Familiar:</div><div class="celda-dato">${d.fam_nombre || ''} (${d.fam_parentesco || ''})</div></div>
+        <div class="fila"><div class="celda-etiqueta">5. Familiares:</div><div class="celda-dato">${(d.familiares || []).map(f => f.nombre + ' (' + f.parentesco + ') DPI:' + f.dpi + (f.telefono ? ' Tel:' + f.telefono : '')).join(' | ') || (d.fam_nombre || '') + ' (' + (d.fam_parentesco || '') + ')'}</div></div>
         <div class="fila"><div class="celda-etiqueta">6. Características Físicas:</div><div class="celda-dato">Estatura: ${d.fis_estatura || ''} | Piel: ${d.fis_piel || ''} | Cicatrices: ${d.fis_cicatrices || ''}</div></div>
         <div class="fila"><div class="celda-etiqueta">7. Redes Sociales:</div><div class="celda-dato">${d.red_tipo || ''}: ${d.red_alias || ''}</div></div>
         <div class="fila"><div class="celda-etiqueta">8. Académicos / Oficio:</div><div class="celda-dato">${d.aca_nivel || ''} - ${d.aca_profesion || ''}</div></div>
@@ -2436,6 +3239,9 @@ function mostrarFichaConsultada(d) {
         <div class="fila"><div class="celda-etiqueta">15. Tatuajes:</div><div class="celda-dato">${d.foto_tatuajes || ''}</div></div>
         <div class="fila"><div class="celda-etiqueta">16. Financiero:</div><div class="celda-dato">Banco: ${d.fin_banco || ''} | Actividad: ${d.fin_actividad || ''}</div></div>
         <div class="fila"><div class="celda-etiqueta">17. Fuentes:</div><div class="celda-dato">Abiertas: ${d.fue_abiertas || ''} | Cerradas: ${d.fue_cerradas || ''}</div></div>
+        ${(d.vehiculosVinculados && d.vehiculosVinculados.length) ? '<div class="fila"><div class="celda-etiqueta">18. Vehículos Vinculados:</div><div class="celda-dato">' + d.vehiculosVinculados.map(v => v.placa + ' (' + v.marca + ' ' + v.color + ')').join(', ') + '</div></div>' : ''}
+        ${(d.extorsivosVinculados && d.extorsivosVinculados.length) ? '<div class="fila"><div class="celda-etiqueta">19. Números Extorsivos:</div><div class="celda-dato">' + d.extorsivosVinculados.map(e => e.telefonoExtorsionista + ' (Caso:' + e.casoNo + ')').join(', ') + '</div></div>' : ''}
+        ${(d.pdfsAdjuntos && d.pdfsAdjuntos.length) ? '<div class="fila"><div class="celda-etiqueta">20. PDFs Adjuntos:</div><div class="celda-dato">' + d.pdfsAdjuntos.map(p => p.nombre).join(', ') + '</div></div>' : ''}
     `;
 
     document.getElementById('contenedor-ficha-consultada').classList.remove('oculto');
@@ -2447,8 +3253,26 @@ function limpiarFormulario() {
     document.getElementById('usuario').value = userActual;
     document.getElementById('key_persona_editar').value = '';
     document.getElementById('titulo-form-persona').textContent = 'Captura de Datos -SIC-';
-    document.getElementById('vistaFoto').innerHTML = '📷';
-    fotoBase64 = "";
+    // Reset 4 photos
+    fotosPersonaBase64 = ["", "", "", ""];
+    for (let i = 1; i <= 4; i++) {
+        const el = document.getElementById('vistaFoto' + i);
+        if (el) el.innerHTML = '📷';
+    }
+    descriptorFacialActual = null;
+    // Reset family
+    cargarFamiliares([]);
+    // Reset tatuajes
+    cargarTatuajes([]);
+    // Reset vinculaciones
+    vehiculosVinculados = [];
+    extorsivosVinculados = [];
+    pdfsAdjuntos = [];
+    renderVehiculosVinculados();
+    renderExtorsivosVinculados();
+    renderPDFsAdjuntos();
+    llenarDatalistPlacas();
+    llenarDatalistExtorsivos();
     actualizarFicha();
 }
 
@@ -2987,6 +3811,7 @@ function actualizarEstadisticasExtorsivos() {
 function cargarNumerosExtorsivos() {
     if (numerosExtorsivosGlobal.length > 0) {
         actualizarEstadisticasExtorsivos();
+    llenarDatalistExtorsivos();
         buscarNumeroExtorsivo();
     } else {
         // Los datos se cargan vía el RTDB listener; si está vacío, mostrar mensaje
@@ -3683,6 +4508,549 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+
+
+// ==============================================================================
+// ===== SISTEMA DE RECONOCIMIENTO FACIAL =====
+// ==============================================================================
+
+let rfModelosCargados = false;
+let rfModelosCargando = false;
+let rfStreamWebcam = null;
+let rfImagenBusqueda = null; // HTMLImageElement con la imagen a buscar
+let rfDescriptorBusqueda = null; // Float32Array(128) descriptor de la imagen de búsqueda
+
+// --- Carga de modelos face-api.js ---
+async function rfCargarModelos() {
+    if (rfModelosCargados || rfModelosCargando) return rfModelosCargados;
+    rfModelosCargando = true;
+
+    const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/model';
+
+    try {
+        const statusEl = document.getElementById('rf-model-status');
+        if (statusEl) {
+            statusEl.className = 'rf-status rf-status-loading';
+            statusEl.textContent = '⏳ Cargando modelos de reconocimiento facial...';
+        }
+
+        await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+        if (statusEl) statusEl.textContent = '⏳ Cargando detector de rostros... (1/3)';
+
+        await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
+        if (statusEl) statusEl.textContent = '⏳ Cargando puntos de referencia... (2/3)';
+
+        await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
+        if (statusEl) statusEl.textContent = '⏳ Cargando red de reconocimiento... (3/3)';
+
+        rfModelosCargados = true;
+        rfModelosCargando = false;
+
+        if (statusEl) {
+            statusEl.className = 'rf-status rf-status-ready';
+            statusEl.textContent = '✅ Modelos de reconocimiento facial cargados correctamente. El sistema está listo.';
+        }
+
+        console.log('[RF] Modelos face-api.js cargados exitosamente.');
+        return true;
+    } catch (err) {
+        console.error('[RF] Error cargando modelos:', err);
+        rfModelosCargando = false;
+        const statusEl = document.getElementById('rf-model-status');
+        if (statusEl) {
+            statusEl.className = 'rf-status rf-status-error';
+            statusEl.textContent = '❌ Error al cargar modelos: ' + err.message + '. Recarga la página para intentar de nuevo.';
+        }
+        return false;
+    }
+}
+
+// --- Extraer descriptor facial de una imagen ---
+async function rfExtraerDescriptor(imgElement) {
+    if (!rfModelosCargados) {
+        await rfCargarModelos();
+    }
+    if (!rfModelosCargados) return null;
+
+    try {
+        const detections = await faceapi
+            .detectSingleFace(imgElement, new faceapi.TinyFaceDetectorOptions({ inputSize: 416, scoreThreshold: 0.5 }))
+            .withFaceLandmarks()
+            .withFaceDescriptor();
+
+        if (!detections) {
+            console.log('[RF] No se detectó rostro en la imagen.');
+            return null;
+        }
+
+        return detections.descriptor; // Float32Array(128)
+    } catch (err) {
+        console.error('[RF] Error extrayendo descriptor:', err);
+        return null;
+    }
+}
+
+// --- Calcular distancia euclidiana entre dos descriptores ---
+function rfDistanciaEuclidiana(d1, d2) {
+    if (!d1 || !d2 || d1.length !== d2.length) return 1.0;
+    let sum = 0;
+    for (let i = 0; i < d1.length; i++) {
+        const diff = d1[i] - d2[i];
+        sum += diff * diff;
+    }
+    return Math.sqrt(sum);
+}
+
+// --- Convertir Float32Array a Array para almacenamiento en Firebase ---
+function rfDescriptorToArray(descriptor) {
+    return Array.from(descriptor);
+}
+
+// --- Convertir Array de Firebase a Float32Array ---
+function rfArrayToDescriptor(arr) {
+    if (!arr || !Array.isArray(arr)) return null;
+    return new Float32Array(arr);
+}
+
+// --- Inicializar módulo al cambiar de pestaña ---
+function rfInicializarModulo() {
+    if (!rfModelosCargados && !rfModelosCargando) {
+        rfCargarModelos();
+    }
+    rfActualizarEstadisticasMigracion();
+}
+
+// --- Webcam: Iniciar ---
+async function rfIniciarWebcam() {
+    try {
+        rfStreamWebcam = await navigator.mediaDevices.getUserMedia({
+            video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: 'user' }
+        });
+
+        const video = document.getElementById('rf-webcam-video');
+        video.srcObject = rfStreamWebcam;
+        video.style.display = 'block';
+        document.getElementById('rf-webcam-placeholder').style.display = 'none';
+        document.getElementById('rf-preview-img').style.display = 'none';
+        document.getElementById('rf-webcam-canvas').style.display = 'none';
+
+        document.getElementById('rf-btn-webcam').style.display = 'none';
+        document.getElementById('rf-btn-capture').style.display = 'inline-flex';
+        document.getElementById('rf-btn-stop-webcam').style.display = 'inline-flex';
+
+        console.log('[RF] Webcam activada.');
+    } catch (err) {
+        alert('❌ No se pudo acceder a la cámara: ' + err.message);
+        console.error('[RF] Error webcam:', err);
+    }
+}
+
+// --- Webcam: Capturar foto ---
+function rfCapturarFoto() {
+    const video = document.getElementById('rf-webcam-video');
+    const canvas = document.getElementById('rf-webcam-canvas');
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0);
+
+    // Detener webcam
+    rfDetenerWebcam();
+
+    // Mostrar canvas como vista previa
+    canvas.style.display = 'block';
+    video.style.display = 'none';
+
+    // Crear imagen para face-api
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+    rfImagenBusqueda = new Image();
+    rfImagenBusqueda.src = dataUrl;
+    rfImagenBusqueda.onload = function() {
+        document.getElementById('rf-btn-search').disabled = false;
+        console.log('[RF] Foto capturada de webcam.');
+    };
+}
+
+// --- Webcam: Detener ---
+function rfDetenerWebcam() {
+    if (rfStreamWebcam) {
+        rfStreamWebcam.getTracks().forEach(t => t.stop());
+        rfStreamWebcam = null;
+    }
+    const video = document.getElementById('rf-webcam-video');
+    video.srcObject = null;
+    video.style.display = 'none';
+
+    document.getElementById('rf-btn-webcam').style.display = 'inline-flex';
+    document.getElementById('rf-btn-capture').style.display = 'none';
+    document.getElementById('rf-btn-stop-webcam').style.display = 'none';
+}
+
+// --- Cargar imagen desde archivo ---
+function rfCargarImagenArchivo(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    rfDetenerWebcam();
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+            rfImagenBusqueda = img;
+
+            // Mostrar vista previa
+            const preview = document.getElementById('rf-preview-img');
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+            document.getElementById('rf-webcam-placeholder').style.display = 'none';
+            document.getElementById('rf-webcam-canvas').style.display = 'none';
+            document.getElementById('rf-webcam-video').style.display = 'none';
+
+            document.getElementById('rf-btn-search').disabled = false;
+            console.log('[RF] Imagen cargada desde archivo.');
+        };
+        img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+}
+
+// --- Drag & Drop ---
+(function() {
+    const dropZone = document.getElementById('rf-upload-area');
+    if (dropZone) {
+        ['dragenter', 'dragover'].forEach(evt => {
+            dropZone.addEventListener(evt, e => { e.preventDefault(); dropZone.style.background = '#d4e6f1'; });
+        });
+        ['dragleave', 'drop'].forEach(evt => {
+            dropZone.addEventListener(evt, e => { e.preventDefault(); dropZone.style.background = ''; });
+        });
+        dropZone.addEventListener('drop', e => {
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) {
+                rfCargarImagenArchivo({ target: { files: [file] } });
+            }
+        });
+    }
+})();
+
+// --- Buscar por rostro en toda la base de datos ---
+async function rfBuscarPorRostro() {
+    if (!rfImagenBusqueda) {
+        alert('⚠️ Primero captura o sube una foto.');
+        return;
+    }
+
+    const btnSearch = document.getElementById('rf-btn-search');
+    const statusEl = document.getElementById('rf-search-status');
+    const resultsEl = document.getElementById('rf-results-container');
+    const progressBar = document.getElementById('rf-progress-bar');
+    const progressFill = document.getElementById('rf-progress-fill');
+
+    btnSearch.disabled = true;
+    statusEl.style.display = 'block';
+    statusEl.className = 'rf-status rf-status-loading';
+    statusEl.textContent = '⏳ Detectando rostro en la imagen de búsqueda...';
+    resultsEl.innerHTML = '';
+    progressBar.style.display = 'block';
+    progressFill.style.width = '5%';
+
+    // Extraer descriptor de la imagen de búsqueda
+    const descriptor = await rfExtraerDescriptor(rfImagenBusqueda);
+    if (!descriptor) {
+        statusEl.className = 'rf-status rf-status-error';
+        statusEl.textContent = '❌ No se detectó un rostro en la imagen. Intenta con otra foto más clara.';
+        btnSearch.disabled = false;
+        progressBar.style.display = 'none';
+        rfDescriptorBusqueda = null;
+        return;
+    }
+
+    rfDescriptorBusqueda = descriptor;
+    statusEl.textContent = '✅ Rostro detectado. Buscando coincidencias en la base de datos...';
+    progressFill.style.width = '15%';
+
+    // Obtener todas las fichas de Firebase
+    try {
+        const snapshot = await db.ref('fichasSIC').once('value');
+        const fichas = snapshot.val();
+
+        if (!fichas) {
+            statusEl.className = 'rf-status rf-status-info';
+            statusEl.textContent = 'ℹ️ No hay fichas en la base de datos.';
+            btnSearch.disabled = false;
+            progressBar.style.display = 'none';
+            return;
+        }
+
+        const entries = Object.entries(fichas);
+        let coincidencias = [];
+        let procesadas = 0;
+        let sinDescriptor = 0;
+        let sinFoto = 0;
+        const total = entries.length;
+        const threshold = parseFloat(document.getElementById('rf-threshold').value);
+
+        for (const [key, ficha] of entries) {
+            procesadas++;
+            const pct = 15 + Math.round((procesadas / total) * 80);
+            progressFill.style.width = pct + '%';
+            statusEl.textContent = `🔍 Comparando... ${procesadas}/${total} fichas analizadas`;
+
+            // Si ya tiene descriptor, comparar directamente
+            if (ficha.descriptorFacial && Array.isArray(ficha.descriptorFacial)) {
+                const storedDesc = rfArrayToDescriptor(ficha.descriptorFacial);
+                const distancia = rfDistanciaEuclidiana(descriptor, storedDesc);
+                const similitud = Math.max(0, 1 - distancia); // normalizar: 1 = idéntico, 0 = sin relación
+
+                if (distancia <= threshold) {
+                    coincidencias.push({
+                        key, ficha, distancia, similitud,
+                        nombre: `${ficha.g_pnombre || ''} ${ficha.g_snombre || ''} ${ficha.g_papellido || ''} ${ficha.g_sapellido || ''}`.trim(),
+                        apodo: ficha.g_apodo || '',
+                        dpi: ficha.g_dpi || '',
+                        foto: ficha.foto || '',
+                        tieneDescriptor: true
+                    });
+                }
+            } else if (ficha.foto) {
+                // No tiene descriptor pero tiene foto: extraer en vivo
+                sinDescriptor++;
+                try {
+                    const img = new Image();
+                    img.src = ficha.foto;
+                    await new Promise((resolve, reject) => {
+                        img.onload = resolve;
+                        img.onerror = reject;
+                    });
+
+                    const desc = await rfExtraerDescriptor(img);
+                    if (desc) {
+                        const distancia = rfDistanciaEuclidiana(descriptor, desc);
+                        const similitud = Math.max(0, 1 - distancia);
+
+                        if (distancia <= threshold) {
+                            coincidencias.push({
+                                key, ficha, distancia, similitud,
+                                nombre: `${ficha.g_pnombre || ''} ${ficha.g_snombre || ''} ${ficha.g_papellido || ''} ${ficha.g_sapellido || ''}`.trim(),
+                                apodo: ficha.g_apodo || '',
+                                dpi: ficha.g_dpi || '',
+                                foto: ficha.foto || '',
+                                tieneDescriptor: false
+                            });
+                        }
+
+                        // Guardar descriptor recién extraído para futuras búsquedas
+                        db.ref('fichasSIC/' + key + '/descriptorFacial').set(rfDescriptorToArray(desc));
+                    }
+                } catch (e) {
+                    // imagen corrupta, saltar
+                    console.warn('[RF] No se pudo procesar la foto de', key, e);
+                }
+            } else {
+                sinFoto++;
+            }
+
+            // Pequeña pausa para no bloquear UI
+            if (procesadas % 5 === 0) {
+                await new Promise(r => setTimeout(r, 10));
+            }
+        }
+
+        progressFill.style.width = '100%';
+
+        // Ordenar por similitud descendente
+        coincidencias.sort((a, b) => b.similitud - a.similitud);
+
+        if (coincidencias.length === 0) {
+            statusEl.className = 'rf-status rf-status-info';
+            statusEl.textContent = `ℹ️ No se encontraron coincidencias. Se analizaron ${total} fichas (${sinDescriptor} sin descriptor precalculado, ${sinFoto} sin foto).`;
+            resultsEl.innerHTML = '<div class="rf-no-results"><div class="icon">🚫</div><p>No se encontraron coincidencias faciales<br>con el umbral actual.</p></div>';
+        } else {
+            statusEl.className = 'rf-status rf-status-ready';
+            statusEl.textContent = `✅ Se encontraron ${coincidencias.length} coincidencia(s) en ${total} fichas analizadas.`;
+
+            coincidencias.forEach(c => {
+                const matchClass = c.similitud >= 0.7 ? 'rf-match-high' : (c.similitud >= 0.5 ? 'rf-match-medium' : 'rf-match-low');
+                const scoreClass = c.similitud >= 0.7 ? 'high' : (c.similitud >= 0.5 ? 'medium' : 'low');
+                const pctSim = Math.round(c.similitud * 100);
+
+                const card = document.createElement('div');
+                card.className = `rf-result-card ${matchClass}`;
+                card.innerHTML = `
+                    ${c.foto ? '<img class="rf-result-photo" src="' + c.foto + '" alt="Foto">' : '<div class="rf-result-photo" style="background:#ddd;display:flex;align-items:center;justify-content:center;">👤</div>'}
+                    <div class="rf-result-info">
+                        <div class="rf-result-name">${c.nombre || 'Sin nombre'}</div>
+                        <div class="rf-result-detail">DPI: ${c.dpi || 'N/A'} | Apodo: ${c.apodo || 'N/A'}</div>
+                        <div class="rf-result-detail" style="margin-top:4px;">Distancia: ${c.distancia.toFixed(3)} | ${c.tieneDescriptor ? '✅ Descriptor precalculado' : '🔄 Descriptor en vivo'}</div>
+                    </div>
+                    <div class="rf-result-score ${scoreClass}">${pctSim}%</div>
+                `;
+                card.style.cursor = 'pointer';
+                card.title = 'Click para ver/editar esta ficha';
+                card.onclick = function() {
+                    // Cargar la ficha para edición
+                    const fichaCompleta = Object.assign({}, c.ficha, { _key: c.key });
+                    CargarPersonaParaEditar(fichaCompleta);
+                };
+                resultsEl.appendChild(card);
+            });
+        }
+
+        setTimeout(() => { progressBar.style.display = 'none'; }, 1500);
+
+    } catch (err) {
+        statusEl.className = 'rf-status rf-status-error';
+        statusEl.textContent = '❌ Error en la búsqueda: ' + err.message;
+        progressBar.style.display = 'none';
+        console.error('[RF] Error búsqueda:', err);
+    }
+
+    btnSearch.disabled = false;
+}
+
+// --- Limpiar búsqueda ---
+function rfLimpiarBusqueda() {
+    rfImagenBusqueda = null;
+    rfDescriptorBusqueda = null;
+
+    rfDetenerWebcam();
+
+    document.getElementById('rf-preview-img').style.display = 'none';
+    document.getElementById('rf-webcam-canvas').style.display = 'none';
+    document.getElementById('rf-webcam-placeholder').style.display = 'flex';
+    document.getElementById('rf-btn-search').disabled = true;
+    document.getElementById('rf-search-status').style.display = 'none';
+    document.getElementById('rf-progress-bar').style.display = 'none';
+
+    document.getElementById('rf-results-container').innerHTML =
+        '<div class="rf-no-results"><div class="icon">🔎</div><p>Captura o sube una foto y presiona<br>"Buscar por Rostro" para iniciar la búsqueda</p></div>';
+
+    // Reset file input
+    document.getElementById('rf-file-input').value = '';
+}
+
+// --- Migrar descriptores de fichas existentes ---
+async function rfMigrarDescriptores() {
+    if (!rfModelosCargados) {
+        alert('⚠️ Los modelos aún se están cargando. Espera un momento.');
+        return;
+    }
+
+    const btnMigrate = document.getElementById('rf-btn-migrate');
+    const progress = document.getElementById('rf-migrate-progress');
+    const progressFill = document.getElementById('rf-migrate-progress-fill');
+    const logEl = document.getElementById('rf-migrate-log');
+
+    btnMigrate.disabled = true;
+    progress.style.display = 'block';
+    progressFill.style.width = '0%';
+    logEl.innerHTML = '';
+
+    try {
+        const snapshot = await db.ref('fichasSIC').once('value');
+        const fichas = snapshot.val();
+        if (!fichas) {
+            logEl.innerHTML += '<div>ℹ️ No hay fichas en la base de datos.</div>';
+            btnMigrate.disabled = false;
+            progress.style.display = 'none';
+            return;
+        }
+
+        const entries = Object.entries(fichas);
+        let totalProcesadas = 0;
+        let totalConFoto = 0;
+        let totalSinDescriptor = 0;
+        let totalExitosas = 0;
+        let totalFallidas = 0;
+        let totalSinRostro = 0;
+
+        for (const [key, ficha] of entries) {
+            totalProcesadas++;
+            const pct = Math.round((totalProcesadas / entries.length) * 100);
+            progressFill.style.width = pct + '%';
+
+            if (ficha.foto) {
+                totalConFoto++;
+
+                if (ficha.descriptorFacial && Array.isArray(ficha.descriptorFacial)) {
+                    // Ya tiene descriptor, saltar
+                    continue;
+                }
+
+                totalSinDescriptor++;
+                try {
+                    const img = new Image();
+                    img.src = ficha.foto;
+                    await new Promise((resolve, reject) => {
+                        img.onload = resolve;
+                        img.onerror = reject;
+                    });
+
+                    const descriptor = await rfExtraerDescriptor(img);
+                    if (descriptor) {
+                        await db.ref('fichasSIC/' + key + '/descriptorFacial').set(rfDescriptorToArray(descriptor));
+                        totalExitosas++;
+                        const nombre = `${ficha.g_pnombre || ''} ${ficha.g_papellido || ''}`.trim();
+                        logEl.innerHTML += `<div style="color:#27ae60;">✅ ${nombre || key} - Descriptor guardado</div>`;
+                    } else {
+                        totalSinRostro++;
+                        const nombre = `${ficha.g_pnombre || ''} ${ficha.g_papellido || ''}`.trim();
+                        logEl.innerHTML += `<div style="color:#f39c12;">⚠️ ${nombre || key} - No se detectó rostro</div>`;
+                    }
+                } catch (e) {
+                    totalFallidas++;
+                    logEl.innerHTML += `<div style="color:#e74c3c;">❌ ${key} - Error: ${e.message}</div>`;
+                }
+
+                // Pequeña pausa
+                if (totalProcesadas % 3 === 0) {
+                    await new Promise(r => setTimeout(r, 20));
+                }
+            }
+        }
+
+        document.getElementById('rf-migrate-procesadas').textContent = totalExitosas;
+        logEl.innerHTML += `<div style="margin-top:8px;font-weight:bold;">🎉 Migración completada: ${totalExitosas} descriptores guardados, ${totalSinRostro} sin rostro detectado, ${totalFallidas} errores.</div>`;
+
+    } catch (err) {
+        logEl.innerHTML += `<div style="color:#e74c3c;">❌ Error general: ${err.message}</div>`;
+        console.error('[RF] Error migración:', err);
+    }
+
+    btnMigrate.disabled = false;
+    rfActualizarEstadisticasMigracion();
+}
+
+// --- Actualizar estadísticas de migración ---
+function rfActualizarEstadisticasMigracion() {
+    db.ref('fichasSIC').once('value', snapshot => {
+        const fichas = snapshot.val();
+        if (!fichas) {
+            document.getElementById('rf-migrate-total').textContent = '0';
+            document.getElementById('rf-migrate-con-foto').textContent = '0';
+            document.getElementById('rf-migrate-sin-descriptor').textContent = '0';
+            document.getElementById('rf-migrate-procesadas').textContent = '0';
+            document.getElementById('rf-btn-migrate').disabled = true;
+            return;
+        }
+
+        const entries = Object.entries(fichas);
+        const total = entries.length;
+        const conFoto = entries.filter(([, f]) => f.foto).length;
+        const sinDescriptor = entries.filter(([, f]) => f.foto && (!f.descriptorFacial || !Array.isArray(f.descriptorFacial))).length;
+        const conDescriptor = entries.filter(([, f]) => f.descriptorFacial && Array.isArray(f.descriptorFacial)).length;
+
+        document.getElementById('rf-migrate-total').textContent = total;
+        document.getElementById('rf-migrate-con-foto').textContent = conFoto;
+        document.getElementById('rf-migrate-sin-descriptor').textContent = sinDescriptor;
+        document.getElementById('rf-migrate-procesadas').textContent = conDescriptor;
+
+        document.getElementById('rf-btn-migrate').disabled = (sinDescriptor === 0);
+    });
+}
+
 </script>
 </body>
 </html>
