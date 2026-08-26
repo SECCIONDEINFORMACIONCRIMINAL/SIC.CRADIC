@@ -1611,7 +1611,7 @@
             <div id="modulo-fichas" class="card-modulo oculto">
                 <h2>🔍 Consulta de Fichas -ARGOS-</h2>
                 <div class="panel-busqueda">
-                    <input type="text" id="input-buscar-persona" placeholder="Escribe Nombre, DPI o Apodo..." oninput="buscarPersona()">
+                    <input type="text" id="input-buscar-persona" placeholder="Buscar por cualquier campo: nombre, DPI, apodo, tatuaje, cicatriz, dirección, organización, teléfono..." oninput="buscarPersona()">
                     <button onclick="exportarAExcel()" class="btn-excel">📊 Exportar Todos a Excel</button>
                 </div>
                 <div class="lista-personas" id="lista-resultados"></div>
@@ -2147,6 +2147,15 @@
                         <div style="text-align:center;margin-top:12px;">
                             <button class="rf-btn rf-btn-primary" id="rf-btn-search" onclick="rfBuscarPorRostro()" disabled>🔍 Buscar por Rostro</button>
                             <button class="rf-btn rf-btn-secondary" onclick="rfLimpiarBusqueda()">🗑 Limpiar</button>
+                        </div>
+
+                        <!-- Búsqueda por texto (tatuajes, descripciones, etc.) -->
+                        <div style="margin-top:12px;padding:10px;background:#e8f4fd;border-radius:6px;border:1px solid #b3d9f2;">
+                            <label style="font-size:12px;color:#00529b;font-weight:bold;">🔎 Búsqueda por Texto (Tatuajes, Cicatrices, Organización, etc.)</label>
+                            <input type="text" id="rf-input-buscar-texto" placeholder="Ej: Virgen de Guadalupe, MS-13, cicatriz, apodo..." 
+                                   style="width:100%;padding:8px 10px;margin-top:6px;border:1px solid #b3d9f2;border-radius:4px;font-size:13px;box-sizing:border-box;">
+                            <button class="rf-btn rf-btn-primary" style="margin-top:8px;width:100%;" onclick="rfBuscarPorTexto()">🔍 Buscar por Texto en Fichas</button>
+                            <p style="font-size:10px;color:#888;margin:4px 0 0 0;">Busca en tatuajes (descripción y ubicación), cicatrices, organización criminal, apodo, DPI, dirección, teléfono, redes sociales y más.</p>
                         </div>
 
                         <!-- Umbral de coincidencia -->
@@ -3283,14 +3292,100 @@ function CargarPersonaParaEditar(ficha) {
 }
 
 function buscarPersona() {
-    const texto = document.getElementById('input-buscar-persona').value.toLowerCase();
+    const texto = document.getElementById('input-buscar-persona').value.toLowerCase().trim();
     const historial = obtenerHistorial();
     const contenedorLista = document.getElementById('lista-resultados');
     contenedorLista.innerHTML = '';
 
+    if (!texto) {
+        // Si no hay texto, mostrar todos
+        historial.forEach(ficha => {
+            const div = document.createElement('div');
+            div.className = 'item-persona';
+            const puedeEditar = usuarioSesionActual && (usuarioSesionActual.rol === 'Administrador General' || usuarioSesionActual.rol === 'Operador');
+            div.innerHTML = `
+                <div>
+                    <strong>${ficha.g_pnombre || ''} ${ficha.g_papellido || ''}</strong> 
+                    <span style="color:#666; font-size:13px;">(DPI: ${ficha.g_dpi || 'S/DPI'}) - Apodo: ${ficha.g_apodo || 'N/A'}</span>
+                </div>
+                <div>
+                    <button onclick='mostrarFichaConsultada(${JSON.stringify(ficha).replace(/'/g, "&apos;")})' style="padding:4px 10px; font-size:12px; background:#00529b; color:white; border:none; border-radius:3px; cursor:pointer; margin-right:5px;">Ver Ficha</button>
+                    ${puedeEditar ? `<button class="btn-editar" onclick='CargarPersonaParaEditar(${JSON.stringify(ficha).replace(/'/g, "&apos;")})' style="padding:4px 10px; font-size:12px; border:none; border-radius:3px; cursor:pointer;">✏️ Editar</button>` : ''}
+                </div>
+            `;
+            contenedorLista.appendChild(div);
+        });
+        return;
+    }
+
     const filtrados = historial.filter(i => {
-        const nom = `${i.g_pnombre} ${i.g_papellido} ${i.g_apodo}`.toLowerCase();
-        return nom.includes(texto) || (i.g_dpi && i.g_dpi.includes(texto));
+        // Buscar en TODOS los campos de texto de la ficha
+        const camposTexto = [
+            i.g_pnombre, i.g_snombre, i.g_papellido, i.g_sapellido, i.g_apodo, i.g_dpi,
+            i.tel_linea, i.tel_imei, i.tel_tipo,
+            i.dir_exacta, i.dir_zona, i.dir_muni, i.dir_deptopais,
+            i.fis_estatura, i.fis_piel, i.fis_complexion, i.fis_cabello, i.fis_ojos,
+            i.fis_orejas, i.fis_labios, i.fis_nariz, i.fis_cicatrices, i.fis_discapacidad,
+            i.fis_capacidades, i.fis_otros,
+            i.red_url, i.red_alias, i.red_tipo, i.red_actividad,
+            i.aca_nivel, i.aca_carrera, i.aca_profesion, i.aca_estudia, i.aca_colegiado,
+            i.lab_empresa, i.lab_direccion, i.lab_jefe, i.lab_telefono,
+            i.pat_tipo, i.pat_caract, i.pat_vehiculo,
+            i.arm_tipo, i.arm_registro, i.arm_licencia, i.arm_tenencia, i.arm_estatus,
+            i.crim_org, i.crim_act, i.crim_clica, i.crim_rango, i.crim_lugar,
+            i.crim_estatus, i.crim_penales, i.crim_policiales, i.crim_aprehension,
+            i.crim_causa, i.crim_colaboradores,
+            i.pen_centro, i.pen_delito, i.pen_expediente, i.pen_oj,
+            i.mig_motivo, i.mig_destino, i.mig_procedencia, i.mig_transporte, i.mig_arraigo,
+            i.foto_tatuajes, i.foto_grafitis,
+            i.fin_banco, i.fin_cuenta, i.fin_actividad, i.fin_obs,
+            i.fue_abiertas, i.fue_cerradas,
+            i.id_operativo, i.id_direccion, i.id_coordenadas
+        ];
+
+        // Buscar en campos de texto simples
+        for (const campo of camposTexto) {
+            if (campo && String(campo).toLowerCase().includes(texto)) return true;
+        }
+
+        // Buscar en tatuajesConFoto (ubicacion y descripcion)
+        if (i.tatuajesConFoto && Array.isArray(i.tatuajesConFoto)) {
+            for (const tat of i.tatuajesConFoto) {
+                if (tat.ubicacion && tat.ubicacion.toLowerCase().includes(texto)) return true;
+                if (tat.descripcion && tat.descripcion.toLowerCase().includes(texto)) return true;
+            }
+        }
+
+        // Buscar en familiares
+        if (i.familiares && Array.isArray(i.familiares)) {
+            for (const fam of i.familiares) {
+                if (fam.nombre && fam.nombre.toLowerCase().includes(texto)) return true;
+                if (fam.relacion && fam.relacion.toLowerCase().includes(texto)) return true;
+                if (fam.telefono && fam.telefono.toLowerCase().includes(texto)) return true;
+                if (fam.direccion && fam.direccion.toLowerCase().includes(texto)) return true;
+            }
+        }
+
+        // Buscar en vehículos vinculados
+        if (i.vehiculosVinculados && Array.isArray(i.vehiculosVinculados)) {
+            for (const veh of i.vehiculosVinculados) {
+                if (veh.placa && veh.placa.toLowerCase().includes(texto)) return true;
+                if (veh.marca && veh.marca.toLowerCase().includes(texto)) return true;
+                if (veh.color && veh.color.toLowerCase().includes(texto)) return true;
+                if (veh.tipo && veh.tipo.toLowerCase().includes(texto)) return true;
+            }
+        }
+
+        // Buscar en números extorsivos vinculados
+        if (i.extorsivosVinculados && Array.isArray(i.extorsivosVinculados)) {
+            for (const ext of i.extorsivosVinculados) {
+                if (ext.telefonoExtorsionista && ext.telefonoExtorsionista.toLowerCase().includes(texto)) return true;
+                if (ext.casoNo && ext.casoNo.toLowerCase().includes(texto)) return true;
+                if (ext.orgCriminalAtribuye && ext.orgCriminalAtribuye.toLowerCase().includes(texto)) return true;
+            }
+        }
+
+        return false;
     });
 
     if (filtrados.length === 0) {
@@ -4981,12 +5076,23 @@ async function rfBuscarPorRostro() {
 
                 const card = document.createElement('div');
                 card.className = `rf-result-card ${matchClass}`;
+
+                // Agregar info de tatuajes a la tarjeta de resultado facial
+                const ficha = c.ficha || {};
+                const tatuajesTexto = (ficha.tatuajesConFoto && ficha.tatuajesConFoto.length)
+                    ? ficha.tatuajesConFoto.map(t => (t.descripcion || '') + (t.ubicacion ? ' (' + t.ubicacion + ')' : '')).filter(Boolean).join(', ')
+                    : (ficha.foto_tatuajes || '');
+                const tatLine = tatuajesTexto ? `<div class="rf-result-detail" style="margin-top:2px;color:#b45309;font-size:11px;">🎨 Tatuajes: ${tatuajesTexto}</div>` : '';
+                const orgLine = ficha.crim_org ? `<div class="rf-result-detail" style="color:#dc2626;font-size:11px;">🏴 Org: ${ficha.crim_org}${ficha.crim_clica ? ' / Clica: ' + ficha.crim_clica : ''}</div>` : '';
+                const cicLine = ficha.fis_cicatrices ? `<div class="rf-result-detail" style="color:#9333ea;font-size:11px;">⚕️ Cicatrices: ${ficha.fis_cicatrices}</div>` : '';
+
                 card.innerHTML = `
                     ${c.foto ? '<img class="rf-result-photo" src="' + c.foto + '" alt="Foto">' : '<div class="rf-result-photo" style="background:#ddd;display:flex;align-items:center;justify-content:center;">👤</div>'}
                     <div class="rf-result-info">
                         <div class="rf-result-name">${c.nombre || 'Sin nombre'}</div>
                         <div class="rf-result-detail">DPI: ${c.dpi || 'N/A'} | Apodo: ${c.apodo || 'N/A'}</div>
                         <div class="rf-result-detail" style="margin-top:4px;">Distancia: ${c.distancia.toFixed(3)} | ${c.tieneDescriptor ? '✅ Descriptor precalculado' : '🔄 Descriptor en vivo'}</div>
+                        ${tatLine}${orgLine}${cicLine}
                     </div>
                     <div class="rf-result-score ${scoreClass}">${pctSim}%</div>
                 `;
@@ -5013,6 +5119,139 @@ async function rfBuscarPorRostro() {
     btnSearch.disabled = false;
 }
 
+// --- Buscar por texto en fichas (tatuajes, cicatrices, organización, etc.) ---
+function rfBuscarPorTexto() {
+    const texto = document.getElementById('rf-input-buscar-texto').value.toLowerCase().trim();
+    const statusEl = document.getElementById('rf-search-status');
+    const resultsEl = document.getElementById('rf-results-container');
+
+    if (!texto) {
+        alert('⚠️ Escribe un término de búsqueda (tatuaje, cicatriz, organización, apodo, etc.).');
+        return;
+    }
+
+    statusEl.style.display = 'block';
+    statusEl.className = 'rf-status rf-status-loading';
+    statusEl.textContent = '⏳ Buscando en todas las fichas...';
+    resultsEl.innerHTML = '';
+
+    const historial = obtenerHistorial();
+
+    const coincidencias = historial.filter(i => {
+        const camposTexto = [
+            i.g_pnombre, i.g_snombre, i.g_papellido, i.g_sapellido, i.g_apodo, i.g_dpi,
+            i.tel_linea, i.tel_imei, i.tel_tipo,
+            i.dir_exacta, i.dir_zona, i.dir_muni, i.dir_deptopais,
+            i.fis_estatura, i.fis_piel, i.fis_complexion, i.fis_cabello, i.fis_ojos,
+            i.fis_orejas, i.fis_labios, i.fis_nariz, i.fis_cicatrices, i.fis_discapacidad,
+            i.fis_capacidades, i.fis_otros,
+            i.red_url, i.red_alias, i.red_tipo, i.red_actividad,
+            i.aca_nivel, i.aca_carrera, i.aca_profesion,
+            i.lab_empresa, i.lab_direccion, i.lab_jefe, i.lab_telefono,
+            i.arm_tipo, i.arm_registro, i.arm_licencia, i.arm_tenencia, i.arm_estatus,
+            i.crim_org, i.crim_act, i.crim_clica, i.crim_rango, i.crim_lugar,
+            i.crim_estatus, i.crim_penales, i.crim_policiales, i.crim_aprehension,
+            i.crim_causa, i.crim_colaboradores,
+            i.pen_centro, i.pen_delito, i.pen_expediente, i.pen_oj,
+            i.mig_motivo, i.mig_destino, i.mig_procedencia, i.mig_transporte, i.mig_arraigo,
+            i.foto_tatuajes, i.foto_grafitis,
+            i.fin_banco, i.fin_cuenta, i.fin_actividad, i.fin_obs,
+            i.fue_abiertas, i.fue_cerradas,
+            i.id_operativo, i.id_direccion, i.id_coordenadas
+        ];
+
+        for (const campo of camposTexto) {
+            if (campo && String(campo).toLowerCase().includes(texto)) return true;
+        }
+
+        // Buscar en tatuajesConFoto
+        if (i.tatuajesConFoto && Array.isArray(i.tatuajesConFoto)) {
+            for (const tat of i.tatuajesConFoto) {
+                if (tat.ubicacion && tat.ubicacion.toLowerCase().includes(texto)) return true;
+                if (tat.descripcion && tat.descripcion.toLowerCase().includes(texto)) return true;
+            }
+        }
+
+        // Buscar en familiares
+        if (i.familiares && Array.isArray(i.familiares)) {
+            for (const fam of i.familiares) {
+                if (fam.nombre && fam.nombre.toLowerCase().includes(texto)) return true;
+                if (fam.relacion && fam.relacion.toLowerCase().includes(texto)) return true;
+                if (fam.telefono && fam.telefono.toLowerCase().includes(texto)) return true;
+                if (fam.direccion && fam.direccion.toLowerCase().includes(texto)) return true;
+            }
+        }
+
+        // Buscar en vehículos vinculados
+        if (i.vehiculosVinculados && Array.isArray(i.vehiculosVinculados)) {
+            for (const veh of i.vehiculosVinculados) {
+                if (veh.placa && veh.placa.toLowerCase().includes(texto)) return true;
+                if (veh.marca && veh.marca.toLowerCase().includes(texto)) return true;
+                if (veh.color && veh.color.toLowerCase().includes(texto)) return true;
+                if (veh.tipo && veh.tipo.toLowerCase().includes(texto)) return true;
+            }
+        }
+
+        // Buscar en números extorsivos vinculados
+        if (i.extorsivosVinculados && Array.isArray(i.extorsivosVinculados)) {
+            for (const ext of i.extorsivosVinculados) {
+                if (ext.telefonoExtorsionista && ext.telefonoExtorsionista.toLowerCase().includes(texto)) return true;
+                if (ext.casoNo && ext.casoNo.toLowerCase().includes(texto)) return true;
+                if (ext.orgCriminalAtribuye && ext.orgCriminalAtribuye.toLowerCase().includes(texto)) return true;
+            }
+        }
+
+        return false;
+    });
+
+    if (coincidencias.length === 0) {
+        statusEl.className = 'rf-status rf-status-info';
+        statusEl.textContent = `ℹ️ No se encontraron fichas con "${texto}" en ningún campo.`;
+        resultsEl.innerHTML = '<div class="rf-no-results"><div class="icon">🚫</div><p>No se encontraron resultados<br>para el término de búsqueda.</p></div>';
+        return;
+    }
+
+    statusEl.className = 'rf-status rf-status-ready';
+    statusEl.textContent = `✅ Se encontraron ${coincidencias.length} ficha(s) con "${texto}".`;
+
+    coincidencias.forEach(c => {
+        const card = document.createElement('div');
+        card.className = 'rf-result-card rf-match-high';
+
+        // Construir resumen de campos coincidentes
+        const tatuajesTexto = (c.tatuajesConFoto && c.tatuajesConFoto.length)
+            ? c.tatuajesConFoto.map(t => (t.descripcion || '') + (t.ubicacion ? ' (' + t.ubicacion + ')' : '')).filter(Boolean).join(', ')
+            : (c.foto_tatuajes || '');
+
+        const tatBadge = tatuajesTexto ? `<div class="rf-result-detail" style="margin-top:4px;color:#b45309;">🎨 Tatuajes: ${tatuajesTexto}</div>` : '';
+        const orgBadge = c.crim_org ? `<div class="rf-result-detail" style="color:#dc2626;">🏴 Org: ${c.crim_org}${c.crim_clica ? ' / Clica: ' + c.crim_clica : ''}${c.crim_rango ? ' / Rango: ' + c.crim_rango : ''}</div>` : '';
+        const cicatrizBadge = c.fis_cicatrices ? `<div class="rf-result-detail" style="color:#9333ea;">⚕️ Cicatrices: ${c.fis_cicatrices}</div>` : '';
+
+        card.innerHTML = `
+            ${c.foto ? '<img class="rf-result-photo" src="' + c.foto + '" alt="Foto">' : '<div class="rf-result-photo" style="background:#ddd;display:flex;align-items:center;justify-content:center;">👤</div>'}
+            <div class="rf-result-info">
+                <div class="rf-result-name">${c.g_pnombre || ''} ${c.g_snombre || ''} ${c.g_papellido || ''} ${c.g_sapellido || ''}</div>
+                <div class="rf-result-detail">DPI: ${c.g_dpi || 'N/A'} | Apodo: ${c.g_apodo || 'N/A'}</div>
+                <div class="rf-result-detail">Tel: ${c.tel_linea || 'N/A'} | Dir: ${c.dir_exacta || 'N/A'}</div>
+                ${tatBadge}
+                ${orgBadge}
+                ${cicatrizBadge}
+            </div>
+        `;
+        card.style.cursor = 'pointer';
+        card.title = 'Click para ver/editar esta ficha';
+        card.onclick = function() {
+            if (c._key) {
+                const fichaCompleta = Object.assign({}, c, { _key: c._key });
+                CargarPersonaParaEditar(fichaCompleta);
+            } else {
+                mostrarFichaConsultada(c);
+            }
+        };
+        resultsEl.appendChild(card);
+    });
+}
+
 // --- Limpiar búsqueda ---
 function rfLimpiarBusqueda() {
     rfImagenBusqueda = null;
@@ -5032,6 +5271,10 @@ function rfLimpiarBusqueda() {
 
     // Reset file input
     document.getElementById('rf-file-input').value = '';
+
+    // Limpiar búsqueda por texto
+    var rfTxtBuscar = document.getElementById('rf-input-buscar-texto');
+    if (rfTxtBuscar) rfTxtBuscar.value = '';
 }
 
 // --- Migrar descriptores de fichas existentes ---
