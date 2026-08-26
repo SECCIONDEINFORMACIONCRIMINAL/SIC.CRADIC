@@ -102,12 +102,46 @@
             justify-content: space-between;
             align-items: center;
             background: white;
-            padding: 15px 25px;
+            padding: 10px 25px;
             border-radius: 8px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
 
-        .header-app h1 {
+        .header-app-logo {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            text-decoration: none;
+        }
+
+        .header-app-logo img {
+            height: 90px;
+            width: auto;
+            object-fit: contain;
+        }
+
+        .header-app-logo-text {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .header-app-logo-text h1 {
+            color: #00529b;
+            font-size: 22px;
+            font-weight: bold;
+            letter-spacing: 3px;
+            margin: 0;
+            line-height: 1;
+        }
+
+        .header-app-logo-text span {
+            color: #555;
+            font-size: 11px;
+            font-weight: normal;
+        }
+
+        .header-app h3 {
             color: #00529b;
             font-size: 20px;
         }
@@ -1090,7 +1124,7 @@
     <!-- LOGIN -->
     <div id="login-screen">
         <div class="card-login">
-            <img src="argos.png" alt="descripción de imagen" class="logo-login">
+            <img src="https://cdn.oreateai.com/aiimage/upload/af2abc008de7ce72e01e0633/c1403343ad54bc0068b6dfc1caf89e38.png" alt="ARGOS - Sistema Integral de Inteligencia e Investigación Criminal" class="logo-login">
             <h2>SISTEMA INTEGRAL DE INTELIGENCIA E INVESTIGACION CRIMINAL</h2>
             <form id="login-form">
                 <input type="text" id="login-username" class="input-login" placeholder="Usuario" required>
@@ -1105,9 +1139,15 @@
     <div id="app-screen" class="oculto">
         
         <header class="header-app">
-            <h3>📋 Sistema Integral de Inteligencia e Investigacion Criminal -ARGOS-</h3>
+            <div class="header-app-logo">
+                <img src="https://cdn.oreateai.com/aiimage/upload/af2abc008de7ce72e01e0633/c1403343ad54bc0068b6dfc1caf89e38.png" alt="ARGOS - Sistema Integral de Inteligencia e Investigación Criminal">
+                <div class="header-app-logo-text">
+                    <h1>ARGOS</h1>
+                    <h4>Sistema Integral de Inteligencia e Investigación Criminal</h4>
+                </div>
+            </div>
             <div>
-                <span id="info-user-rol" style="margin-right: 15px; font-weight: bold; color: #555;"></span>
+                <span id="info-user-rol" style="margin-right: 10px; font-weight: bold; color: #555;"></span>
                 <span id="contador-fichas" style="margin-right: 15px; font-weight: bold; color: #00529b;">Fichas: 0</span>
                 <button class="btn-logout" onclick="cerrarSesion()">🔒 Cerrar Sesión</button>
             </div>
@@ -1188,6 +1228,8 @@
                             <option value="">Seleccione...</option>
                             <option value="Soltero">SOLTERO</option>
                             <option value="Casado">CASADO</option>
+                            <option value="Divorsiado">DIVORSIADO</option>
+                            <option value="Union de Hecho">UNION DE HECHO</option>
                         </select>
                     </div>
                     <div class="grupo-form"><label>NIT</label><input type="text" id="g_nit"></div>
