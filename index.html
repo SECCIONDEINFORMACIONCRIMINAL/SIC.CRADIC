@@ -310,7 +310,19 @@
             margin-bottom: 20px;
         }
 
-        .lista-personas, .lista-vehiculos {
+        .lista-personas {
+            max-height: 600px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 10px;
+            padding: 10px;
+            align-content: start;
+        }
+        .lista-vehiculos {
             max-height: 300px;
             overflow-y: auto;
             border: 1px solid #ddd;
@@ -318,15 +330,30 @@
             margin-bottom: 20px;
         }
 
-        .item-persona, .item-vehiculo {
+        .item-persona {
+            padding: 14px 16px;
+            border: 1px solid #d0dce8;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            background: #fff;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+            transition: box-shadow 0.2s, border-color 0.2s;
+        }
+        .item-persona:hover {
+            background-color: #eaf2f8;
+            box-shadow: 0 3px 10px rgba(0,82,155,0.12);
+            border-color: #2980b9;
+        }
+        .item-vehiculo {
             padding: 12px 15px;
             border-bottom: 1px solid #eee;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
-
-        .item-persona:hover, .item-vehiculo:hover {
+        .item-vehiculo:hover {
             background-color: #eaf2f8;
         }
 
@@ -1069,15 +1096,15 @@
 
     
 /* === ENHANCEMENT: Photos Grid, Family Dynamic, Tattoo Photos, Vinculaciones === */
-.fotos-grid-container { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 15px; }
+.fotos-grid-container { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 8px; margin-bottom: 15px; }
 .fotos-grid-container .foto-item { border: 1px solid #2a3a5c; border-radius: 6px; padding: 10px; background: #0d1b2a; text-align: center; }
 .fotos-grid-container .foto-item label { display: block; font-size: 12px; color: #8a9bb5; margin-bottom: 6px; font-weight: bold; }
 .fotos-grid-container .foto-item input[type="file"] { font-size: 11px; color: #cbd5e1; }
 .fotos-grid-container .foto-preview { width: 100%; min-height: 100px; max-height: 160px; display: flex; align-items: center; justify-content: center; font-size: 40px; border-radius: 6px; margin-top: 8px; background: #111827; overflow: hidden; }
 .fotos-grid-container .foto-preview img { max-width: 100%; max-height: 150px; border-radius: 4px; }
-.fotos-ficha-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
-.fotos-ficha-grid .foto-ficha { width: 100%; min-height: 100px; max-height: 160px; display: flex; align-items: center; justify-content: center; font-size: 36px; border-radius: 6px; overflow: hidden; }
-.fotos-ficha-grid .foto-ficha img { max-width: 100%; max-height: 150px; border-radius: 4px; }
+.fotos-ficha-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 6px; margin-bottom: 12px; }
+.fotos-ficha-grid .foto-ficha { width: 100%; min-height: 120px; max-height: 200px; display: flex; align-items: center; justify-content: center; font-size: 36px; border-radius: 6px; overflow: hidden; border: 1px solid #2a3a5c; background: #0d1b2a; }
+.fotos-ficha-grid .foto-ficha img { max-width: 100%; max-height: 190px; border-radius: 4px; object-fit: cover; }
 
 .familiar-row { border: 1px solid #2a3a5c; border-radius: 6px; padding: 10px; margin-bottom: 10px; background: #0d1b2a; display: grid; grid-template-columns: 1fr 1fr 1fr 1fr auto; gap: 8px; align-items: end; }
 .btn-quitar-familiar { background: #dc2626; color: white; border: none; border-radius: 4px; cursor: pointer; padding: 8px 12px; font-size: 14px; margin-bottom: 2px; }
@@ -1085,6 +1112,24 @@
 .btn-agregar-familiar { background: #1e40af; color: white; border: none; border-radius: 6px; padding: 8px 18px; cursor: pointer; font-size: 13px; margin-bottom: 15px; }
 .btn-agregar-familiar:hover { background: #2563eb; }
 .familiares-list .familiar-item-vista { padding: 4px 0; font-size: 12px; border-bottom: 1px solid #1e293b; }
+.telefono-row { border: 1px solid #2a3a5c; border-radius: 6px; padding: 10px; margin-bottom: 10px; background: #0d1b2a; display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 8px; align-items: end; }
+.btn-quitar-telefono { background: #dc2626; color: white; border: none; border-radius: 4px; cursor: pointer; padding: 8px 12px; font-size: 14px; margin-bottom: 2px; }
+.btn-quitar-telefono:hover { background: #ef4444; }
+.btn-agregar-telefono { background: #1e40af; color: white; border: none; border-radius: 6px; padding: 8px 18px; cursor: pointer; font-size: 13px; margin-bottom: 15px; }
+.btn-agregar-telefono:hover { background: #2563eb; }
+
+.red-social-row { border: 1px solid #2a3a5c; border-radius: 6px; padding: 10px; margin-bottom: 10px; background: #0d1b2a; display: grid; grid-template-columns: 1fr 1fr 1fr 1fr auto; gap: 8px; align-items: end; }
+.btn-quitar-red { background: #dc2626; color: white; border: none; border-radius: 4px; cursor: pointer; padding: 8px 12px; font-size: 14px; margin-bottom: 2px; }
+.btn-quitar-red:hover { background: #ef4444; }
+.btn-agregar-red { background: #1e40af; color: white; border: none; border-radius: 6px; padding: 8px 18px; cursor: pointer; font-size: 13px; margin-bottom: 15px; }
+.btn-agregar-red:hover { background: #2563eb; }
+
+.arma-row { border: 1px solid #2a3a5c; border-radius: 6px; padding: 10px; margin-bottom: 10px; background: #0d1b2a; display: grid; grid-template-columns: 1fr 1fr 1fr 1fr 1fr auto; gap: 8px; align-items: end; }
+.btn-quitar-arma { background: #dc2626; color: white; border: none; border-radius: 4px; cursor: pointer; padding: 8px 12px; font-size: 14px; margin-bottom: 2px; }
+.btn-quitar-arma:hover { background: #ef4444; }
+.btn-agregar-arma { background: #1e40af; color: white; border: none; border-radius: 6px; padding: 8px 18px; cursor: pointer; font-size: 13px; margin-bottom: 15px; }
+.btn-agregar-arma:hover { background: #2563eb; }
+
 
 .tatuaje-row { border: 1px solid #2a3a5c; border-radius: 6px; padding: 10px; margin-bottom: 10px; background: #0d1b2a; display: grid; grid-template-columns: 1fr 1fr 1fr auto auto; gap: 8px; align-items: end; }
 .tatuaje-foto-preview { width: 70px; height: 70px; display: flex; align-items: center; justify-content: center; font-size: 28px; border-radius: 6px; background: #111827; border: 1px solid #2a3a5c; overflow: hidden; margin-bottom: 2px; }
@@ -1257,9 +1302,15 @@
 
                     <!-- 3. TELÉFONO - CELULAR -->
                     <div class="seccion-form-titulo">3. Teléfono - Celular</div>
-                    <div class="grupo-form"><label>Número de Línea</label><input type="text" id="tel_linea"></div>
-                    <div class="grupo-form"><label>Número IMEI</label><input type="text" id="tel_imei"></div>
-                    <div class="grupo-form"><label>Compañía Telefónica</label><input type="text" id="tel_compania"></div>
+                    <div id="telefonos-container">
+                        <div class="telefono-row" data-index="0">
+                            <div class="grupo-form"><label>Número de Línea</label><input type="text" class="tel-linea"></div>
+                            <div class="grupo-form"><label>Número IMEI</label><input type="text" class="tel-imei"></div>
+                            <div class="grupo-form"><label>Compañía Telefónica</label><input type="text" class="tel-compania"></div>
+                            <button type="button" class="btn-quitar-telefono" onclick="quitarTelefono(this)" title="Quitar teléfono">✖</button>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-agregar-telefono" onclick="agregarTelefono()">➕ Agregar Teléfono</button>
 
                     <!-- 4. DIRECCIÓN DOMICILIAR -->
                     <div class="seccion-form-titulo">4. Dirección Domiciliar</div>
@@ -1304,27 +1355,19 @@
 
                     <!-- 7. REDES SOCIALES -->
                     <div class="seccion-form-titulo">7. Redes Sociales</div>
-                    <div class="grupo-form"><label>ID / URL</label><input type="text" id="red_url"></div>
-                    <div class="grupo-form"><label>Alias en Red Social</label><input type="text" id="red_alias"></div>
-                    <div class="grupo-form">
-                        <label>Tipo de Red Social</label>
-                        <select id="red_tipo">
-                            <option value="">Seleccione...</option>
-                            <option value="Facebook">Facebook</option>
-                            <option value="Twitter / X">Twitter / X</option>
-                            <option value="TikTok">TikTok</option>
-                            <option value="Instagram">Instagram</option>
-                        </select>
+                    <div id="redes-container">
+                        <div class="red-social-row" data-index="0">
+                            <div class="grupo-form"><label>ID / URL</label><input type="text" class="red-url"></div>
+                            <div class="grupo-form"><label>Alias en Red Social</label><input type="text" class="red-alias"></div>
+                            <div class="grupo-form">
+                                <label>Tipo de Red Social</label>
+                                <select class="red-tipo"><option value="">Seleccione...</option><option value="Facebook">Facebook</option><option value="Twitter / X">Twitter / X</option><option value="TikTok">TikTok</option><option value="Instagram">Instagram</option><option value="WhatsApp">WhatsApp</option><option value="Telegram">Telegram</option><option value="Snapchat">Snapchat</option><option value="YouTube">YouTube</option><option value="LinkedIn">LinkedIn</option><option value="Signal">Signal</option><option value="Pinterest">Pinterest</option><option value="Reddit">Reddit</option><option value="Discord">Discord</option><option value="Otra">Otra</option></select>
+                            </div>
+                            <div class="grupo-form"><label>Fecha Consulta</label><input type="date" class="red-fconsulta"></div>
+                            <button type="button" class="btn-quitar-red" onclick="quitarRed(this)" title="Quitar red social">✖</button>
+                        </div>
                     </div>
-                    <div class="grupo-form"><label>Fecha Consulta</label><input type="date" id="red_fconsulta"></div>
-                    <div class="grupo-form">
-                        <label>Actividad del Perfil</label>
-                        <select id="red_actividad">
-                            <option value="Perfil personal">Perfil personal</option>
-                            <option value="Influencer">Influencer</option>
-                            <option value="Ventas en línea">Ventas en línea</option>
-                        </select>
-                    </div>
+                    <button type="button" class="btn-agregar-red" onclick="agregarRed()">➕ Agregar Red Social</button>
 
                     <!-- 8. ANTECEDENTES ACADÉMICOS -->
                     <div class="seccion-form-titulo">8. Antecedentes Académicos</div>
@@ -1364,24 +1407,30 @@
 
                     <!-- 11. ARMA DE FUEGO -->
                     <div class="seccion-form-titulo">11. Arma de Fuego</div>
-                    <div class="grupo-form"><label>Tipo de Arma</label><input type="text" id="arm_tipo"></div>
-                    <div class="grupo-form"><label>No. Registro Arma</label><input type="text" id="arm_registro"></div>
-                    <div class="grupo-form">
-                        <label>Licencia Arma</label>
-                        <select id="arm_licencia"><option value="No">No</option><option value="Si">Si</option></select>
+                    <div id="armas-container">
+                        <div class="arma-row" data-index="0">
+                            <div class="grupo-form"><label>Tipo de Arma</label><input type="text" class="arm-tipo"></div>
+                            <div class="grupo-form"><label>No. Registro Arma</label><input type="text" class="arm-registro"></div>
+                            <div class="grupo-form">
+                                <label>Licencia Arma</label>
+                                <select class="arm-licencia"><option value="No">No</option><option value="Si">Si</option></select>
+                            </div>
+                            <div class="grupo-form">
+                                <label>Tenencia Arma</label>
+                                <select class="arm-tenencia"><option value="No">No</option><option value="Si">Si</option></select>
+                            </div>
+                            <div class="grupo-form">
+                                <label>Estatus Arma</label>
+                                <select class="arm-estatus">
+                                    <option value="Solvente">Solvente</option>
+                                    <option value="Extraviado">Extraviado</option>
+                                    <option value="Reporte de robo">Reporte de robo</option>
+                                </select>
+                            </div>
+                            <button type="button" class="btn-quitar-arma" onclick="quitarArma(this)" title="Quitar arma">✖</button>
+                        </div>
                     </div>
-                    <div class="grupo-form">
-                        <label>Tenencia Arma</label>
-                        <select id="arm_tenencia"><option value="No">No</option><option value="Si">Si</option></select>
-                    </div>
-                    <div class="grupo-form">
-                        <label>Estatus Arma</label>
-                        <select id="arm_estatus">
-                            <option value="Solvente">Solvente</option>
-                            <option value="Extraviado">Extraviado</option>
-                            <option value="Reporte de robo">Reporte de robo</option>
-                        </select>
-                    </div>
+                    <button type="button" class="btn-agregar-arma" onclick="agregarArma()">➕ Agregar Arma de Fuego</button>
 
                     <!-- 12. INFORMACIÓN CRIMINAL -->
                     <div class="seccion-form-titulo">12. Información Criminal</div>
@@ -1389,7 +1438,11 @@
                     <div class="grupo-form"><label>Actividad Criminal</label><input type="text" id="crim_act"></div>
                     <div class="grupo-form"><label>Clica / Subgrupo</label><input type="text" id="crim_clica"></div>
                     <div class="grupo-form"><label>Rango en Clica</label><input type="text" id="crim_rango"></div>
-                    <div class="grupo-form"><label>Lugar Operatividad</label><input type="text" id="crim_lugar"></div>
+                    <div class="grupo-form"><label>Lugar de Operatividad - Departamento</label><input type="text" id="crim_lugar_depto"></div>
+                    <div class="grupo-form"><label>Lugar de Operatividad - Municipio</label><input type="text" id="crim_lugar_muni"></div>
+                    <div class="grupo-form"><label>Lugar de Operatividad - Aldea/Cantón/Colonia/Barrio</label><input type="text" id="crim_lugar_aldea"></div>
+                    <div class="grupo-form"><label>Lugar de Operatividad - Zona</label><input type="text" id="crim_lugar_zona"></div>
+                    <div class="grupo-form"><label>Lugar de Operatividad - Calzada/Boulevard/Ave/Calle</label><input type="text" id="crim_lugar_calle"></div>
                     <div class="grupo-form">
                         <label>Estatus en Organización</label>
                         <select id="crim_estatus">
@@ -1581,7 +1634,7 @@
                             <div class="fila"><div class="celda-etiqueta">Licencia Conducir:</div><div class="celda-dato" id="v-g_licencia"></div></div>
 
                             <div class="ficha-seccion-titulo" style="text-align: left;">3. Teléfono - Celular</div>
-                            <div class="fila"><div class="celda-etiqueta">Línea / IMEI / Compañía:</div><div class="celda-dato" id="v-tel_info"></div></div>
+                            <div id="v-telefonos-list"></div>
 
                             <div class="ficha-seccion-titulo" style="text-align: left;">4. Dirección Domiciliar</div>
                             <div class="fila"><div class="celda-etiqueta">Dirección Exacta:</div><div class="celda-dato" id="v-dir_exacta"></div></div>
@@ -1595,7 +1648,7 @@
                             <div class="fila"><div class="celda-etiqueta">Cicatrices / Discapacidad:</div><div class="celda-dato" id="v-fis_otros"></div></div>
 
                             <div class="ficha-seccion-titulo" style="text-align: left;">7. Redes Sociales</div>
-                            <div class="fila"><div class="celda-etiqueta">Red / Alias / URL:</div><div class="celda-dato" id="v-red_info"></div></div>
+                            <div id="v-redes-list"></div>
 
                             <div class="ficha-seccion-titulo" style="text-align: left;">8. Antecedentes Académicos</div>
                             <div class="fila"><div class="celda-etiqueta">Nivel / Carrera / Profesión:</div><div class="celda-dato" id="v-aca_info"></div></div>
@@ -1607,10 +1660,11 @@
                             <div class="fila"><div class="celda-etiqueta">Bienes / Vehículos:</div><div class="celda-dato" id="v-pat_info"></div></div>
 
                             <div class="ficha-seccion-titulo" style="text-align: left;">11. Arma de Fuego</div>
-                            <div class="fila"><div class="celda-etiqueta">Tipo / Registro / Estatus:</div><div class="celda-dato" id="v-arm_info"></div></div>
+                            <div id="v-armas-list"></div>
 
                             <div class="ficha-seccion-titulo" style="text-align: left;">12. Información Criminal</div>
                             <div class="fila"><div class="celda-etiqueta">Org / Clica / Rango / Estatus:</div><div class="celda-dato" id="v-crim_org"></div></div>
+                            <div class="fila"><div class="celda-etiqueta">Lugar de Operatividad:</div><div class="celda-dato" id="v-crim_lugar"></div></div>
                             <div class="fila"><div class="celda-etiqueta">Antecedentes / Aprehensión:</div><div class="celda-dato" id="v-crim_antecedentes"></div></div>
 
                             <div class="ficha-seccion-titulo" style="text-align: left;">13. Historial Penitenciario</div>
@@ -2682,6 +2736,7 @@ for (let i = 1; i <= 4; i++) {
                 lector.onload = function(ev) {
                     fotosPersonaBase64[idx - 1] = ev.target.result;
                     document.getElementById('vistaFoto' + idx).innerHTML = '<img src="' + ev.target.result + '">';
+                    actualizarFicha();
                     if (idx === 1 && rfModelosCargados) {
                         const img = new Image();
                         img.src = ev.target.result;
@@ -2753,6 +2808,180 @@ function cargarFamiliares(familiares) {
         container.appendChild(row);
         row.querySelectorAll('input').forEach(inp => inp.addEventListener('input', actualizarFicha));
         familiarCounter++;
+    });
+}
+
+// ===== DYNAMIC TELEFONOS =====
+let telefonoCounter = 1;
+function agregarTelefono() {
+    const container = document.getElementById('telefonos-container');
+    const row = document.createElement('div');
+    row.className = 'telefono-row';
+    row.dataset.index = telefonoCounter;
+    row.innerHTML = '<div class="grupo-form"><label>Número de Línea</label><input type="text" class="tel-linea"></div>' +
+        '<div class="grupo-form"><label>Número IMEI</label><input type="text" class="tel-imei"></div>' +
+        '<div class="grupo-form"><label>Compañía Telefónica</label><input type="text" class="tel-compania"></div>' +
+        '<button type="button" class="btn-quitar-telefono" onclick="quitarTelefono(this)" title="Quitar teléfono">✖</button>';
+    container.appendChild(row);
+    telefonoCounter++;
+    row.querySelectorAll('input').forEach(inp => inp.addEventListener('input', actualizarFicha));
+}
+function quitarTelefono(btn) {
+    btn.closest('.telefono-row').remove();
+    actualizarFicha();
+}
+function obtenerTelefonos() {
+    const rows = document.querySelectorAll('#telefonos-container .telefono-row');
+    const list = [];
+    rows.forEach(row => {
+        list.push({
+            linea: row.querySelector('.tel-linea') ? row.querySelector('.tel-linea').value : '',
+            imei: row.querySelector('.tel-imei') ? row.querySelector('.tel-imei').value : '',
+            compania: row.querySelector('.tel-compania') ? row.querySelector('.tel-compania').value : ''
+        });
+    });
+    return list;
+}
+function cargarTelefonos(telefonos) {
+    const container = document.getElementById('telefonos-container');
+    container.innerHTML = '';
+    telefonoCounter = 0;
+    if (!telefonos || telefonos.length === 0) { agregarTelefono(); return; }
+    telefonos.forEach(function(tel) {
+        const row = document.createElement('div');
+        row.className = 'telefono-row';
+        row.dataset.index = telefonoCounter;
+        row.innerHTML = '<div class="grupo-form"><label>Número de Línea</label><input type="text" class="tel-linea" value="' + (tel.linea||'').replace(/"/g,'&quot;') + '"></div>' +
+            '<div class="grupo-form"><label>Número IMEI</label><input type="text" class="tel-imei" value="' + (tel.imei||'').replace(/"/g,'&quot;') + '"></div>' +
+            '<div class="grupo-form"><label>Compañía Telefónica</label><input type="text" class="tel-compania" value="' + (tel.compania||'').replace(/"/g,'&quot;') + '"></div>' +
+            '<button type="button" class="btn-quitar-telefono" onclick="quitarTelefono(this)" title="Quitar teléfono">✖</button>';
+        container.appendChild(row);
+        row.querySelectorAll('input').forEach(inp => inp.addEventListener('input', actualizarFicha));
+        telefonoCounter++;
+    });
+}
+
+// ===== DYNAMIC REDES SOCIALES =====
+let redCounter = 1;
+function agregarRed() {
+    const container = document.getElementById('redes-container');
+    const row = document.createElement('div');
+    row.className = 'red-social-row';
+    row.dataset.index = redCounter;
+    row.innerHTML = '<div class="grupo-form"><label>ID / URL</label><input type="text" class="red-url"></div>' +
+        '<div class="grupo-form"><label>Alias en Red Social</label><input type="text" class="red-alias"></div>' +
+        '<div class="grupo-form"><label>Tipo de Red Social</label><select class="red-tipo"><option value="">Seleccione...</option><option value="Facebook">Facebook</option><option value="Twitter / X">Twitter / X</option><option value="TikTok">TikTok</option><option value="Instagram">Instagram</option><option value="WhatsApp">WhatsApp</option><option value="Telegram">Telegram</option><option value="Snapchat">Snapchat</option><option value="YouTube">YouTube</option><option value="LinkedIn">LinkedIn</option><option value="Signal">Signal</option><option value="Pinterest">Pinterest</option><option value="Reddit">Reddit</option><option value="Discord">Discord</option><option value="Otra">Otra</option></select></div>' +
+        '<div class="grupo-form"><label>Fecha Consulta</label><input type="date" class="red-fconsulta"></div>' +
+        '<button type="button" class="btn-quitar-red" onclick="quitarRed(this)" title="Quitar red social">✖</button>';
+    container.appendChild(row);
+    redCounter++;
+    row.querySelectorAll('input, select').forEach(inp => inp.addEventListener('input', actualizarFicha));
+    row.querySelectorAll('select').forEach(sel => sel.addEventListener('change', actualizarFicha));
+}
+function quitarRed(btn) {
+    btn.closest('.red-social-row').remove();
+    actualizarFicha();
+}
+function obtenerRedesSociales() {
+    const rows = document.querySelectorAll('#redes-container .red-social-row');
+    const list = [];
+    rows.forEach(row => {
+        list.push({
+            url: row.querySelector('.red-url') ? row.querySelector('.red-url').value : '',
+            alias: row.querySelector('.red-alias') ? row.querySelector('.red-alias').value : '',
+            tipo: row.querySelector('.red-tipo') ? row.querySelector('.red-tipo').value : '',
+            fconsulta: row.querySelector('.red-fconsulta') ? row.querySelector('.red-fconsulta').value : ''
+        });
+    });
+    return list;
+}
+function cargarRedesSociales(redes) {
+    const container = document.getElementById('redes-container');
+    container.innerHTML = '';
+    redCounter = 0;
+    if (!redes || redes.length === 0) { agregarRed(); return; }
+    redes.forEach(function(red) {
+        const row = document.createElement('div');
+        row.className = 'red-social-row';
+        row.dataset.index = redCounter;
+        const tipoVal = (red.tipo||'').replace(/"/g,'&quot;');
+        row.innerHTML = '<div class="grupo-form"><label>ID / URL</label><input type="text" class="red-url" value="' + (red.url||'').replace(/"/g,'&quot;') + '"></div>' +
+            '<div class="grupo-form"><label>Alias en Red Social</label><input type="text" class="red-alias" value="' + (red.alias||'').replace(/"/g,'&quot;') + '"></div>' +
+            '<div class="grupo-form"><label>Tipo de Red Social</label><select class="red-tipo"><option value="">Seleccione...</option><option value="Facebook">Facebook</option><option value="Twitter / X">Twitter / X</option><option value="TikTok">TikTok</option><option value="Instagram">Instagram</option><option value="WhatsApp">WhatsApp</option><option value="Telegram">Telegram</option><option value="Snapchat">Snapchat</option><option value="YouTube">YouTube</option><option value="LinkedIn">LinkedIn</option><option value="Signal">Signal</option><option value="Pinterest">Pinterest</option><option value="Reddit">Reddit</option><option value="Discord">Discord</option><option value="Otra">Otra</option></select></div>' +
+            '<div class="grupo-form"><label>Fecha Consulta</label><input type="date" class="red-fconsulta" value="' + (red.fconsulta||'') + '"></div>' +
+            '<button type="button" class="btn-quitar-red" onclick="quitarRed(this)" title="Quitar red social">✖</button>';
+        container.appendChild(row);
+        // Set select value after innerHTML
+        const sel = row.querySelector('.red-tipo');
+        if (sel) sel.value = red.tipo || '';
+        row.querySelectorAll('input, select').forEach(inp => inp.addEventListener('input', actualizarFicha));
+        row.querySelectorAll('select').forEach(sel2 => sel2.addEventListener('change', actualizarFicha));
+        redCounter++;
+    });
+}
+
+// ===== DYNAMIC ARMAS DE FUEGO =====
+let armaCounter = 1;
+function agregarArma() {
+    const container = document.getElementById('armas-container');
+    const row = document.createElement('div');
+    row.className = 'arma-row';
+    row.dataset.index = armaCounter;
+    row.innerHTML = '<div class="grupo-form"><label>Tipo de Arma</label><input type="text" class="arm-tipo"></div>' +
+        '<div class="grupo-form"><label>No. Registro Arma</label><input type="text" class="arm-registro"></div>' +
+        '<div class="grupo-form"><label>Licencia Arma</label><select class="arm-licencia"><option value="No">No</option><option value="Si">Si</option></select></div>' +
+        '<div class="grupo-form"><label>Tenencia Arma</label><select class="arm-tenencia"><option value="No">No</option><option value="Si">Si</option></select></div>' +
+        '<div class="grupo-form"><label>Estatus Arma</label><select class="arm-estatus"><option value="Solvente">Solvente</option><option value="Extraviado">Extraviado</option><option value="Reporte de robo">Reporte de robo</option></select></div>' +
+        '<button type="button" class="btn-quitar-arma" onclick="quitarArma(this)" title="Quitar arma">✖</button>';
+    container.appendChild(row);
+    armaCounter++;
+    row.querySelectorAll('input, select').forEach(inp => inp.addEventListener('input', actualizarFicha));
+    row.querySelectorAll('select').forEach(sel => sel.addEventListener('change', actualizarFicha));
+}
+function quitarArma(btn) {
+    btn.closest('.arma-row').remove();
+    actualizarFicha();
+}
+function obtenerArmas() {
+    const rows = document.querySelectorAll('#armas-container .arma-row');
+    const list = [];
+    rows.forEach(row => {
+        list.push({
+            tipo: row.querySelector('.arm-tipo') ? row.querySelector('.arm-tipo').value : '',
+            registro: row.querySelector('.arm-registro') ? row.querySelector('.arm-registro').value : '',
+            licencia: row.querySelector('.arm-licencia') ? row.querySelector('.arm-licencia').value : '',
+            tenencia: row.querySelector('.arm-tenencia') ? row.querySelector('.arm-tenencia').value : '',
+            estatus: row.querySelector('.arm-estatus') ? row.querySelector('.arm-estatus').value : ''
+        });
+    });
+    return list;
+}
+function cargarArmas(armas) {
+    const container = document.getElementById('armas-container');
+    container.innerHTML = '';
+    armaCounter = 0;
+    if (!armas || armas.length === 0) { agregarArma(); return; }
+    armas.forEach(function(arm) {
+        const row = document.createElement('div');
+        row.className = 'arma-row';
+        row.dataset.index = armaCounter;
+        row.innerHTML = '<div class="grupo-form"><label>Tipo de Arma</label><input type="text" class="arm-tipo" value="' + (arm.tipo||'').replace(/"/g,'&quot;') + '"></div>' +
+            '<div class="grupo-form"><label>No. Registro Arma</label><input type="text" class="arm-registro" value="' + (arm.registro||'').replace(/"/g,'&quot;') + '"></div>' +
+            '<div class="grupo-form"><label>Licencia Arma</label><select class="arm-licencia"><option value="No">No</option><option value="Si">Si</option></select></div>' +
+            '<div class="grupo-form"><label>Tenencia Arma</label><select class="arm-tenencia"><option value="No">No</option><option value="Si">Si</option></select></div>' +
+            '<div class="grupo-form"><label>Estatus Arma</label><select class="arm-estatus"><option value="Solvente">Solvente</option><option value="Extraviado">Extraviado</option><option value="Reporte de robo">Reporte de robo</option></select></div>' +
+            '<button type="button" class="btn-quitar-arma" onclick="quitarArma(this)" title="Quitar arma">✖</button>';
+        container.appendChild(row);
+        // Set select values after innerHTML
+        const licSel = row.querySelector('.arm-licencia');
+        if (licSel) licSel.value = arm.licencia || 'No';
+        const tenSel = row.querySelector('.arm-tenencia');
+        if (tenSel) tenSel.value = arm.tenencia || 'No';
+        const estSel = row.querySelector('.arm-estatus');
+        if (estSel) estSel.value = arm.estatus || 'Solvente';
+        row.querySelectorAll('input, select').forEach(inp => inp.addEventListener('input', actualizarFicha));
+        row.querySelectorAll('select').forEach(sel => sel.addEventListener('change', actualizarFicha));
+        armaCounter++;
     });
 }
 
@@ -2971,7 +3200,7 @@ function obtenerDatosFormulario() {
         g_sexo: v('g_sexo'), g_lgtbiq: v('g_lgtbiq'), g_ecivil: v('g_ecivil'), g_nit: v('g_nit'),
         g_igss: v('g_igss'), g_pueblo: v('g_pueblo'), g_etnia: v('g_etnia'), g_nacionalidad: v('g_nacionalidad'),
         g_idioma: v('g_idioma'), g_situacion: v('g_situacion'), g_tiplicencia: v('g_tiplicencia'), g_estlicencia: v('g_estlicencia'),
-        tel_linea: v('tel_linea'), tel_imei: v('tel_imei'), tel_compania: v('tel_compania'),
+        telefonos: obtenerTelefonos(),
         dir_exacta: v('dir_exacta'), dir_pais: v('dir_pais'), dir_depto: v('dir_depto'),
         dir_muni: v('dir_muni'), dir_sector: v('dir_sector'), dir_zona: v('dir_zona'),
         dir_calle: v('dir_calle'), dir_numcasa: v('dir_numcasa'), dir_contador: v('dir_contador'),
@@ -2981,17 +3210,15 @@ function obtenerDatosFormulario() {
         fis_orejas: v('fis_orejas'), fis_labios: v('fis_labios'), fis_nariz: v('fis_nariz'),
         fis_cicatrices: v('fis_cicatrices'), fis_discapacidad: v('fis_discapacidad'),
         fis_capacidades: v('fis_capacidades'), fis_otros: v('fis_otros'),
-        red_url: v('red_url'), red_alias: v('red_alias'), red_tipo: v('red_tipo'),
-        red_fconsulta: v('red_fconsulta'), red_actividad: v('red_actividad'),
+        redesSociales: obtenerRedesSociales(),
         aca_nivel: v('aca_nivel'), aca_carrera: v('aca_carrera'), aca_profesion: v('aca_profesion'),
         aca_estudia: v('aca_estudia'), aca_colegiado: v('aca_colegiado'), aca_estcolegiado: v('aca_estcolegiado'),
         lab_empresa: v('lab_empresa'), lab_direccion: v('lab_direccion'), lab_finicio: v('lab_finicio'),
         lab_ffin: v('lab_ffin'), lab_jefe: v('lab_jefe'), lab_telefono: v('lab_telefono'),
         pat_tipo: v('pat_tipo'), pat_caract: v('pat_caract'), pat_vehiculo: v('pat_vehiculo'),
-        arm_tipo: v('arm_tipo'), arm_registro: v('arm_registro'), arm_licencia: v('arm_licencia'),
-        arm_tenencia: v('arm_tenencia'), arm_estatus: v('arm_estatus'),
+        armasFuego: obtenerArmas(),
         crim_org: v('crim_org'), crim_act: v('crim_act'), crim_clica: v('crim_clica'),
-        crim_rango: v('crim_rango'), crim_lugar: v('crim_lugar'), crim_estatus: v('crim_estatus'),
+        crim_rango: v('crim_rango'), crim_lugar_depto: v('crim_lugar_depto'), crim_lugar_muni: v('crim_lugar_muni'), crim_lugar_aldea: v('crim_lugar_aldea'), crim_lugar_zona: v('crim_lugar_zona'), crim_lugar_calle: v('crim_lugar_calle'), crim_estatus: v('crim_estatus'),
         crim_penales: v('crim_penales'), crim_policiales: v('crim_policiales'),
         crim_aprehension: v('crim_aprehension'), crim_causa: v('crim_causa'), crim_colaboradores: v('crim_colaboradores'),
         pen_centro: v('pen_centro'), pen_delito: v('pen_delito'), pen_fingreso: v('pen_fingreso'),
@@ -3031,7 +3258,15 @@ function actualizarFicha() {
     document.getElementById('v-g_nac_sit').textContent = `Nacionalidad: ${d.g_nacionalidad} | Estado: ${d.g_situacion}`;
     document.getElementById('v-g_licencia').textContent = `Tipo: ${d.g_tiplicencia} | Estatus: ${d.g_estlicencia}`;
 
-    document.getElementById('v-tel_info').textContent = `Línea: ${d.tel_linea} | IMEI: ${d.tel_imei} | Compañía: ${d.tel_compania}`;
+    // Render telefonos list
+    const telList = document.getElementById('v-telefonos-list');
+    if (telList) {
+        const tels = d.telefonos || [];
+        telList.innerHTML = tels.map(t =>
+            '<div style="padding:3px 0;border-bottom:1px solid #1e293b;font-size:12px;"><b>Línea:</b> ' + (t.linea||'') + ' | <b>IMEI:</b> ' + (t.imei||'') + ' | <b>Compañía:</b> ' + (t.compania||'') + '</div>'
+        ).join('');
+        if (tels.length === 0 || (tels.length === 1 && !tels[0].linea && !tels[0].imei && !tels[0].compania)) telList.innerHTML = '<div style="color:#777;padding:4px;">Sin teléfonos registrados</div>';
+    }
 
     document.getElementById('v-dir_exacta').textContent = d.dir_exacta;
     document.getElementById('v-dir_ubicacion').textContent = `${d.dir_sector}, Zona ${d.dir_zona}, ${d.dir_muni}, ${d.dir_depto}, ${d.dir_pais}. Contador: ${d.dir_contador}`;
@@ -3049,7 +3284,15 @@ function actualizarFicha() {
     document.getElementById('v-fis_rasgos').textContent = `Estatura: ${d.fis_estatura} | Complexión: ${d.fis_complexion} | Piel: ${d.fis_piel} | Ojos: ${d.fis_ojos} | Cabello: ${d.fis_colcabello} (${d.fis_estcabello})`;
     document.getElementById('v-fis_otros').textContent = `Cicatrices: ${d.fis_cicatrices} | Discapacidad: ${d.fis_discapacidad} | Otros: ${d.fis_otros}`;
 
-    document.getElementById('v-red_info').textContent = `${d.red_tipo}: ${d.red_alias} (${d.red_url}) | Actividad: ${d.red_actividad}`;
+    // Render redes sociales list
+    const redList = document.getElementById('v-redes-list');
+    if (redList) {
+        const redes = d.redesSociales || [];
+        redList.innerHTML = redes.map(r =>
+            '<div style="padding:3px 0;border-bottom:1px solid #1e293b;font-size:12px;"><b>' + (r.tipo||'') + '</b>: ' + (r.alias||'') + ' (' + (r.url||'') + ')' + (r.fconsulta ? ' | Consulta: ' + r.fconsulta : '') + '</div>'
+        ).join('');
+        if (redes.length === 0 || (redes.length === 1 && !redes[0].url && !redes[0].alias && !redes[0].tipo)) redList.innerHTML = '<div style="color:#777;padding:4px;">Sin redes sociales registradas</div>';
+    }
 
     document.getElementById('v-aca_info').textContent = `Nivel: ${d.aca_nivel} | Carrera: ${d.aca_carrera} | Profesión: ${d.aca_profesion} | Colegiado: ${d.aca_colegiado} (${d.aca_estcolegiado})`;
 
@@ -3057,9 +3300,21 @@ function actualizarFicha() {
 
     document.getElementById('v-pat_info').textContent = `Tipo: ${d.pat_tipo} | Caract: ${d.pat_caract} | Vehículo: ${d.pat_vehiculo}`;
 
-    document.getElementById('v-arm_info').textContent = `Tipo: ${d.arm_tipo} | Reg: ${d.arm_registro} | Licencia: ${d.arm_licencia} | Estatus: ${d.arm_estatus}`;
+    // Render armas de fuego list
+    const armList = document.getElementById('v-armas-list');
+    if (armList) {
+        const armas = d.armasFuego || [];
+        armList.innerHTML = armas.map(a =>
+            '<div style="padding:3px 0;border-bottom:1px solid #1e293b;font-size:12px;"><b>Tipo:</b> ' + (a.tipo||'') + ' | <b>Reg:</b> ' + (a.registro||'') + ' | <b>Licencia:</b> ' + (a.licencia||'') + ' | <b>Tenencia:</b> ' + (a.tenencia||'') + ' | <b>Estatus:</b> ' + (a.estatus||'') + '</div>'
+        ).join('');
+        if (armas.length === 0 || (armas.length === 1 && !armas[0].tipo && !armas[0].registro && !armas[0].estatus)) armList.innerHTML = '<div style="color:#777;padding:4px;">Sin armas registradas</div>';
+    }
 
     document.getElementById('v-crim_org').textContent = `Org: ${d.crim_org} | Act: ${d.crim_act} | Clica: ${d.crim_clica} | Rango: ${d.crim_rango} (${d.crim_estatus})`;
+    const lugarParts = [d.crim_lugar_depto, d.crim_lugar_muni, d.crim_lugar_aldea, d.crim_lugar_zona, d.crim_lugar_calle].filter(p => p);
+    const lugarDisplay = lugarParts.length ? lugarParts.join(' / ') : (d.crim_lugar || '');
+    const lugarEl = document.getElementById('v-crim_lugar');
+    if (lugarEl) lugarEl.textContent = lugarDisplay || 'N/A';
     document.getElementById('v-crim_antecedentes').textContent = `Penales: ${d.crim_penales} | Policiales: ${d.crim_policiales} | Aprehensión: ${d.crim_aprehension} | Causa: ${d.crim_causa}`;
 
     document.getElementById('v-pen_info').textContent = `Centro: ${d.pen_centro} | Delito: ${d.pen_delito} | Fechas: ${d.pen_fingreso} al ${d.pen_fsalida} | Exp: ${d.pen_expediente}`;
@@ -3184,9 +3439,14 @@ function CargarPersonaParaEditar(ficha) {
     setV('g_tiplicencia', ficha.g_tiplicencia);
     setV('g_estlicencia', ficha.g_estlicencia);
 
-    setV('tel_linea', ficha.tel_linea);
-    setV('tel_imei', ficha.tel_imei);
-    setV('tel_compania', ficha.tel_compania);
+    // Cargar teléfonos dinámicos
+    if (ficha.telefonos && Array.isArray(ficha.telefonos)) {
+        cargarTelefonos(ficha.telefonos);
+    } else if (ficha.tel_linea) {
+        cargarTelefonos([{linea: ficha.tel_linea||'', imei: ficha.tel_imei||'', compania: ficha.tel_compania||''}]);
+    } else {
+        cargarTelefonos([]);
+    }
 
     setV('dir_exacta', ficha.dir_exacta);
     setV('dir_pais', ficha.dir_pais);
@@ -3205,6 +3465,9 @@ function CargarPersonaParaEditar(ficha) {
         cargarFamiliares([{nombre: ficha.fam_nombre||'', parentesco: ficha.fam_parentesco||'', dpi: ficha.fam_dpi||'', telefono: ''}]);
     } else {
         cargarFamiliares([]);
+    cargarTelefonos([]);
+    cargarRedesSociales([]);
+    cargarArmas([]);
     }
 
     setV('fis_estatura', ficha.fis_estatura);
@@ -3221,11 +3484,14 @@ function CargarPersonaParaEditar(ficha) {
     setV('fis_capacidades', ficha.fis_capacidades);
     setV('fis_otros', ficha.fis_otros);
 
-    setV('red_url', ficha.red_url);
-    setV('red_alias', ficha.red_alias);
-    setV('red_tipo', ficha.red_tipo);
-    setV('red_fconsulta', ficha.red_fconsulta);
-    setV('red_actividad', ficha.red_actividad);
+    // Cargar redes sociales dinámicas
+    if (ficha.redesSociales && Array.isArray(ficha.redesSociales)) {
+        cargarRedesSociales(ficha.redesSociales);
+    } else if (ficha.red_url) {
+        cargarRedesSociales([{url: ficha.red_url||'', alias: ficha.red_alias||'', tipo: ficha.red_tipo||'', fconsulta: ficha.red_fconsulta||''}]);
+    } else {
+        cargarRedesSociales([]);
+    }
 
     setV('aca_nivel', ficha.aca_nivel);
     setV('aca_carrera', ficha.aca_carrera);
@@ -3245,17 +3511,29 @@ function CargarPersonaParaEditar(ficha) {
     setV('pat_caract', ficha.pat_caract);
     setV('pat_vehiculo', ficha.pat_vehiculo);
 
-    setV('arm_tipo', ficha.arm_tipo);
-    setV('arm_registro', ficha.arm_registro);
-    setV('arm_licencia', ficha.arm_licencia);
-    setV('arm_tenencia', ficha.arm_tenencia);
-    setV('arm_estatus', ficha.arm_estatus);
+    // Cargar armas de fuego dinámicas
+    if (ficha.armasFuego && Array.isArray(ficha.armasFuego)) {
+        cargarArmas(ficha.armasFuego);
+    } else if (ficha.arm_tipo) {
+        cargarArmas([{tipo: ficha.arm_tipo||'', registro: ficha.arm_registro||'', licencia: ficha.arm_licencia||'', tenencia: ficha.arm_tenencia||'', estatus: ficha.arm_estatus||''}]);
+    } else {
+        cargarArmas([]);
+    }
 
     setV('crim_org', ficha.crim_org);
     setV('crim_act', ficha.crim_act);
     setV('crim_clica', ficha.crim_clica);
     setV('crim_rango', ficha.crim_rango);
-    setV('crim_lugar', ficha.crim_lugar);
+    // Lugar de Operatividad - sub-fields with backward compat
+    if (ficha.crim_lugar_depto !== undefined) {
+        setV('crim_lugar_depto', ficha.crim_lugar_depto);
+        setV('crim_lugar_muni', ficha.crim_lugar_muni);
+        setV('crim_lugar_aldea', ficha.crim_lugar_aldea);
+        setV('crim_lugar_zona', ficha.crim_lugar_zona);
+        setV('crim_lugar_calle', ficha.crim_lugar_calle);
+    } else if (ficha.crim_lugar) {
+        setV('crim_lugar_depto', ficha.crim_lugar);
+    }
     setV('crim_estatus', ficha.crim_estatus);
     setV('crim_penales', ficha.crim_penales);
     setV('crim_policiales', ficha.crim_policiales);
@@ -3346,13 +3624,12 @@ function buscarPersona() {
             div.className = 'item-persona';
             const puedeEditar = usuarioSesionActual && (usuarioSesionActual.rol === 'Administrador General' || usuarioSesionActual.rol === 'Operador');
             div.innerHTML = `
-                <div>
-                    <strong>${ficha.g_pnombre || ''} ${ficha.g_papellido || ''}</strong> 
-                    <span style="color:#666; font-size:13px;">(DPI: ${ficha.g_dpi || 'S/DPI'}) - Apodo: ${ficha.g_apodo || 'N/A'}</span>
-                </div>
-                <div>
-                    <button onclick='mostrarFichaConsultada(${JSON.stringify(ficha).replace(/'/g, "&apos;")})' style="padding:4px 10px; font-size:12px; background:#00529b; color:white; border:none; border-radius:3px; cursor:pointer; margin-right:5px;">Ver Ficha</button>
-                    ${puedeEditar ? `<button class="btn-editar" onclick='CargarPersonaParaEditar(${JSON.stringify(ficha).replace(/'/g, "&apos;")})' style="padding:4px 10px; font-size:12px; border:none; border-radius:3px; cursor:pointer;">✏️ Editar</button>` : ''}
+                <div style="font-size:14px;"><strong>${ficha.g_pnombre || ''} ${ficha.g_papellido || ''}</strong></div>
+                <div style="color:#555; font-size:12px;">DPI: ${ficha.g_dpi || 'S/DPI'}</div>
+                <div style="color:#555; font-size:12px;">Apodo: ${ficha.g_apodo || 'N/A'}</div>
+                <div style="display:flex; gap:6px; margin-top:4px;">
+                    <button onclick='mostrarFichaConsultada(${JSON.stringify(ficha).replace(/'/g, "&apos;")})' style="padding:5px 12px; font-size:12px; background:#00529b; color:white; border:none; border-radius:4px; cursor:pointer;">Ver Ficha</button>
+                    ${puedeEditar ? `<button class="btn-editar" onclick='CargarPersonaParaEditar(${JSON.stringify(ficha).replace(/'/g, "&apos;")})' style="padding:5px 12px; font-size:12px; border:none; border-radius:4px; cursor:pointer;">✏️ Editar</button>` : ''}
                 </div>
             `;
             contenedorLista.appendChild(div);
@@ -3364,17 +3641,14 @@ function buscarPersona() {
         // Buscar en TODOS los campos de texto de la ficha
         const camposTexto = [
             i.g_pnombre, i.g_snombre, i.g_papellido, i.g_sapellido, i.g_apodo, i.g_dpi,
-            i.tel_linea, i.tel_imei, i.tel_tipo,
             i.dir_exacta, i.dir_zona, i.dir_muni, i.dir_deptopais,
             i.fis_estatura, i.fis_piel, i.fis_complexion, i.fis_cabello, i.fis_ojos,
             i.fis_orejas, i.fis_labios, i.fis_nariz, i.fis_cicatrices, i.fis_discapacidad,
             i.fis_capacidades, i.fis_otros,
-            i.red_url, i.red_alias, i.red_tipo, i.red_actividad,
             i.aca_nivel, i.aca_carrera, i.aca_profesion, i.aca_estudia, i.aca_colegiado,
             i.lab_empresa, i.lab_direccion, i.lab_jefe, i.lab_telefono,
             i.pat_tipo, i.pat_caract, i.pat_vehiculo,
-            i.arm_tipo, i.arm_registro, i.arm_licencia, i.arm_tenencia, i.arm_estatus,
-            i.crim_org, i.crim_act, i.crim_clica, i.crim_rango, i.crim_lugar,
+            i.crim_org, i.crim_act, i.crim_clica, i.crim_rango, i.crim_lugar_depto, i.crim_lugar_muni, i.crim_lugar_aldea, i.crim_lugar_zona, i.crim_lugar_calle,
             i.crim_estatus, i.crim_penales, i.crim_policiales, i.crim_aprehension,
             i.crim_causa, i.crim_colaboradores,
             i.pen_centro, i.pen_delito, i.pen_expediente, i.pen_oj,
@@ -3389,6 +3663,44 @@ function buscarPersona() {
         for (const campo of camposTexto) {
             if (campo && String(campo).toLowerCase().includes(texto)) return true;
         }
+
+        // Buscar en telefonos
+        if (i.telefonos && Array.isArray(i.telefonos)) {
+            for (const tel of i.telefonos) {
+                if (tel.linea && tel.linea.toLowerCase().includes(texto)) return true;
+                if (tel.imei && tel.imei.toLowerCase().includes(texto)) return true;
+                if (tel.compania && tel.compania.toLowerCase().includes(texto)) return true;
+            }
+        }
+        // Fallback: buscar en campos antiguos de teléfono
+        if (i.tel_linea && i.tel_linea.toLowerCase().includes(texto)) return true;
+        if (i.tel_imei && i.tel_imei.toLowerCase().includes(texto)) return true;
+
+        // Buscar en redes sociales
+        if (i.redesSociales && Array.isArray(i.redesSociales)) {
+            for (const red of i.redesSociales) {
+                if (red.url && red.url.toLowerCase().includes(texto)) return true;
+                if (red.alias && red.alias.toLowerCase().includes(texto)) return true;
+                if (red.tipo && red.tipo.toLowerCase().includes(texto)) return true;
+            }
+        }
+        // Fallback: buscar en campos antiguos de redes
+        if (i.red_url && i.red_url.toLowerCase().includes(texto)) return true;
+        if (i.red_alias && i.red_alias.toLowerCase().includes(texto)) return true;
+        if (i.red_tipo && i.red_tipo.toLowerCase().includes(texto)) return true;
+
+        // Buscar en armas de fuego
+        if (i.armasFuego && Array.isArray(i.armasFuego)) {
+            for (const arm of i.armasFuego) {
+                if (arm.tipo && arm.tipo.toLowerCase().includes(texto)) return true;
+                if (arm.registro && arm.registro.toLowerCase().includes(texto)) return true;
+                if (arm.estatus && arm.estatus.toLowerCase().includes(texto)) return true;
+            }
+        }
+        // Fallback: buscar en campos antiguos de armas
+        if (i.arm_tipo && i.arm_tipo.toLowerCase().includes(texto)) return true;
+        if (i.arm_registro && i.arm_registro.toLowerCase().includes(texto)) return true;
+        if (i.arm_estatus && i.arm_estatus.toLowerCase().includes(texto)) return true;
 
         // Buscar en tatuajesConFoto (ubicacion y descripcion)
         if (i.tatuajesConFoto && Array.isArray(i.tatuajesConFoto)) {
@@ -3443,13 +3755,12 @@ function buscarPersona() {
         const puedeEditar = usuarioSesionActual && (usuarioSesionActual.rol === 'Administrador General' || usuarioSesionActual.rol === 'Operador');
 
         div.innerHTML = `
-            <div>
-                <strong>${ficha.g_pnombre || ''} ${ficha.g_papellido || ''}</strong> 
-                <span style="color:#666; font-size:13px;">(DPI: ${ficha.g_dpi || 'S/DPI'}) - Apodo: ${ficha.g_apodo || 'N/A'}</span>
-            </div>
-            <div>
-                <button onclick='mostrarFichaConsultada(${JSON.stringify(ficha).replace(/'/g, "&apos;")})' style="padding:4px 10px; font-size:12px; background:#00529b; color:white; border:none; border-radius:3px; cursor:pointer; margin-right:5px;">Ver Ficha</button>
-                ${puedeEditar ? `<button class="btn-editar" onclick='CargarPersonaParaEditar(${JSON.stringify(ficha).replace(/'/g, "&apos;")})' style="padding:4px 10px; font-size:12px; border:none; border-radius:3px; cursor:pointer;">✏️ Editar</button>` : ''}
+            <div style="font-size:15px;"><strong>${ficha.g_pnombre || ''} ${ficha.g_papellido || ''}</strong></div>
+            <div style="font-size:12px; color:#555;">DPI: ${ficha.g_dpi || 'S/DPI'}</div>
+            <div style="font-size:12px; color:#888;">Apodo: ${ficha.g_apodo || 'N/A'}</div>
+            <div style="margin-top:8px; display:flex; flex-direction:column; gap:4px;">
+                <button onclick='mostrarFichaConsultada(${JSON.stringify(ficha).replace(/'/g, "&apos;")})' style="padding:5px 10px; font-size:12px; background:#00529b; color:white; border:none; border-radius:3px; cursor:pointer; width:100%;">Ver Ficha</button>
+                ${puedeEditar ? `<button class="btn-editar" onclick='CargarPersonaParaEditar(${JSON.stringify(ficha).replace(/'/g, "&apos;")})' style="padding:5px 10px; font-size:12px; border:none; border-radius:3px; cursor:pointer; width:100%;">✏️ Editar</button>` : ''}
             </div>
         `;
         contenedorLista.appendChild(div);
@@ -3460,23 +3771,80 @@ function mostrarFichaConsultada(d) {
     const contenedor = document.getElementById('detalle-persona-consultada');
     const nomComp = `${d.g_pnombre || ''} ${d.g_snombre || ''} ${d.g_papellido || ''} ${d.g_sapellido || ''}`.trim();
 
+    // Build 4-photo grid HTML
+    let fotosHTML = '';
+    const fotos = (d.fotosPersona && d.fotosPersona.length) ? d.fotosPersona.filter(f => f) : (d.foto ? [d.foto] : []);
+    if (fotos.length > 0) {
+        fotosHTML = '<div class="fotos-ficha-grid" style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:4px;margin-bottom:8px;">';
+        fotos.forEach(f => {
+            fotosHTML += '<div class="foto-ficha" style="text-align:center;"><img src="' + f + '" style="max-width:100%;border:1px solid #2a3a5c;border-radius:4px;"></div>';
+        });
+        fotosHTML += '</div>';
+    }
+
+    // Build telefonos list HTML
+    let telsHTML = '';
+    const tels = (d.telefonos && d.telefonos.length) ? d.telefonos : (d.tel_linea ? [{linea: d.tel_linea, imei: d.tel_imei || '', compania: d.tel_compania || ''}] : []);
+    tels.forEach(t => {
+        if (t.linea || t.imei) telsHTML += (telsHTML ? '<br>' : '') + (t.linea||'') + ' | IMEI: ' + (t.imei||'') + (t.compania ? ' (' + t.compania + ')' : '');
+    });
+    if (!telsHTML) telsHTML = 'N/A';
+
+    // Build redes sociales list HTML
+    let redesHTML = '';
+    const redes = (d.redesSociales && d.redesSociales.length) ? d.redesSociales : (d.red_url ? [{url: d.red_url, alias: d.red_alias||'', tipo: d.red_tipo||'', fconsulta: d.red_fconsulta||''}] : []);
+    redes.forEach(r => {
+        if (r.url || r.alias) redesHTML += (redesHTML ? '<br>' : '') + (r.tipo||'') + ': ' + (r.alias||'') + ' (' + (r.url||'') + ')' + (r.fconsulta ? ' | Consulta: ' + r.fconsulta : '');
+    });
+    if (!redesHTML) redesHTML = 'N/A';
+
+    // Build armas list HTML
+    let armasHTML = '';
+    const armas = (d.armasFuego && d.armasFuego.length) ? d.armasFuego : (d.arm_tipo ? [{tipo: d.arm_tipo, registro: d.arm_registro||'', licencia: d.arm_licencia||'', tenencia: d.arm_tenencia||'', estatus: d.arm_estatus||''}] : []);
+    armas.forEach(a => {
+        if (a.tipo || a.registro) armasHTML += (armasHTML ? '<br>' : '') + (a.tipo||'') + ' Reg:' + (a.registro||'') + ' Lic:' + (a.licencia||'') + ' Ten:' + (a.tenencia||'') + ' (' + (a.estatus||'') + ')';
+    });
+    if (!armasHTML) armasHTML = 'N/A';
+
+    // Build tatuajes display for ficha consultada
+    const tatsData = (d.tatuajesConFoto && d.tatuajesConFoto.length) ? d.tatuajesConFoto : [];
+    const tatsWithFoto = tatsData.filter(t => t.foto);
+    const tatTextParts = [];
+    tatsData.forEach(t => {
+        if (t.ubicacion || t.descripcion) tatTextParts.push((t.ubicacion||'') + ': ' + (t.descripcion||''));
+    });
+    const tatFichaLine = tatTextParts.length ? tatTextParts.join(' | ') : (d.foto_tatuajes || 'N/A');
+    let tatFichaFotosHTML = '';
+    if (tatsWithFoto.length > 0) {
+        tatFichaFotosHTML = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:6px;margin-top:4px;">';
+        tatsWithFoto.forEach(t => {
+            tatFichaFotosHTML += '<div style="text-align:center;"><img src="' + t.foto + '" style="max-width:100%;border:1px solid #2a3a5c;border-radius:4px;"><div style="font-size:11px;color:#ccc;">' + (t.ubicacion||'') + '</div><div style="font-size:10px;color:#aaa;">' + (t.descripcion||'') + '</div></div>';
+        });
+        tatFichaFotosHTML += '</div>';
+    }
+
+    // Build Lugar de Operatividad display for ficha consultada
+    const lugarFichaParts = [d.crim_lugar_depto, d.crim_lugar_muni, d.crim_lugar_aldea, d.crim_lugar_zona, d.crim_lugar_calle].filter(p => p);
+    const lugarFichaLine = lugarFichaParts.length ? lugarFichaParts.join(" / ") : (d.crim_lugar || "N/A");
+
     contenedor.innerHTML = `
-        ${d.foto ? `<div class="foto-ficha"><img src="${d.foto}"></div><br>` : ''}
+        ${fotosHTML}
         <div class="fila"><div class="celda-etiqueta">1. Operativo / Tipo:</div><div class="celda-dato">${d.id_operativo || 'N/A'} (${d.id_fecha} ${d.id_hora})</div></div>
         <div class="fila"><div class="celda-etiqueta">2. Nombre Completo:</div><div class="celda-dato"><b>${nomComp}</b> | DPI: ${d.g_dpi || ''} | Apodo: ${d.g_apodo || ''}</div></div>
-        <div class="fila"><div class="celda-etiqueta">3. Teléfono / IMEI:</div><div class="celda-dato">${d.tel_linea || ''} | IMEI: ${d.tel_imei || ''}</div></div>
+        <div class="fila"><div class="celda-etiqueta">3. Teléfono / IMEI:</div><div class="celda-dato">${telsHTML}</div></div>
         <div class="fila"><div class="celda-etiqueta">4. Dirección Exacta:</div><div class="celda-dato">${d.dir_exacta || ''}, Zona ${d.dir_zona || ''}, ${d.dir_muni || ''}</div></div>
         <div class="fila"><div class="celda-etiqueta">5. Familiares:</div><div class="celda-dato">${(d.familiares || []).map(f => f.nombre + ' (' + f.parentesco + ') DPI:' + f.dpi + (f.telefono ? ' Tel:' + f.telefono : '')).join(' | ') || (d.fam_nombre || '') + ' (' + (d.fam_parentesco || '') + ')'}</div></div>
         <div class="fila"><div class="celda-etiqueta">6. Características Físicas:</div><div class="celda-dato">Estatura: ${d.fis_estatura || ''} | Piel: ${d.fis_piel || ''} | Cicatrices: ${d.fis_cicatrices || ''}</div></div>
-        <div class="fila"><div class="celda-etiqueta">7. Redes Sociales:</div><div class="celda-dato">${d.red_tipo || ''}: ${d.red_alias || ''}</div></div>
+        <div class="fila"><div class="celda-etiqueta">7. Redes Sociales:</div><div class="celda-dato">${redesHTML}</div></div>
         <div class="fila"><div class="celda-etiqueta">8. Académicos / Oficio:</div><div class="celda-dato">${d.aca_nivel || ''} - ${d.aca_profesion || ''}</div></div>
         <div class="fila"><div class="celda-etiqueta">9. Historial Laboral:</div><div class="celda-dato">${d.lab_empresa || ''} (Jefe: ${d.lab_jefe || ''})</div></div>
         <div class="fila"><div class="celda-etiqueta">10. Patrimonio:</div><div class="celda-dato">${d.pat_tipo || ''} - ${d.pat_caract || ''}</div></div>
-        <div class="fila"><div class="celda-etiqueta">11. Arma de Fuego:</div><div class="celda-dato">${d.arm_tipo || ''} Reg: ${d.arm_registro || ''} (${d.arm_estatus || ''})</div></div>
+        <div class="fila"><div class="celda-etiqueta">11. Arma de Fuego:</div><div class="celda-dato">${armasHTML}</div></div>
         <div class="fila"><div class="celda-etiqueta">12. Org. Criminal:</div><div class="celda-dato">${d.crim_org || ''} - Clica: ${d.crim_clica || ''} - Rango: ${d.crim_rango || ''}</div></div>
+        <div class="fila"><div class="celda-etiqueta">Lugar de Operatividad:</div><div class="celda-dato">${lugarFichaLine}</div></div>
         <div class="fila"><div class="celda-etiqueta">13. Penitenciario:</div><div class="celda-dato">Centro: ${d.pen_centro || ''} | Delito: ${d.pen_delito || ''}</div></div>
         <div class="fila"><div class="celda-etiqueta">14. Migratorio:</div><div class="celda-dato">${d.mig_motivo || ''} (${d.mig_fecha || ''}) - Destino: ${d.mig_destino || ''}</div></div>
-        <div class="fila"><div class="celda-etiqueta">15. Tatuajes:</div><div class="celda-dato">${d.foto_tatuajes || ''}</div></div>
+        <div class="fila"><div class="celda-etiqueta">15. Tatuajes:</div><div class="celda-dato">${tatFichaLine}${tatFichaFotosHTML ? '<br>' + tatFichaFotosHTML : ''}</div></div>
         <div class="fila"><div class="celda-etiqueta">16. Financiero:</div><div class="celda-dato">Banco: ${d.fin_banco || ''} | Actividad: ${d.fin_actividad || ''}</div></div>
         <div class="fila"><div class="celda-etiqueta">17. Fuentes:</div><div class="celda-dato">Abiertas: ${d.fue_abiertas || ''} | Cerradas: ${d.fue_cerradas || ''}</div></div>
         ${(d.vehiculosVinculados && d.vehiculosVinculados.length) ? '<div class="fila"><div class="celda-etiqueta">18. Vehículos Vinculados:</div><div class="celda-dato">' + d.vehiculosVinculados.map(v => v.placa + ' (' + v.marca + ' ' + v.color + ')').join(', ') + '</div></div>' : ''}
@@ -5139,11 +5507,11 @@ async function rfBuscarPorRostro() {
                     <div class="rf-result-score ${scoreClass}">${pctSim}%</div>
                 `;
                 card.style.cursor = 'pointer';
-                card.title = 'Click para ver/editar esta ficha';
+                card.title = 'Click para ver la ficha de esta persona';
                 card.onclick = function() {
-                    // Cargar la ficha para edición
+                    // Mostrar la ficha consultada (solo lectura)
                     const fichaCompleta = Object.assign({}, c.ficha, { _key: c.key });
-                    CargarPersonaParaEditar(fichaCompleta);
+                    mostrarFichaConsultada(fichaCompleta);
                 };
                 resultsEl.appendChild(card);
             });
@@ -5182,16 +5550,13 @@ function rfBuscarPorTexto() {
     const coincidencias = historial.filter(i => {
         const camposTexto = [
             i.g_pnombre, i.g_snombre, i.g_papellido, i.g_sapellido, i.g_apodo, i.g_dpi,
-            i.tel_linea, i.tel_imei, i.tel_tipo,
             i.dir_exacta, i.dir_zona, i.dir_muni, i.dir_deptopais,
             i.fis_estatura, i.fis_piel, i.fis_complexion, i.fis_cabello, i.fis_ojos,
             i.fis_orejas, i.fis_labios, i.fis_nariz, i.fis_cicatrices, i.fis_discapacidad,
             i.fis_capacidades, i.fis_otros,
-            i.red_url, i.red_alias, i.red_tipo, i.red_actividad,
             i.aca_nivel, i.aca_carrera, i.aca_profesion,
             i.lab_empresa, i.lab_direccion, i.lab_jefe, i.lab_telefono,
-            i.arm_tipo, i.arm_registro, i.arm_licencia, i.arm_tenencia, i.arm_estatus,
-            i.crim_org, i.crim_act, i.crim_clica, i.crim_rango, i.crim_lugar,
+            i.crim_org, i.crim_act, i.crim_clica, i.crim_rango, i.crim_lugar_depto, i.crim_lugar_muni, i.crim_lugar_aldea, i.crim_lugar_zona, i.crim_lugar_calle,
             i.crim_estatus, i.crim_penales, i.crim_policiales, i.crim_aprehension,
             i.crim_causa, i.crim_colaboradores,
             i.pen_centro, i.pen_delito, i.pen_expediente, i.pen_oj,
@@ -5205,6 +5570,44 @@ function rfBuscarPorTexto() {
         for (const campo of camposTexto) {
             if (campo && String(campo).toLowerCase().includes(texto)) return true;
         }
+
+        // Buscar en telefonos
+        if (i.telefonos && Array.isArray(i.telefonos)) {
+            for (const tel of i.telefonos) {
+                if (tel.linea && tel.linea.toLowerCase().includes(texto)) return true;
+                if (tel.imei && tel.imei.toLowerCase().includes(texto)) return true;
+                if (tel.compania && tel.compania.toLowerCase().includes(texto)) return true;
+            }
+        }
+        // Fallback: buscar en campos antiguos de teléfono
+        if (i.tel_linea && i.tel_linea.toLowerCase().includes(texto)) return true;
+        if (i.tel_imei && i.tel_imei.toLowerCase().includes(texto)) return true;
+
+        // Buscar en redes sociales
+        if (i.redesSociales && Array.isArray(i.redesSociales)) {
+            for (const red of i.redesSociales) {
+                if (red.url && red.url.toLowerCase().includes(texto)) return true;
+                if (red.alias && red.alias.toLowerCase().includes(texto)) return true;
+                if (red.tipo && red.tipo.toLowerCase().includes(texto)) return true;
+            }
+        }
+        // Fallback: buscar en campos antiguos de redes
+        if (i.red_url && i.red_url.toLowerCase().includes(texto)) return true;
+        if (i.red_alias && i.red_alias.toLowerCase().includes(texto)) return true;
+        if (i.red_tipo && i.red_tipo.toLowerCase().includes(texto)) return true;
+
+        // Buscar en armas de fuego
+        if (i.armasFuego && Array.isArray(i.armasFuego)) {
+            for (const arm of i.armasFuego) {
+                if (arm.tipo && arm.tipo.toLowerCase().includes(texto)) return true;
+                if (arm.registro && arm.registro.toLowerCase().includes(texto)) return true;
+                if (arm.estatus && arm.estatus.toLowerCase().includes(texto)) return true;
+            }
+        }
+        // Fallback: buscar en campos antiguos de armas
+        if (i.arm_tipo && i.arm_tipo.toLowerCase().includes(texto)) return true;
+        if (i.arm_registro && i.arm_registro.toLowerCase().includes(texto)) return true;
+        if (i.arm_estatus && i.arm_estatus.toLowerCase().includes(texto)) return true;
 
         // Buscar en tatuajesConFoto
         if (i.tatuajesConFoto && Array.isArray(i.tatuajesConFoto)) {
@@ -5274,18 +5677,18 @@ function rfBuscarPorTexto() {
             <div class="rf-result-info">
                 <div class="rf-result-name">${c.g_pnombre || ''} ${c.g_snombre || ''} ${c.g_papellido || ''} ${c.g_sapellido || ''}</div>
                 <div class="rf-result-detail">DPI: ${c.g_dpi || 'N/A'} | Apodo: ${c.g_apodo || 'N/A'}</div>
-                <div class="rf-result-detail">Tel: ${c.tel_linea || 'N/A'} | Dir: ${c.dir_exacta || 'N/A'}</div>
+                <div class="rf-result-detail">Tel: ${(c.telefonos && c.telefonos.length) ? c.telefonos.map(t=>t.linea||"?").join(", ") : (c.tel_linea || "N/A")} | Dir: ${c.dir_exacta || 'N/A'}</div>
                 ${tatBadge}
                 ${orgBadge}
                 ${cicatrizBadge}
             </div>
         `;
         card.style.cursor = 'pointer';
-        card.title = 'Click para ver/editar esta ficha';
+        card.title = 'Click para ver la ficha de esta persona';
         card.onclick = function() {
             if (c._key) {
                 const fichaCompleta = Object.assign({}, c, { _key: c._key });
-                CargarPersonaParaEditar(fichaCompleta);
+                mostrarFichaConsultada(fichaCompleta);
             } else {
                 mostrarFichaConsultada(c);
             }
