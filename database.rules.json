@@ -1,0 +1,40 @@
+{
+  "rules": {
+    "fichasSIC": {
+      ".read": "auth != null",
+      ".write": "auth != null && (auth.token.admin === true || auth.token.role === 'operador' || auth.token.role === 'ingresador' || auth.token.role === 'analista')",
+      ".indexOn": ["dpi", "nombreCompleto", "fechaIngreso"]
+    },
+    "vehiculosSIC": {
+      ".read": "auth != null",
+      ".write": "auth != null && (auth.token.admin === true || auth.token.role === 'operador' || auth.token.role === 'ingresador' || auth.token.role === 'analista')",
+      ".indexOn": ["placa"]
+    },
+    "extorsivos": {
+      ".read": "auth != null",
+      ".write": "auth != null && (auth.token.admin === true || auth.token.role === 'ingresador' || auth.token.role === 'operador')",
+      ".indexOn": ["caso"]
+    },
+    "biblioteca": {
+      ".read": "auth != null",
+      ".write": "auth != null && auth.token.admin === true"
+    },
+    "usuariosSistema": {
+      ".read": "auth != null && auth.token.admin === true",
+      ".write": "auth != null && auth.token.admin === true",
+      "$pushId": {
+        "pass": {
+          ".write": false,
+          ".read": false
+        },
+        "authUid": {
+          ".read": "auth != null && auth.token.admin === true"
+        }
+      }
+    },
+    "$other": {
+      ".read": false,
+      ".write": false
+    }
+  }
+}
