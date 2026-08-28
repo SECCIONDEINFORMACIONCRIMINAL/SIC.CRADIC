@@ -3,18 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2064%2064%22%3E%0A%20%20%3Cdefs%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22bg%22%20x1%3D%220%25%22%20y1%3D%220%25%22%20x2%3D%22100%25%22%20y2%3D%22100%25%22%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%220%25%22%20style%3D%22stop-color%3A%2300529b%22/%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%22100%25%22%20style%3D%22stop-color%3A%23003366%22/%3E%0A%20%20%20%20%3C/linearGradient%3E%0A%20%20%3C/defs%3E%0A%20%20%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2212%22%20fill%3D%22url%28%23bg%29%22/%3E%0A%20%20%3Ctext%20x%3D%2232%22%20y%3D%2224%22%20text-anchor%3D%22middle%22%20font-family%3D%22Arial%2Csans-serif%22%20font-weight%3D%22bold%22%20font-size%3D%2214%22%20fill%3D%22%23ffffff%22%3ESIC%3C/text%3E%0A%20%20%3Ctext%20x%3D%2232%22%20y%3D%2238%22%20text-anchor%3D%22middle%22%20font-family%3D%22Arial%2Csans-serif%22%20font-weight%3D%22bold%22%20font-size%3D%228%22%20fill%3D%22%23FFD700%22%3EGRADIC%3C/text%3E%0A%20%20%3Cpath%20d%3D%22M16%2044%20L32%2052%20L48%2044%22%20stroke%3D%22%23FFD700%22%20stroke-width%3D%222%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22/%3E%0A%20%20%3Cpath%20d%3D%22M20%2048%20L32%2054%20L44%2048%22%20stroke%3D%22%23FFD700%22%20stroke-width%3D%221.5%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22%20opacity%3D%220.6%22/%3E%0A%3C/svg%3E">
+    <title>Sistema -ARGOS- - Investigacion Criminal</title>
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="./manifest.json">
     <meta name="theme-color" content="#00529b">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="SIC ARGOS">
-    <link rel="manifest" href="./manifest.json">
-    <link rel="apple-touch-icon" href="./icons/icon-192x192.png">
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2064%2064%22%3E%0A%20%20%3Cdefs%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22bg%22%20x1%3D%220%25%22%20y1%3D%220%25%22%20x2%3D%22100%25%22%20y2%3D%22100%25%22%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%220%25%22%20style%3D%22stop-color%3A%2300529b%22/%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%22100%25%22%20style%3D%22stop-color%3A%23003366%22/%3E%0A%20%20%20%20%3C/linearGradient%3E%0A%20%20%3C/defs%3E%0A%20%20%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2212%22%20fill%3D%22url%28%23bg%29%22/%3E%0A%20%20%3Ctext%20x%3D%2232%22%20y%3D%2224%22%20text-anchor%3D%22middle%22%20font-family%3D%22Arial%2Csans-serif%22%20font-weight%3D%22bold%22%20font-size%3D%2214%22%20fill%3D%22%23ffffff%22%3ESIC%3C/text%3E%0A%20%20%3Ctext%20x%3D%2232%22%20y%3D%2238%22%20text-anchor%3D%22middle%22%20font-family%3D%22Arial%2Csans-serif%22%20font-weight%3D%22bold%22%20font-size%3D%228%22%20fill%3D%22%23FFD700%22%3EGRADIC%3C/text%3E%0A%20%20%3Cpath%20d%3D%22M16%2044%20L32%2052%20L48%2044%22%20stroke%3D%22%23FFD700%22%20stroke-width%3D%222%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22/%3E%0A%20%20%3Cpath%20d%3D%22M20%2048%20L32%2054%20L44%2048%22%20stroke%3D%22%23FFD700%22%20stroke-width%3D%221.5%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22%20opacity%3D%220.6%22/%3E%0A%3C/svg%3E">
-    <title>Sistema -ARGOS- - Investigacion Criminal</title>
+    <link rel="apple-touch-icon" href="icons/icon-192x192.png">
+    <link rel="stylesheet" href="./pwa-mobile-fixes.css">
     <!-- Librería SheetJS para exportar a Excel -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <!-- PWA Mobile Responsive Styles -->
-    <link rel="stylesheet" href="./pwa-mobile-fixes.css">
     <style>
         * {
             margin: 0;
@@ -164,13 +164,6 @@
             border-radius: 8px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
             flex-wrap: wrap;
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-            scrollbar-width: none;
-        }
-
-        .nav-bar::-webkit-scrollbar {
-            display: none;
         }
 
         .nav-btn {
@@ -182,8 +175,6 @@
             border-radius: 6px;
             cursor: pointer;
             transition: all 0.2s;
-            white-space: nowrap;
-            min-width: auto;
         }
 
         .nav-btn:hover {
@@ -5986,70 +5977,17 @@ function rfActualizarEstadisticasMigracion() {
 
 </script>
 
-<!-- ===== REGISTRO DEL SERVICE WORKER (PWA) ===== -->
+<!-- PWA Service Worker -->
 <script>
 if ('serviceWorker' in navigator) {
-    window.addEventListener('load', function() {
-        navigator.serviceWorker.register('./sw.js')
-            .then(function(registration) {
-                console.log('[PWA] Service Worker registrado exitosamente:', registration.scope);
-                
-                // Verificar actualizaciones cada 30 minutos
-                setInterval(function() {
-                    registration.update();
-                }, 1800000);
-            })
-            .catch(function(error) {
-                console.error('[PWA] Error al registrar Service Worker:', error);
-            });
+  navigator.serviceWorker.register('./sw.js')
+    .then(reg => console.log('SW registrado:', reg.scope))
+    .catch(err => console.log('SW error:', err));
+}
 
-        // Mostrar prompt de instalación cuando esté disponible
-        var deferredPrompt;
-        window.addEventListener('beforeinstallprompt', function(e) {
-            e.preventDefault();
-            deferredPrompt = e;
-            console.log('[PWA] Prompt de instalación listo');
-
-            // Crear botón de instalar si no existe
-            var existingBtn = document.getElementById('pwa-install-btn');
-            if (!existingBtn) {
-                var installBtn = document.createElement('button');
-                installBtn.id = 'pwa-install-btn';
-                installBtn.textContent = '📲 Instalar App';
-                installBtn.style.cssText = 'position:fixed;bottom:20px;right:20px;z-index:10000;background:#00529b;color:white;border:none;border-radius:30px;padding:14px 24px;font-size:15px;font-weight:bold;cursor:pointer;box-shadow:0 4px 15px rgba(0,82,155,0.4);animation:pwa-pulse 2s infinite;';
-                
-                // Agregar animación CSS
-                var style = document.createElement('style');
-                style.textContent = '@keyframes pwa-pulse{0%,100%{transform:scale(1);box-shadow:0 4px 15px rgba(0,82,155,0.4)}50%{transform:scale(1.05);box-shadow:0 6px 20px rgba(0,82,155,0.6)}}';
-                document.head.appendChild(style);
-
-                installBtn.addEventListener('click', function() {
-                    deferredPrompt.prompt();
-                    deferredPrompt.userChoice.then(function(choiceResult) {
-                        if (choiceResult.outcome === 'accepted') {
-                            console.log('[PWA] Usuario instaló la app');
-                        }
-                        deferredPrompt = null;
-                        installBtn.remove();
-                    });
-                });
-
-                document.body.appendChild(installBtn);
-            }
-        });
-
-        // Detectar si ya está instalada como PWA
-        window.addEventListener('appinstalled', function() {
-            console.log('[PWA] App instalada correctamente');
-            var btn = document.getElementById('pwa-install-btn');
-            if (btn) btn.remove();
-        });
-
-        // Detectar modo standalone (ya instalada)
-        if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
-            console.log('[PWA] Ejecutándose como app instalada');
-        }
-    });
+// Detectar modo standalone y ocultar botón instalar si ya es PWA
+if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
+  document.documentElement.classList.add('standalone');
 }
 </script>
 </body>
