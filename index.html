@@ -2776,11 +2776,42 @@ function renderizarTablaUsuarios() {
             <td><span style="color:${u.estado === 'Activo' ? 'green' : 'red'}; font-weight:bold;">${u.estado}</span></td>
             <td>
                 ${esAdmin && u.usuario !== 'admin' ? `
+                    <button onclick="restablecerClave('${u._key}')" style="background:#f39c12; color:white; border:none; padding:4px 8px; border-radius:3px; cursor:pointer; margin-right:4px;">Restablecer Clave</button>
                     <button onclick="eliminarUsuario('${u._key}')" style="background:#e74c3c; color:white; border:none; padding:4px 8px; border-radius:3px; cursor:pointer;">Eliminar</button>
                 ` : '<span style="color:#aaa; font-size:12px;">Sin acciones</span>'}
             </td>
         `;
         tbody.appendChild(tr);
+    });
+}
+
+function restablecerClave(key) {
+    const usuarios = obtenerUsuarios();
+    const usuario = usuarios.find(u => u._key === key);
+    if (!usuario) {
+        alert('Usuario no encontrado.');
+        return;
+    }
+    
+    const nuevaPass = prompt('Ingrese la nueva contraseña para "' + usuario.usuario + '"\n(Mínimo 6 caracteres. Si deja vacío se restablecerá a: Cradic2024!)');
+    
+    if (nuevaPass === null) return; // Canceló
+    
+    const restablecerCF = firebase.functions().httpsCallable('restablecerPassword');
+    restablecerCF({ 
+        authUid: usuario.authUid || '',
+        nuevaPassword: nuevaPass || ''
+    })
+    .then(function(result) {
+        if (result.data.success) {
+            alert('✅ ' + result.data.mensaje);
+        } else {
+            alert('❌ Error: ' + (result.data.error || 'Error desconocido'));
+        }
+    })
+    .catch(function(err) {
+        console.error('[CF] Error restablecerPassword:', err);
+        alert('❌ Error al restablecer contraseña: ' + err.message);
     });
 }
 
@@ -2795,7 +2826,7 @@ function eliminarUsuario(key) {
         }
         // Usar Cloud Function para eliminar de Firebase Auth + RTDB
         const eliminarUsuarioCF = firebase.functions().httpsCallable('eliminarUsuario');
-        eliminarUsuarioCF({ authUid: usuario.authUid || '', rtdbKey: key, usuario: usuario.usuario })
+        eliminarUsuarioCF({ authUid: usuario.authUid || '', pushId: key, usuario: usuario.usuario })
             .then(function(result) {
                 if (result.data.success) {
                     alert('✅ Usuario eliminado de Firebase Auth y RTDB.');
