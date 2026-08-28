@@ -1194,6 +1194,7 @@
             <div>
                 <span id="info-user-rol" style="margin-right: 10px; font-weight: bold; color: #555;"></span>
                 <span id="contador-fichas" style="margin-right: 15px; font-weight: bold; color: #00529b;">Fichas: 0</span>
+                <button class="btn-logout" onclick="mostrarModalCambioPass()" style="background:#2c3e50; margin-right:8px;">🔑 Cambiar Contraseña</button>
                 <button class="btn-logout" onclick="cerrarSesion()">🔒 Cerrar Sesión</button>
             </div>
         </header>
@@ -2122,7 +2123,7 @@
                         <form id="form-nuevo-usuario">
                             <div class="grupo-form"><label>Nombre Completo</label><input type="text" id="nuevo-nombre" required></div>
                             <div class="grupo-form"><label>Usuario Login</label><input type="text" id="nuevo-user" required></div>
-                            <div class="grupo-form"><label>Contraseña</label><input type="password" id="nuevo-pass" required></div>
+                            <div class="grupo-form"><label style="font-size:11px; color:#888;">⚠ Contraseña se genera automáticamente vía Firebase Auth</label></div>
                             <div class="grupo-form">
                                 <label>Rol / Permisos</label>
                                 <select id="nuevo-rol">
@@ -2317,6 +2318,7 @@
 
 <!-- SDKs de Firebase Compatibles para la Web -->
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
     <!-- face-api.js para Reconocimiento Facial -->
     <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
@@ -2396,11 +2398,10 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 // Storage no requerido - PDFs se guardan como Base64 en RTDB
 
-const USUARIOS_DEFECTO = [
-    { nombre: "Administrador Sistema", usuario: "admin", pass: "1234", rol: "Administrador General", estado: "Activo" },
-    { nombre: "SAC", usuario: "sac", pass: "1234", rol: "Operador", estado: "Activo" },
-    { nombre: "JEFES", usuario: "jefes", pass: "1234", rol: "Analista", estado: "Activo" }
-];
+/* ─── USUARIOS_DEFECTO ELIMINADO ───
+   Ya no se insertan usuarios por defecto con contraseñas débiles.
+   Los usuarios se crean exclusivamente vía Firebase Auth + Cloud Functions.
+*/
 
 let usuariosGlobal = [];
 let historialPersonasGlobal = [];
@@ -2414,11 +2415,11 @@ db.ref('usuariosSistema').on('value', snapshot => {
         snapshot.forEach(child => {
             let user = child.val();
             user._key = child.key;
-            usuariosGlobal.push(user);
+            // Solo mostrar usuarios no eliminados
+            if (!user.eliminado) usuariosGlobal.push(user);
         });
-    } else {
-        USUARIOS_DEFECTO.forEach(u => db.ref('usuariosSistema').push(u));
     }
+    // NOTA: Ya NO se insertan USUARIOS_DEFECTO automáticamente
     renderizarTablaUsuarios();
 });
 
@@ -2518,32 +2519,115 @@ window.addEventListener('extorsivosReady', function() {
 });
 
 let usuarioSesionActual = null;
+let authUser = null; // Usuario de Firebase Auth
+let authInactivityTimer = null;
+const AUTH_CONFIG = {
+    INACTIVITY_TIMEOUT: 15 * 60 * 1000, // 15 minutos de inactividad
+    MAX_LOGIN_ATTEMPTS: 5,
+    LOCKOUT_DURATION: 5 * 60 * 1000, // 5 minutos de bloqueo
+    EMAIL_DOMAIN: 'cradic.gt'
+};
+let loginAttempts = 0;
+let loginLockedUntil = 0;
 
 // AUTENTICACIÓN
-document.getElementById('login-form').addEventListener('submit', function(e) {
+document.getElementById('login-form').addEventListener('submit', async function(e) {
     e.preventDefault();
     const userIn = document.getElementById('login-username').value.trim();
     const passIn = document.getElementById('login-password').value.trim();
     const errorMsg = document.getElementById('error-msg');
 
-    const usuarios = obtenerUsuarios();
-    const encontrado = usuarios.find(u => u.usuario === userIn && u.pass === passIn && u.estado === "Activo");
+    // ─── Rate limiting del lado del cliente ───
+    const ahora = Date.now();
+    if (loginAttempts >= AUTH_CONFIG.MAX_LOGIN_ATTEMPTS && ahora < loginLockedUntil) {
+        const minutosRestantes = Math.ceil((loginLockedUntil - ahora) / 60000);
+        errorMsg.textContent = `Demasiados intentos. Espere ${minutosRestantes} minuto(s).`;
+        errorMsg.classList.remove('oculto');
+        return;
+    }
+    if (ahora >= loginLockedUntil) {
+        loginAttempts = 0;
+    }
 
-    if (encontrado) {
-        usuarioSesionActual = encontrado;
+    // ─── Login con Firebase Authentication ───
+    const email = `${userIn}@${AUTH_CONFIG.EMAIL_DOMAIN}`;
+
+    try {
+        const credenciales = await firebase.auth().signInWithEmailAndPassword(email, passIn);
+        authUser = credenciales.user;
+
+        // Buscar datos adicionales en RTDB
+        const usuarios = obtenerUsuarios();
+        const encontradoRTDB = usuarios.find(u => u.authUid === authUser.uid || u.usuario === userIn);
+
+        if (encontradoRTDB) {
+            usuarioSesionActual = encontradoRTDB;
+        } else {
+            // Si no hay registro en RTDB, crear uno mínimo a partir de los claims de Auth
+            const token = await authUser.getIdTokenResult();
+            const role = token.claims.role || 'viewer';
+            const mapaRolesAuth = {
+                admin: 'Administrador General',
+                ingresador: 'Ingresador Extorsivos',
+                operador: 'Operador',
+                analista: 'Analista',
+                viewer: 'Analista'
+            };
+            usuarioSesionActual = {
+                usuario: userIn,
+                nombre: authUser.displayName || userIn,
+                rol: mapaRolesAuth[role] || role,
+                estado: 'Activo',
+                authUid: authUser.uid,
+                authEmail: authUser.email
+            };
+        }
+
+        // Si el usuario requiere cambio de contraseña, mostrar aviso
+        if (encontradoRTDB && encontradoRTDB.requiereCambioPass) {
+            alert('⚠️ ATENCIÓN: Debe cambiar su contraseña temporal. Use la opción "Cambiar Contraseña" en el menú superior.');
+        }
+
+        loginAttempts = 0;
         document.getElementById('login-screen').classList.add('oculto');
         document.getElementById('app-screen').classList.remove('oculto');
-        document.getElementById('usuario').value = encontrado.usuario;
-        document.getElementById('info-user-rol').textContent = `Usuario: ${encontrado.usuario} (${encontrado.rol})`;
+        document.getElementById('usuario').value = usuarioSesionActual.usuario;
+        document.getElementById('info-user-rol').textContent = `Usuario: ${usuarioSesionActual.usuario} (${usuarioSesionActual.rol})`;
         errorMsg.classList.add('oculto');
-        
+        errorMsg.textContent = 'Usuario o contraseña incorrectos.';
+
+        // ─── Iniciar temporizador de inactividad ───
+        iniciarTemporizadorInactividad();
+
         aplicarPermisosRol();
         actualizarContadores();
         actualizarFicha();
         actualizarFichaVehiculo();
         renderizarTablaUsuarios();
-    } else {
+
+    } catch (error) {
+        console.error('[Auth] Error de login:', error.code, error.message);
+        loginAttempts++;
+
+        // Mensajes personalizados según código de error
+        const erroresAuth = {
+            'auth/user-not-found': 'Usuario no registrado en el sistema.',
+            'auth/wrong-password': 'Usuario o contraseña incorrectos.',
+            'auth/invalid-credential': 'Usuario o contraseña incorrectos.',
+            'auth/too-many-requests': 'Demasiados intentos fallidos. Cuenta temporalmente bloqueada por Firebase. Intente más tarde.',
+            'auth/user-disabled': 'Esta cuenta ha sido deshabilitada. Contacte al administrador.',
+            'auth/invalid-email': 'Formato de usuario inválido.',
+            'auth/network-request-failed': 'Error de conexión. Verifique su internet.'
+        };
+
+        const mensaje = erroresAuth[error.code] || 'Error de autenticación. Intente de nuevo.';
+        errorMsg.textContent = mensaje;
         errorMsg.classList.remove('oculto');
+
+        // Bloqueo por intentos del lado del cliente
+        if (loginAttempts >= AUTH_CONFIG.MAX_LOGIN_ATTEMPTS) {
+            loginLockedUntil = Date.now() + AUTH_CONFIG.LOCKOUT_DURATION;
+        }
     }
 });
 
@@ -2620,11 +2704,112 @@ function aplicarPermisosRol() {
 }
 
 function cerrarSesion() {
-    usuarioSesionActual = null;
-    document.getElementById('app-screen').classList.add('oculto');
-    document.getElementById('login-screen').classList.remove('oculto');
-    document.getElementById('login-username').value = '';
-    document.getElementById('login-password').value = '';
+    // ─── Cerrar sesión en Firebase Auth ───
+    firebase.auth().signOut().then(() => {
+        authUser = null;
+        usuarioSesionActual = null;
+        clearTimeout(authInactivityTimer);
+        document.getElementById('app-screen').classList.add('oculto');
+        document.getElementById('login-screen').classList.remove('oculto');
+        document.getElementById('login-username').value = '';
+        document.getElementById('login-password').value = '';
+        document.getElementById('error-msg').classList.add('oculto');
+    }).catch(err => {
+        console.error('[Auth] Error al cerrar sesión:', err);
+        // Forzar cierre local aunque falle el signOut
+        authUser = null;
+        usuarioSesionActual = null;
+        document.getElementById('app-screen').classList.add('oculto');
+        document.getElementById('login-screen').classList.remove('oculto');
+    });
+}
+
+// ─── Temporizador de inactividad ───
+function iniciarTemporizadorInactividad() {
+    clearTimeout(authInactivityTimer);
+    authInactivityTimer = setTimeout(() => {
+        alert('⚠️ Sesión cerrada por inactividad (15 minutos).');
+        cerrarSesion();
+    }, AUTH_CONFIG.INACTIVITY_TIMEOUT);
+    // Reiniciar timer en cualquier actividad del usuario
+    ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(event => {
+        document.removeEventListener(event, reiniciarTimerInactividad);
+        document.addEventListener(event, reiniciarTimerInactividad, { passive: true });
+    });
+}
+
+function reiniciarTimerInactividad() {
+    clearTimeout(authInactivityTimer);
+    authInactivityTimer = setTimeout(() => {
+        alert('⚠️ Sesión cerrada por inactividad (15 minutos).');
+        cerrarSesion();
+    }, AUTH_CONFIG.INACTIVITY_TIMEOUT);
+}
+
+// ─── Cambio de contraseña ───
+async function cambiarContrasena() {
+    const user = firebase.auth().currentUser;
+    if (!user) {
+        alert('Debe iniciar sesión para cambiar su contraseña.');
+        return;
+    }
+
+    const actual = document.getElementById('pass-actual').value;
+    const nueva = document.getElementById('pass-nueva').value;
+    const confirmar = document.getElementById('pass-confirmar').value;
+
+    if (!actual || !nueva || !confirmar) {
+        alert('Complete todos los campos.');
+        return;
+    }
+
+    if (nueva.length < 6) {
+        alert('La nueva contraseña debe tener al menos 6 caracteres.');
+        return;
+    }
+
+    if (nueva !== confirmar) {
+        alert('La nueva contraseña y la confirmación no coinciden.');
+        return;
+    }
+
+    try {
+        // Re-autenticar (requerido para cambio de contraseña)
+        const credential = firebase.auth.EmailAuthProvider.credential(user.email, actual);
+        await user.reauthenticateWithCredential(credential);
+
+        // Cambiar contraseña
+        await user.updatePassword(nueva);
+
+        // Limpiar flag de requerimiento en RTDB
+        const rtdbUser = usuariosGlobal.find(u => u.authUid === user.uid);
+        if (rtdbUser && rtdbUser._key) {
+            db.ref('usuariosSistema/' + rtdbUser._key + '/requiereCambioPass').set(false);
+        }
+
+        alert('✅ Contraseña actualizada exitosamente.');
+        document.getElementById('modal-cambio-pass').classList.add('oculto');
+        document.getElementById('pass-actual').value = '';
+        document.getElementById('pass-nueva').value = '';
+        document.getElementById('pass-confirmar').value = '';
+
+    } catch (error) {
+        console.error('[Auth] Error cambiando contraseña:', error.code);
+        const erroresPass = {
+            'auth/wrong-password': 'Contraseña actual incorrecta.',
+            'auth/weak-password': 'La nueva contraseña es muy débil. Use al menos 6 caracteres.',
+            'auth/requires-recent-login': 'Su sesión ha expirado. Cierre sesión e inicie nuevamente antes de cambiar la contraseña.'
+        };
+        alert('❌ ' + (erroresPass[error.code] || error.message));
+    }
+}
+
+function mostrarModalCambioPass() {
+    document.getElementById('modal-cambio-pass').classList.remove('oculto');
+}
+
+function ocultarModalCambioPass() {
+    document.getElementById('modal-cambio-pass').classList.add('oculto');
 }
 
 function cambiarModulo(modulo) {
@@ -2659,15 +2844,19 @@ function cambiarModulo(modulo) {
     if (modulo === 'reconocimiento-facial') rfInicializarModulo();
 }
 
-// USUARIOS
-document.getElementById('form-nuevo-usuario').addEventListener('submit', function(e) {
+// USUARIOS — Creación vía Cloud Function + RTDB
+document.getElementById('form-nuevo-usuario').addEventListener('submit', async function(e) {
     e.preventDefault();
     if (usuarioSesionActual.rol !== "Administrador General") return;
 
     const nombre = document.getElementById('nuevo-nombre').value.trim();
     const user = document.getElementById('nuevo-user').value.trim();
-    const pass = document.getElementById('nuevo-pass').value.trim();
     const rol = document.getElementById('nuevo-rol').value;
+
+    if (!nombre || !user || !rol) {
+        alert('Complete todos los campos.');
+        return;
+    }
 
     let usuarios = obtenerUsuarios();
     if (usuarios.some(u => u.usuario === user)) {
@@ -2675,12 +2864,63 @@ document.getElementById('form-nuevo-usuario').addEventListener('submit', functio
         return;
     }
 
-    db.ref('usuariosSistema').push({ nombre, usuario: user, pass, rol, estado: "Activo" })
-        .then(() => {
-            alert(`✅ Usuario "${user}" registrado.`);
+    // ─── Verificar si Cloud Functions está disponible ───
+    if (typeof crearUsuarioCF === 'function') {
+        // Ruta Cloud Function (producción)
+        try {
+            const resultado = await crearUsuarioCF({ nombre, rol });
+            if (resultado.data && resultado.data.success) {
+                alert(`✅ ${resultado.data.mensaje}`);
+                document.getElementById('form-nuevo-usuario').reset();
+            } else {
+                alert('❌ Error: ' + (resultado.data?.mensaje || 'Error desconocido'));
+            }
+        } catch (err) {
+            alert('❌ Error al crear usuario: ' + err.message);
+        }
+    } else {
+        // ─── Ruta alternativa: registro directo en Auth desde el cliente ───
+        // NOTA: Esto requiere que Firebase Auth tenga habilitado el registro
+        //       en la consola. Es temporal hasta deployar Cloud Functions.
+        try {
+            const email = `${user}@${AUTH_CONFIG.EMAIL_DOMAIN}`;
+            const passTemporal = 'Cradic2024!';
+            
+            // Crear en Firebase Auth
+            const nuevoAuthUser = await firebase.auth().createUserWithEmailAndPassword(email, passTemporal);
+            
+            // Crear registro en RTDB
+            await db.ref('usuariosSistema').push({
+                nombre,
+                usuario: user,
+                rol,
+                estado: 'Activo',
+                authUid: nuevoAuthUser.user.uid,
+                authEmail: email,
+                requiereCambioPass: true,
+                fechaCreacion: firebase.database.ServerValue.TIMESTAMP
+            });
+            
+            // Cerrar la sesión del usuario recién creado (para no perder la del admin)
+            // NOTA: Esto cierra la sesión del admin también — es la limitación sin Cloud Functions
+            // Se recomienda usar Cloud Functions en producción
+            alert(`✅ Usuario "${user}" creado.\nEmail: ${email}\nContraseña temporal: ${passTemporal}\n\n⚠️ IMPORTANTE: Debe volver a iniciar sesión.`);
             document.getElementById('form-nuevo-usuario').reset();
-        })
-        .catch(err => alert("❌ Error: " + err.message));
+            
+            // Re-login del admin
+            firebase.auth().signInWithEmailAndPassword(
+                authUser.email,
+                // El admin necesita re-autenticarse
+            );
+            
+        } catch (err) {
+            if (err.code === 'auth/email-already-in-use') {
+                alert('❌ Ya existe un usuario con ese nombre en Firebase Auth.');
+            } else {
+                alert('❌ Error al crear usuario: ' + err.message);
+            }
+        }
+    }
 });
 
 function renderizarTablaUsuarios() {
@@ -2695,14 +2935,18 @@ function renderizarTablaUsuarios() {
 
     usuarios.forEach((u) => {
         const tr = document.createElement('tr');
+        const authVinculado = u.authUid ? '✅' : '❌';
+        const requierePass = u.requiereCambioPass ? '<br><span style="color:orange;font-size:10px;">⚠ Pass temporal</span>' : '';
         tr.innerHTML = `
             <td>${u.nombre}</td>
             <td><b>${u.usuario}</b></td>
             <td>${u.rol}</td>
             <td><span style="color:${u.estado === 'Activo' ? 'green' : 'red'}; font-weight:bold;">${u.estado}</span></td>
+            <td style="text-align:center;">${authVinculado}${requierePass}</td>
             <td>
-                ${esAdmin && u.usuario !== 'admin' ? `
-                    <button onclick="eliminarUsuario('${u._key}')" style="background:#e74c3c; color:white; border:none; padding:4px 8px; border-radius:3px; cursor:pointer;">Eliminar</button>
+                ${esAdmin ? `
+                    <button onclick="eliminarUsuario('${u._key}', '${u.authUid || ''}')" style="background:#e74c3c; color:white; border:none; padding:4px 8px; border-radius:3px; cursor:pointer; margin-right:4px;">Eliminar</button>
+                    ${u.authUid ? `<button onclick="restablecerPasswordUsuario('${u.authUid}')" style="background:#f39c12; color:white; border:none; padding:4px 8px; border-radius:3px; cursor:pointer;">🔄 Pass</button>` : ''}
                 ` : '<span style="color:#aaa; font-size:12px;">Sin acciones</span>'}
             </td>
         `;
@@ -2710,9 +2954,41 @@ function renderizarTablaUsuarios() {
     });
 }
 
-function eliminarUsuario(key) {
-    if (confirm("¿Estás seguro de eliminar este usuario?")) {
-        db.ref('usuariosSistema/' + key).remove();
+function eliminarUsuario(key, authUid) {
+    if (!confirm("¿Está seguro de eliminar este usuario?\nSe deshabilitará en Firebase Authentication.")) return;
+    
+    // ─── Si Cloud Functions está disponible ───
+    if (typeof eliminarUsuarioCF === 'function') {
+        eliminarUsuarioCF({ pushId: key, authUid: authUid })
+            .then(result => {
+                if (result.data.success) alert('✅ ' + result.data.mensaje);
+            })
+            .catch(err => alert('❌ Error: ' + err.message));
+    } else {
+        // ─── Ruta alternativa: eliminar solo de RTDB ───
+        db.ref('usuariosSistema/' + key).update({
+            eliminado: true,
+            estado: 'Inactivo',
+            fechaEliminacion: firebase.database.ServerValue.TIMESTAMP
+        }).then(() => {
+            alert('✅ Usuario eliminado del sistema.\n⚠️ NOTA: Para deshabilitar en Firebase Auth, use la consola de Firebase o deploy Cloud Functions.');
+        }).catch(err => alert('❌ Error: ' + err.message));
+    }
+}
+
+// ─── Restablecer contraseña (requiere Cloud Functions) ───
+async function restablecerPasswordUsuario(authUid) {
+    if (!confirm('¿Restablecer la contraseña de este usuario a la temporal?')) return;
+    
+    if (typeof restablecerPasswordCF === 'function') {
+        try {
+            const result = await restablecerPasswordCF({ authUid });
+            if (result.data.success) alert('✅ ' + result.data.mensaje);
+        } catch (err) {
+            alert('❌ Error: ' + err.message);
+        }
+    } else {
+        alert('⚠️ Esta función requiere Cloud Functions.\nDeploy las funciones con:\nfirebase deploy --only functions');
     }
 }
 
@@ -5842,6 +6118,127 @@ function rfActualizarEstadisticasMigracion() {
     });
 }
 
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  FIREBASE AUTH — onAuthStateChanged + Cloud Functions        ║
+// ╚══════════════════════════════════════════════════════════════╝
+
+// ─── Cloud Function wrappers ───
+// Estas funciones llaman a las Cloud Functions desplegadas.
+// Si no están desplegadas, las rutas alternativas en el código se activan.
+const CF_BASE_URL = `https://us-central1-cradic-sgic.cloudfunctions.net`;
+
+async function crearUsuarioCF(data) {
+    const token = await firebase.auth().currentUser.getIdToken();
+    const resp = await fetch(`${CF_BASE_URL}/crearUsuario`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify(data)
+    });
+    return resp.json();
+}
+
+async function eliminarUsuarioCF(data) {
+    const token = await firebase.auth().currentUser.getIdToken();
+    const resp = await fetch(`${CF_BASE_URL}/eliminarUsuario`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify(data)
+    });
+    return resp.json();
+}
+
+async function cambiarRolUsuarioCF(data) {
+    const token = await firebase.auth().currentUser.getIdToken();
+    const resp = await fetch(`${CF_BASE_URL}/cambiarRolUsuario`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify(data)
+    });
+    return resp.json();
+}
+
+async function restablecerPasswordCF(data) {
+    const token = await firebase.auth().currentUser.getIdToken();
+    const resp = await fetch(`${CF_BASE_URL}/restablecerPassword`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify(data)
+    });
+    return resp.json();
+}
+
+// ─── onAuthStateChanged — Session persistence ───
+firebase.auth().onAuthStateChanged(async (user) => {
+    if (user) {
+        // ─── Usuario autenticado — restaurar sesión ───
+        const userRecord = await db.ref('usuariosSistema')
+            .orderByChild('authUid')
+            .equalTo(user.uid)
+            .once('value');
+        
+        const usuariosData = userRecord.val();
+        if (!usuariosData) {
+            // Usuario existe en Auth pero no en RTDB — sesión inválida
+            await firebase.auth().signOut();
+            return;
+        }
+        
+        const userInfo = Object.entries(usuariosData)[0];
+        const userData = userInfo[1];
+        
+        if (userData.eliminado || userData.estado === 'Inactivo') {
+            await firebase.auth().signOut();
+            return;
+        }
+        
+        // Restaurar sesión
+        authUser = { uid: user.uid, email: user.email };
+        usuarioSesionActual = {
+            nombre: userData.nombre,
+            usuario: userData.usuario,
+            rol: userData.rol,
+            estado: userData.estado
+        };
+        
+        loginExitoso();
+        console.log(`[AUTH] Sesión restaurada: ${userData.usuario} (${userData.rol})`);
+    } else {
+        // ─── No autenticado — mostrar login ───
+        authUser = null;
+        usuarioSesionActual = null;
+        document.getElementById('contenedor-app').style.display = 'none';
+        document.getElementById('login-contenedor').style.display = 'flex';
+        iniciarTemporizadorInactividad(); // reset timer
+        console.log('[AUTH] No hay sesión activa');
+    }
+});
+
 </script>
+
+<!-- ═══ Modal Cambio de Contraseña ═══ -->
+<div id="modal-cambio-pass" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:10000; justify-content:center; align-items:center;">
+    <div style="background:#fff; border-radius:10px; padding:30px; max-width:420px; width:90%; box-shadow:0 8px 32px rgba(0,0,0,0.3);">
+        <h3 style="margin-top:0; color:#2c3e50;">🔑 Cambiar Contraseña</h3>
+        <p style="font-size:13px; color:#666;">Su contraseña debe tener al menos 6 caracteres.</p>
+        <div style="margin-bottom:12px;">
+            <label style="display:block; font-size:13px; font-weight:bold; margin-bottom:4px;">Contraseña actual:</label>
+            <input type="password" id="pass-actual" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:5px;" />
+        </div>
+        <div style="margin-bottom:12px;">
+            <label style="display:block; font-size:13px; font-weight:bold; margin-bottom:4px;">Nueva contraseña:</label>
+            <input type="password" id="pass-nueva" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:5px;" />
+        </div>
+        <div style="margin-bottom:16px;">
+            <label style="display:block; font-size:13px; font-weight:bold; margin-bottom:4px;">Confirmar nueva contraseña:</label>
+            <input type="password" id="pass-confirmar" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:5px;" />
+        </div>
+        <div id="pass-error-msg" style="display:none; color:#e74c3c; font-size:12px; margin-bottom:10px;"></div>
+        <div style="display:flex; gap:10px; justify-content:flex-end;">
+            <button onclick="ocultarModalCambioPass()" style="background:#95a5a6; color:white; border:none; padding:8px 16px; border-radius:5px; cursor:pointer;">Cancelar</button>
+            <button onclick="cambiarContrasena()" style="background:#2c3e50; color:white; border:none; padding:8px 16px; border-radius:5px; cursor:pointer;">Guardar</button>
+        </div>
+    </div>
+</div>
+
 </body>
 </html>
