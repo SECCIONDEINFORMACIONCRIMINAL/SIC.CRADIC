@@ -2,25 +2,29 @@
   "rules": {
     "fichasSIC": {
       ".read": "auth != null",
-      ".write": "auth != null && (auth.token.admin === true || auth.token.role === 'operador' || auth.token.role === 'ingresador' || auth.token.role === 'analista')",
+      ".write": "auth != null",
       ".indexOn": ["dpi", "nombreCompleto", "fechaIngreso"]
     },
-    "vehiculosSIC": {
+    
+    "fichasVehiculos": {
       ".read": "auth != null",
-      ".write": "auth != null && (auth.token.admin === true || auth.token.role === 'operador' || auth.token.role === 'ingresador' || auth.token.role === 'analista')",
+      ".write": "auth != null",
       ".indexOn": ["placa"]
     },
-    "extorsivos": {
+    
+    "numerosExtorsivos": {
       ".read": "auth != null",
-      ".write": "auth != null && (auth.token.admin === true || auth.token.role === 'ingresador' || auth.token.role === 'operador')",
-      ".indexOn": ["caso"]
+      ".write": "auth != null",
+      ".indexOn": ["casoNo", "telefonoExtorsionista"]
     },
-    "biblioteca": {
+    
+    "bibliotecaDocumentos": {
       ".read": "auth != null",
       ".write": "auth != null && auth.token.admin === true"
     },
+    
     "usuariosSistema": {
-      ".read": "auth != null && auth.token.admin === true",
+      ".read": "auth != null",
       ".write": "auth != null && auth.token.admin === true",
       "$pushId": {
         "pass": {
@@ -28,10 +32,11 @@
           ".read": false
         },
         "authUid": {
-          ".read": "auth != null && auth.token.admin === true"
+          ".read": "auth != null"
         }
       }
     },
+    
     "$other": {
       ".read": false,
       ".write": false
