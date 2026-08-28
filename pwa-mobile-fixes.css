@@ -1,0 +1,222 @@
+
+/* ===== PWA - MEJORAS MOBILE RESPONSIVE ===== */
+
+/* Header compacto en móvil */
+@media (max-width: 768px) {
+    .header-app {
+        flex-direction: column;
+        padding: 8px 12px;
+        gap: 8px;
+    }
+
+    .header-app-logo img {
+        height: 60px;
+    }
+
+    .header-app-logo-text h1 {
+        font-size: 16px;
+        letter-spacing: 1px;
+    }
+
+    .header-app-logo-text span {
+        font-size: 9px;
+    }
+
+    /* Navegación horizontal scrolleable en móvil */
+    .nav-bar {
+        flex-wrap: nowrap;
+        padding: 6px 10px;
+        gap: 6px;
+    }
+
+    .nav-btn {
+        padding: 8px 14px;
+        font-size: 12px;
+        flex-shrink: 0;
+    }
+
+    /* Contenedor principal en columna */
+    .contenedor-principal {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .formulario, .vista-ficha {
+        min-width: 100%;
+        max-height: none;
+    }
+
+    /* Formulario más compacto */
+    .grupo-form {
+        margin-bottom: 8px;
+    }
+
+    label {
+        font-size: 12px;
+    }
+
+    input, textarea, select {
+        padding: 8px;
+        font-size: 14px; /* Evita zoom en iOS al hacer tap */
+    }
+
+    /* Botones más grandes para touch */
+    button {
+        padding: 12px 16px;
+        font-size: 14px;
+        min-height: 44px; /* Área mínima de touch Apple */
+    }
+
+    .botones {
+        gap: 8px;
+    }
+
+    /* Lista de personas en móvil */
+    .lista-personas {
+        grid-template-columns: 1fr;
+        max-height: 400px;
+    }
+
+    /* Panel de búsqueda vertical */
+    .panel-busqueda {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    /* Fichas adaptables */
+    .ficha-contenido .fila {
+        flex-direction: column;
+    }
+
+    .celda-etiqueta, .celda-dato {
+        width: 100%;
+    }
+
+    .celda-etiqueta {
+        border-right: none;
+        border-bottom: 1px solid #bdd7ee;
+    }
+
+    /* Foto más pequeña en móvil */
+    .foto-ficha {
+        width: 100px;
+        height: 120px;
+    }
+
+    /* Tablas de vehículo responsivas */
+    .tabla-vehiculo {
+        display: block;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Contenedor de fotos del vehículo */
+    .contenedor-fotos {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .box-foto {
+        width: 100%;
+        max-width: 280px;
+    }
+
+    /* Stats cards en columna */
+    .extorsivos-stats {
+        flex-direction: column;
+    }
+
+    .extorsivos-stat-card {
+        min-width: 100%;
+    }
+
+    /* Biblioteca en móvil */
+    .biblioteca-upload-area {
+        padding: 15px;
+    }
+
+    .biblioteca-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .biblioteca-item-acciones {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    /* Búsqueda rostros en móvil */
+    .extorsivos-header {
+        flex-direction: column;
+    }
+
+    /* Padding general reducido */
+    #app-screen {
+        padding: 10px;
+    }
+
+    .card-modulo {
+        padding: 15px;
+    }
+
+    /* Pie de ficha */
+    .fila-pie {
+        flex-direction: column;
+    }
+
+    /* Secciones de formulario más compactas */
+    .seccion-form-titulo {
+        font-size: 12px;
+        padding: 5px 8px;
+    }
+
+    /* Login en móvil */
+    .card-login {
+        padding: 1.5rem 1.2rem;
+        max-width: 100%;
+    }
+
+    .logo-login {
+        width: 100px;
+    }
+
+    .card-login h2 {
+        font-size: 17px;
+    }
+}
+
+/* Tablets */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .contenedor-principal {
+        gap: 15px;
+    }
+
+    .lista-personas {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* Modo standalone (PWA instalada) - espacio de barra de estado */
+@media (display-mode: standalone) {
+    body {
+        padding-top: env(safe-area-inset-top);
+        padding-left: env(safe-area-inset-left);
+        padding-right: env(safe-area-inset-right);
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    /* Ocultar botón logout en header si la app está instalada 
+       (se puede cerrar como cualquier app nativa) */
+}
+
+/* iOS notch support */
+@supports (padding: max(0px)) {
+    .header-app {
+        padding-top: max(10px, env(safe-area-inset-top));
+    }
+
+    .botones {
+        padding-bottom: max(10px, env(safe-area-inset-bottom));
+    }
+}
