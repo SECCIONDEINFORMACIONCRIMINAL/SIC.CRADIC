@@ -5,7 +5,7 @@
   "start_url": "./index.html",
   "display": "standalone",
   "orientation": "any",
-  "background_color": "#f0f4f8",
+  "background_color": "#000000",
   "theme_color": "#00529b",
   "lang": "es",
   "scope": "./",
@@ -59,13 +59,13 @@
       "purpose": "any"
     },
     {
-      "src": "icons/icon-192x192.png",
+      "src": "icons/icon-192x192-maskable.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable"
     },
     {
-      "src": "icons/icon-512x512.png",
+      "src": "icons/icon-512x512-maskable.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
