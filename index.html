@@ -3084,6 +3084,14 @@ function _cargarDatosUsuarioYEntrar(nombreUsuario) {
         const encontrado = usuarios.find(u => u.usuario === nombreUsuario && u.estado === "Activo");
         if (encontrado) {
             usuarioSesionActual = encontrado;
+            // Guardar authUid en el objeto de sesión y en RTDB si faltaba
+            const authUidActual = firebase.auth().currentUser ? firebase.auth().currentUser.uid : null;
+            if (authUidActual) {
+                usuarioSesionActual.authUid = authUidActual;
+                if (!encontrado.authUid) {
+                    firebase.database().ref('usuariosSistema/' + encontrado._key).update({ authUid: authUidActual });
+                }
+            }
             document.getElementById('login-screen').classList.add('oculto');
             document.getElementById('app-screen').classList.remove('oculto');
             document.getElementById('usuario').value = encontrado.usuario;
@@ -3358,13 +3366,42 @@ function cambiarContrasenaPerfil() {
         return;
     }
     const user = firebase.auth().currentUser;
-    if (user) {
-        user.updatePassword(nueva).then(() => {
-            alert('✅ Contraseña actualizada correctamente.');
-        }).catch(err => {
-            alert('❌ Error al cambiar contraseña: ' + err.message);
-        });
+    if (!user) {
+        alert('❌ No hay sesión activa.');
+        return;
     }
+
+    // Firebase exige re-autenticación reciente para updatePassword
+    // Si da error requires-recent-login, pedimos credenciales y re-autenticamos
+    user.updatePassword(nueva).then(() => {
+        alert('✅ Contraseña actualizada correctamente.');
+    }).catch(err => {
+        if (err.code === 'auth/requires-recent-login') {
+            // Pedir credenciales actuales para re-autenticar
+            const passActual = prompt('⚠️ Firebase requiere re-autenticación.\nIngrese su contraseña ACTUAL para continuar:');
+            if (!passActual) {
+                alert('❌ Operación cancelada.');
+                return;
+            }
+            const credential = firebase.auth.EmailAuthProvider.credential(user.email, passActual);
+            user.reauthenticateWithCredential(credential).then(() => {
+                // Re-autenticado exitosamente, intentar de nuevo
+                user.updatePassword(nueva).then(() => {
+                    alert('✅ Contraseña actualizada correctamente.');
+                }).catch(err2 => {
+                    alert('❌ Error al cambiar contraseña: ' + err2.message);
+                });
+            }).catch(err2 => {
+                if (err2.code === 'auth/wrong-password') {
+                    alert('❌ Contraseña actual incorrecta. Intente de nuevo.');
+                } else {
+                    alert('❌ Error de re-autenticación: ' + err2.message);
+                }
+            });
+        } else {
+            alert('❌ Error al cambiar contraseña: ' + err.message);
+        }
+    });
 }
 
 // ===================== SESIONES =====================
@@ -3513,6 +3550,15 @@ document.getElementById('form-nuevo-usuario').addEventListener('submit', functio
     })
         .then(function(result) {
             if (result.data.success) {
+                // Si la CF devolvió el authUid, guardarlo en RTDB para referencia futura
+                if (result.data.authUid) {
+                    const usuariosRef = firebase.database().ref('usuariosSistema');
+                    usuariosRef.orderByChild('usuario').equalTo(user).limitToFirst(1).once('value', snap => {
+                        snap.forEach(child => {
+                            child.ref.update({ authUid: result.data.authUid });
+                        });
+                    });
+                }
                 alert(`✅ Usuario "${user}" creado en Firebase Auth y registrado.`);
                 document.getElementById('form-nuevo-usuario').reset();
                 // Reset checkboxes to default
@@ -3581,10 +3627,16 @@ function restablecerClave(key) {
     
     if (nuevaPass === null) return; // Canceló
     
+    // Verificar que tengamos un authUid válido (no el pushId de RTDB)
+    if (!usuario.authUid) {
+        alert('❌ Este usuario no tiene authUid registrado en la base de datos.\n\nEsto significa que el usuario fue creado manualmente en RTDB sin registrarse en Firebase Auth.\n\nSolución: Elimine este usuario desde la tabla y créelo nuevamente usando el formulario de creación (módulo Crear). Así se registrará correctamente en Firebase Auth y se guardará el authUid.');
+        return;
+    }
+    
     const restablecerCF = firebase.functions().httpsCallable('restablecerPassword');
     restablecerCF({ 
-        authUid: usuario.authUid || '',
-        nuevaPassword: nuevaPass || ''
+        authUid: usuario.authUid,
+        nuevaPassword: nuevaPass || 'Cradic2024!'
     })
     .then(function(result) {
         if (result.data.success) {
@@ -3595,7 +3647,16 @@ function restablecerClave(key) {
     })
     .catch(function(err) {
         console.error('[CF] Error restablecerPassword:', err);
-        alert('❌ Error al restablecer contraseña: ' + err.message);
+        let mensaje = err.message;
+        if (err.code === 'internal' || mensaje === 'internal') {
+            mensaje = 'Error interno del servidor. Posibles causas:\n\n' +
+                '1. El authUid enviado no corresponde a un usuario válido en Firebase Auth.\n' +
+                '2. La Cloud Function "restablecerPassword" no está desplegada o tiene errores.\n' +
+                '3. El usuario fue creado manualmente en la base de datos sin registrarse en Firebase Auth.\n\n' +
+                'authUid enviado: ' + usuario.authUid + '\n' +
+                'pushId (RTDB): ' + key;
+        }
+        alert('❌ Error al restablecer contraseña: ' + mensaje);
     });
 }
 
@@ -3610,7 +3671,7 @@ function eliminarUsuario(key) {
         }
         // Usar Cloud Function para eliminar de Firebase Auth + RTDB
         const eliminarUsuarioCF = firebase.functions().httpsCallable('eliminarUsuario');
-        eliminarUsuarioCF({ authUid: usuario.authUid || '', pushId: key, usuario: usuario.usuario })
+        eliminarUsuarioCF({ authUid: usuario.authUid || null, pushId: key, usuario: usuario.usuario })
             .then(function(result) {
                 if (result.data.success) {
                     alert('✅ Usuario eliminado de Firebase Auth y RTDB.');
