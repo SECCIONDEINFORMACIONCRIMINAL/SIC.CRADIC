@@ -178,6 +178,10 @@
             border-radius: 8px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
             flex-wrap: wrap;
+            transition: opacity 0.3s;
+        }
+        .nav-bar.nav-hidden {
+            display: none !important;
         }
 
         .nav-btn {
@@ -1184,6 +1188,329 @@
     display: none !important;
   }
 }
+
+/* ===== Pantalla Selección de Módulos (Dashboard) ===== */
+#modulo-dashboard {
+  width: 100%;
+}
+.dashboard-welcome {
+  text-align: center;
+  margin-bottom: 30px;
+}
+.dashboard-welcome h2 {
+  color: #00529b;
+  font-size: 28px;
+  border: none;
+  margin-bottom: 6px;
+  letter-spacing: 1px;
+}
+.dashboard-welcome p {
+  color: #666;
+  font-size: 16px;
+}
+.dashboard-date {
+  text-align: center;
+  color: #555;
+  font-size: 13px;
+  margin-bottom: 25px;
+}
+.dashboard-modules {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 20px;
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 10px;
+  min-height: 200px;
+}
+.dashboard-card {
+  background: white;
+  border: 2px solid #00529b;
+  border-radius: 14px;
+  padding: 32px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 3px 12px rgba(0,82,155,0.10);
+  display: flex !important;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  position: relative;
+  overflow: hidden;
+}
+.dashboard-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #00529b, #0066cc);
+}
+.dashboard-card:hover {
+  border-color: #003d73;
+  box-shadow: 0 8px 28px rgba(0,82,155,0.22);
+  transform: translateY(-5px);
+  background: #f0f7ff;
+}
+.dashboard-card:active {
+  transform: translateY(-1px);
+}
+.dashboard-card-icon {
+  font-size: 44px;
+  line-height: 1;
+}
+.dashboard-card-label {
+  font-weight: bold;
+  color: #00529b;
+  font-size: 13px;
+  line-height: 1.3;
+}
+.dashboard-card:hover .dashboard-card-label {
+  color: #003d73;
+}
+.dashboard-footer {
+  text-align: center;
+  margin-top: 40px;
+  padding: 14px;
+  color: #00529b;
+  font-size: 12px;
+  border-top: 1px solid #e0e8f0;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+/* ===== Perfil de Usuario (estilo RAP) ===== */
+.perfil-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  overflow-y: auto;
+}
+.perfil-card {
+  background: #0a1628;
+  color: #e2e8f0;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 700px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+  overflow: hidden;
+}
+.perfil-header {
+  background: linear-gradient(135deg, #00529b, #1e40af);
+  padding: 18px 25px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.perfil-header-usuario {
+  font-size: 20px;
+  font-weight: bold;
+  color: white;
+}
+.perfil-header-estado {
+  display: inline-block;
+  padding: 4px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: bold;
+}
+.perfil-header-estado.habilitado {
+  background: #059669;
+  color: white;
+}
+.perfil-header-estado.deshabilitado {
+  background: #dc2626;
+  color: white;
+}
+.perfil-body {
+  padding: 25px;
+}
+.perfil-tabla {
+  width: 100%;
+  border-collapse: collapse;
+}
+.perfil-tabla tr {
+  border-bottom: 1px solid #1e293b;
+}
+.perfil-tabla td {
+  padding: 8px 10px;
+  font-size: 14px;
+}
+.perfil-tabla .perfil-label {
+  font-weight: bold;
+  color: #94a3b8;
+  width: 35%;
+  font-size: 13px;
+}
+.perfil-tabla .perfil-valor {
+  color: #f1f5f9;
+}
+.perfil-acciones {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+.perfil-btn {
+  padding: 9px 20px;
+  border: none;
+  border-radius: 6px;
+  font-weight: bold;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.perfil-btn-primary { background: #2563eb; color: white; }
+.perfil-btn-primary:hover { background: #1d4ed8; }
+.perfil-btn-secondary { background: #334155; color: #e2e8f0; }
+.perfil-btn-secondary:hover { background: #475569; }
+.perfil-btn-danger { background: #dc2626; color: white; }
+.perfil-btn-danger:hover { background: #b91c1c; }
+
+/* Sesiones en perfil */
+.perfil-sesiones {
+  margin-top: 20px;
+  border-top: 1px solid #1e293b;
+  padding-top: 18px;
+}
+.perfil-sesiones-title {
+  background: #1e40af;
+  color: white;
+  padding: 8px 14px;
+  font-size: 14px;
+  font-weight: bold;
+  border-radius: 6px 6px 0 0;
+  text-align: center;
+}
+.perfil-sesiones-tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.perfil-sesiones-tabla th {
+  background: #1e293b;
+  color: #94a3b8;
+  padding: 8px 10px;
+  text-align: center;
+  font-weight: bold;
+}
+.perfil-sesiones-tabla td {
+  padding: 8px 10px;
+  text-align: center;
+  border-bottom: 1px solid #1e293b;
+  color: #e2e8f0;
+}
+.perfil-sesiones-tabla .login-row td {
+  background: rgba(5,150,105,0.15);
+  color: #6ee7b7;
+  font-weight: bold;
+}
+.perfil-sesiones-tabla .logout-row td {
+  background: rgba(220,38,38,0.15);
+  color: #fca5a5;
+  font-weight: bold;
+}
+.perfil-sesiones-link {
+  text-align: center;
+  margin-top: 10px;
+}
+.perfil-sesiones-link a {
+  color: #60a5fa;
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: 13px;
+}
+.perfil-sesiones-link a:hover {
+  color: #93c5fd;
+}
+
+/* ===== Módulo Usuarios extendido ===== */
+.grid-usuarios {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr;
+  gap: 20px;
+}
+@media (max-width: 768px) {
+  .grid-usuarios { grid-template-columns: 1fr; }
+}
+.usuario-avatar {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #00529b;
+  margin: 0 auto 10px auto;
+  display: block;
+}
+.usuario-avatar-placeholder {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  background: #e0e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36px;
+  margin: 0 auto 10px auto;
+  border: 3px solid #00529b;
+}
+.modulos-checkbox-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 6px;
+  max-height: 180px;
+  overflow-y: auto;
+  border: 1px solid #d0dce8;
+  border-radius: 6px;
+  padding: 10px;
+  background: #fafcfe;
+}
+.modulos-checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  padding: 3px 0;
+  color: #2c3e50;
+}
+.modulos-checkbox-item input[type="checkbox"] {
+  width: auto;
+  accent-color: #00529b;
+}
+.tabla-usuarios-row td {
+  vertical-align: middle;
+}
+.usuario-mini-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-right: 8px;
+  vertical-align: middle;
+  border: 2px solid #00529b;
+}
+.usuario-mini-avatar-placeholder {
+  display: inline-flex;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #e0e8f0;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  margin-right: 8px;
+  vertical-align: middle;
+  border: 2px solid #00529b;
+}
 </style>
 </head>
 <body>
@@ -1214,8 +1541,10 @@
                 </div>
             </div>
             <div>
+                <button style="background:none;border:none;cursor:pointer;font-weight:bold;color:#00529b;margin-right:8px;font-size:18px;" onclick="abrirPerfilPropio()" title="Mi Perfil" id="btn-perfil-usuario">👤</button>
                 <span id="info-user-rol" style="margin-right: 10px; font-weight: bold; color: #555;"></span>
                 <span id="contador-fichas" style="margin-right: 15px; font-weight: bold; color: #00529b;">Fichas: 0</span>
+                <button style="background:none;border:none;cursor:pointer;font-size:18px;margin-right:6px;" onclick="cambiarModulo('dashboard')" title="Inicio / Módulos">🏠</button>
                 <button class="btn-logout" onclick="cerrarSesion()">🔒 Cerrar Sesión</button>
             </div>
         </header>
@@ -1233,10 +1562,102 @@
             <button class="nav-btn" id="btn-tab-reconocimiento-facial" onclick="cambiarModulo('reconocimiento-facial')">🔍 RECONOCIMIENTO FACIAL</button>
         </nav>
 
+        <!-- PERFIL DE USUARIO OVERLAY -->
+        <div id="perfil-overlay" class="perfil-overlay oculto" onclick="if(event.target===this)cerrarPerfil()">
+          <div class="perfil-card">
+            <div class="perfil-header">
+              <span class="perfil-header-usuario" id="perfil-usuario-nombre"></span>
+              <span class="perfil-header-estado" id="perfil-usuario-estado"></span>
+            </div>
+            <div class="perfil-body">
+              <table class="perfil-tabla">
+                <tr><td class="perfil-label">Nombre</td><td class="perfil-valor" id="perfil-nombre"></td></tr>
+                <tr><td class="perfil-label">Apellido</td><td class="perfil-valor" id="perfil-apellido"></td></tr>
+                <tr><td class="perfil-label">Correo</td><td class="perfil-valor" id="perfil-correo"></td></tr>
+                <tr><td class="perfil-label">DPI</td><td class="perfil-valor" id="perfil-dpi"></td></tr>
+                <tr><td class="perfil-label">NIP</td><td class="perfil-valor" id="perfil-nip"></td></tr>
+                <tr><td class="perfil-label">Destino / Departamento</td><td class="perfil-valor" id="perfil-destino"></td></tr>
+                <tr><td class="perfil-label">Teléfono</td><td class="perfil-valor" id="perfil-telefono"></td></tr>
+                <tr><td class="perfil-label">Estado</td><td class="perfil-valor" id="perfil-estado-texto"></td></tr>
+                <tr><td class="perfil-label">Módulos y Roles</td><td class="perfil-valor" id="perfil-modulos-roles"></td></tr>
+                <tr><td class="perfil-label">Biblioteca</td><td class="perfil-valor" id="perfil-biblioteca"></td></tr>
+                <tr><td class="perfil-label">Creado por</td><td class="perfil-valor" id="perfil-creado-por"></td></tr>
+              </table>
+              <div class="perfil-acciones">
+                <button class="perfil-btn perfil-btn-primary" onclick="cambiarContrasenaPerfil()">🔑 Cambiar Contraseña</button>
+                <button class="perfil-btn perfil-btn-secondary" onclick="verAuditoriaPerfil()">📋 Ver Auditoría</button>
+                <button class="perfil-btn perfil-btn-danger" onclick="cerrarPerfil()">✕ Cerrar</button>
+              </div>
+
+              <!-- Últimas 5 sesiones -->
+              <div class="perfil-sesiones">
+                <div class="perfil-sesiones-title">Últimas 5 sesiones</div>
+                <table class="perfil-sesiones-tabla">
+                  <thead><tr><th>No.</th><th>Fecha y hora</th><th>IP</th><th>Acción</th></tr></thead>
+                  <tbody id="perfil-sesiones-body"></tbody>
+                </table>
+                <div class="perfil-sesiones-link">
+                  <a onclick="verHistorialSesiones()">Ver historial de sesiones</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div class="contenedor-principal">
 
+            <!-- ================= DASHBOARD / SELECCIÓN DE MÓDULOS ================= -->
+            <div id="modulo-dashboard" class="card-modulo">
+                <div class="dashboard-welcome">
+                    <h2>Bienvenido a ARGOS</h2>
+                    <p>Seleccione un módulo</p>
+                </div>
+                <div class="dashboard-date" id="dashboard-fecha"></div>
+                <div class="dashboard-modules" id="dashboard-modules-grid">
+                    <div class="dashboard-card" onclick="cambiarModulo('crear')" id="dash-card-crear">
+                        <span class="dashboard-card-icon">📝</span>
+                        <span class="dashboard-card-label">Crear / Editar Ficha</span>
+                    </div>
+                    <div class="dashboard-card" onclick="cambiarModulo('fichas')" id="dash-card-fichas">
+                        <span class="dashboard-card-icon">🔍</span>
+                        <span class="dashboard-card-label">Fichas Personas</span>
+                    </div>
+                    <div class="dashboard-card" onclick="cambiarModulo('crear-vehiculo')" id="dash-card-crear-vehiculo">
+                        <span class="dashboard-card-icon">🚗</span>
+                        <span class="dashboard-card-label">Crear / Editar Vehículo</span>
+                    </div>
+                    <div class="dashboard-card" onclick="cambiarModulo('fichas-vehiculos')" id="dash-card-fichas-vehiculos">
+                        <span class="dashboard-card-icon">🚘</span>
+                        <span class="dashboard-card-label">Fichas Vehículos</span>
+                    </div>
+                    <div class="dashboard-card" onclick="cambiarModulo('extorsivos')" id="dash-card-extorsivos">
+                        <span class="dashboard-card-icon">🚨</span>
+                        <span class="dashboard-card-label">Números Extorsivos</span>
+                    </div>
+                    <div class="dashboard-card" onclick="cambiarModulo('usuarios')" id="dash-card-usuarios">
+                        <span class="dashboard-card-icon">👤</span>
+                        <span class="dashboard-card-label">Usuarios</span>
+                    </div>
+                    <div class="dashboard-card" onclick="cambiarModulo('seccion')" id="dash-card-seccion">
+                        <span class="dashboard-card-icon">🏢</span>
+                        <span class="dashboard-card-label">Sección</span>
+                    </div>
+                    <div class="dashboard-card" onclick="cambiarModulo('biblioteca')" id="dash-card-biblioteca">
+                        <span class="dashboard-card-icon">📚</span>
+                        <span class="dashboard-card-label">Biblioteca</span>
+                    </div>
+                    <div class="dashboard-card" onclick="cambiarModulo('reconocimiento-facial')" id="dash-card-reconocimiento-facial">
+                        <span class="dashboard-card-icon">🤖</span>
+                        <span class="dashboard-card-label">Reconocimiento Facial</span>
+                    </div>
+                </div>
+                <div class="dashboard-footer">
+                    Sistema ARGOS — Sección de Investigación Criminal
+                </div>
+            </div>
+
             <!-- ================= MÓDULO 1: CREAR / EDITAR PERSONAS (-SIC-) ================= -->
-            <div id="modulo-crear" style="display: flex; gap: 25px; width: 100%;">
+            <div id="modulo-crear" class="oculto" style="gap: 25px; width: 100%;">
                 <div class="card-modulo formulario">
                     <h2 id="titulo-form-persona">Captura de Datos -ARGOS-</h2>
                     <input type="hidden" id="usuario">
@@ -2142,11 +2563,34 @@
                     <div style="background: #f8fbfe; padding: 15px; border-radius: 6px; border: 1px solid #bdd7ee;" id="seccion-crear-usuario">
                         <h3 style="margin-bottom: 12px; color: #00529b;">➕ Registrar Usuario</h3>
                         <form id="form-nuevo-usuario">
-                            <div class="grupo-form"><label>Nombre Completo</label><input type="text" id="nuevo-nombre" required></div>
+                            <div class="seccion-form-titulo">Datos Personales</div>
+                            <div class="grupo-form"><label>Nombre</label><input type="text" id="nuevo-nombre" placeholder="Ej: Osman Neftali" required></div>
+                            <div class="grupo-form"><label>Apellido</label><input type="text" id="nuevo-apellido" placeholder="Ej: Jimenez Marroquin" required></div>
+                            <div class="grupo-form"><label>DPI</label><input type="text" id="nuevo-dpi" placeholder="Ej: 2818168082101"></div>
+                            <div class="grupo-form"><label>NIP</label><input type="text" id="nuevo-nip" placeholder="Ej: 68102-P"></div>
+                            <div class="grupo-form"><label>Correo Electrónico</label><input type="email" id="nuevo-correo" placeholder="Ej: correo@ejemplo.com"></div>
+                            <div class="grupo-form"><label>Teléfono</label><input type="text" id="nuevo-telefono" placeholder="Ej: 58786774"></div>
+
+                            <div class="seccion-form-titulo">Destino / Asignación</div>
+                            <div class="grupo-form">
+                                <label>Destino / Departamento</label>
+                                <select id="nuevo-destino">
+                                    <option value="CRADIC">Centro de Recopilación, Análisis y Diseminación de Información Criminal (CRADIC)</option>
+                                    <option value="DICC">Dirección de Investigación Criminal</option>
+                                    <option value="DIAC">Dirección de Anticorrupción</option>
+                                    <option value="DIGRI">Dirección General de la Policía de Investigaciones</option>
+                                    <option value="SECCION_IC">Sección de Investigación Criminal</option>
+                                    <option value="OTRO">Otro</option>
+                                </select>
+                            </div>
+
+                            <div class="seccion-form-titulo">Credenciales de Acceso</div>
                             <div class="grupo-form"><label>Usuario Login</label><input type="text" id="nuevo-user" required></div>
                             <div class="grupo-form"><label>Contraseña</label><input type="password" id="nuevo-pass" required></div>
+
+                            <div class="seccion-form-titulo">Rol y Permisos</div>
                             <div class="grupo-form">
-                                <label>Rol / Permisos</label>
+                                <label>Rol Principal</label>
                                 <select id="nuevo-rol">
                                     <option value="Administrador General">Administrador General</option>
                                     <option value="Ingresador Extorsivos">Ingresador Extorsivos</option>
@@ -2154,7 +2598,40 @@
                                     <option value="Analista">Analista</option>
                                 </select>
                             </div>
-                            <button type="submit" class="btn-guardar" style="width: 100%; margin-top: 5px;">Guardar Usuario</button>
+                            <div class="grupo-form">
+                                <label>Módulos Asignados</label>
+                                <div class="modulos-checkbox-grid" id="modulos-checkbox-grid">
+                                    <label class="modulos-checkbox-item"><input type="checkbox" value="crear" checked> Crear / Editar Ficha</label>
+                                    <label class="modulos-checkbox-item"><input type="checkbox" value="fichas" checked> Fichas Personas</label>
+                                    <label class="modulos-checkbox-item"><input type="checkbox" value="crear-vehiculo" checked> Crear / Editar Vehículo</label>
+                                    <label class="modulos-checkbox-item"><input type="checkbox" value="fichas-vehiculos" checked> Fichas Vehículos</label>
+                                    <label class="modulos-checkbox-item"><input type="checkbox" value="extorsivos" checked> Números Extorsivos</label>
+                                    <label class="modulos-checkbox-item"><input type="checkbox" value="usuarios"> Usuarios</label>
+                                    <label class="modulos-checkbox-item"><input type="checkbox" value="seccion" checked> Sección</label>
+                                    <label class="modulos-checkbox-item"><input type="checkbox" value="biblioteca" checked> Biblioteca</label>
+                                    <label class="modulos-checkbox-item"><input type="checkbox" value="reconocimiento-facial"> Reconocimiento Facial</label>
+                                </div>
+                            </div>
+
+                            <div class="seccion-form-titulo">Estado del Usuario</div>
+                            <div class="grupo-form">
+                                <label>Estado</label>
+                                <select id="nuevo-estado">
+                                    <option value="Activo">Habilitado</option>
+                                    <option value="Inactivo">Deshabilitado</option>
+                                </select>
+                            </div>
+
+                            <div class="grupo-form">
+                                <label>Acceso a Biblioteca</label>
+                                <select id="nuevo-biblioteca">
+                                    <option value="Lectura">Solo Lectura</option>
+                                    <option value="Escritura">Lectura y Subida</option>
+                                    <option value="Sin acceso">Sin acceso</option>
+                                </select>
+                            </div>
+
+                            <button type="submit" class="btn-guardar" style="width: 100%; margin-top: 10px;">💾 Guardar Usuario</button>
                         </form>
                     </div>
 
@@ -2162,7 +2639,7 @@
                         <h3 style="margin-bottom: 12px; color: #00529b;">Lista de Usuarios</h3>
                         <table class="tabla-datos">
                             <thead>
-                                <tr><th>Nombre</th><th>Usuario</th><th>Rol</th><th>Estado</th><th>Acciones</th></tr>
+                                <tr><th>Foto</th><th>Nombre</th><th>Usuario</th><th>Rol</th><th>Destino</th><th>Estado</th><th>Módulos</th><th>Acciones</th></tr>
                             </thead>
                             <tbody id="tabla-usuarios-body"></tbody>
                         </table>
@@ -2612,6 +3089,7 @@ function _cargarDatosUsuarioYEntrar(nombreUsuario) {
             document.getElementById('usuario').value = encontrado.usuario;
             document.getElementById('info-user-rol').textContent = `Usuario: ${encontrado.usuario} (${encontrado.rol})`;
             aplicarPermisosRol();
+            registrarSesion('login');
             actualizarContadores();
             actualizarFicha();
             actualizarFichaVehiculo();
@@ -2656,7 +3134,7 @@ function aplicarPermisosRol() {
         btnSeccion.style.display = 'inline-block';
         if (btnAgregarExt) btnAgregarExt.style.display = 'none';
         if (btnImportarExt) btnImportarExt.style.display = 'none';
-        cambiarModulo('fichas');
+        cambiarModulo('dashboard');
     } else if (usuarioSesionActual.rol === "Operador") {
         btnUsuarios.style.display = 'none';
         btnCrear.style.display = 'inline-block';
@@ -2666,12 +3144,10 @@ function aplicarPermisosRol() {
         btnSeccion.style.display = 'inline-block';
         if (btnAgregarExt) btnAgregarExt.style.display = 'none';
         if (btnImportarExt) btnImportarExt.style.display = 'none';
-        // Upload oculto para Operador
         const uploadSection = document.getElementById('biblioteca-upload-section');
         if (uploadSection) uploadSection.classList.add('oculto');
-        cambiarModulo('crear');
+        cambiarModulo('dashboard');
     } else if (esIngresadorExt) {
-        // Ingresador Extorsivos: puede buscar/agregar/importar extorsivos, ver fichas, NO puede crear fichas ni gestionar usuarios
         btnCrear.style.display = 'none';
         btnCrearVehiculo.style.display = 'none';
         btnUsuarios.style.display = 'none';
@@ -2680,10 +3156,9 @@ function aplicarPermisosRol() {
         btnSeccion.style.display = 'inline-block';
         if (btnAgregarExt) btnAgregarExt.style.display = 'inline-block';
         if (btnImportarExt) btnImportarExt.style.display = 'inline-block';
-        // Upload oculto para Ingresador
         const uploadSection = document.getElementById('biblioteca-upload-section');
         if (uploadSection) uploadSection.classList.add('oculto');
-        cambiarModulo('extorsivos');
+        cambiarModulo('dashboard');
     } else {
         btnCrear.style.display = 'inline-block';
         btnCrearVehiculo.style.display = 'inline-block';
@@ -2693,14 +3168,14 @@ function aplicarPermisosRol() {
         btnSeccion.style.display = 'inline-block';
         if (btnAgregarExt) btnAgregarExt.style.display = 'inline-block';
         if (btnImportarExt) btnImportarExt.style.display = 'inline-block';
-        // Upload visible solo para Administrador General
         const uploadSection = document.getElementById('biblioteca-upload-section');
         if (uploadSection) uploadSection.classList.remove('oculto');
-        cambiarModulo('crear');
+        cambiarModulo('dashboard');
     }
 }
 
 function cerrarSesion() {
+    registrarSesion('logout');
     // Cerrar sesión en Firebase Auth
     auth.signOut().then(function() {
         console.log('[AUTH] Sesión cerrada en Firebase Auth');
@@ -2717,26 +3192,42 @@ function cerrarSesion() {
 function cambiarModulo(modulo) {
     if (!usuarioSesionActual) return;
 
-    const modulos = ['crear', 'fichas', 'crear-vehiculo', 'fichas-vehiculos', 'extorsivos', 'usuarios', 'seccion', 'biblioteca', 'reconocimiento-facial'];
+    const modulos = ['dashboard', 'crear', 'fichas', 'crear-vehiculo', 'fichas-vehiculos', 'extorsivos', 'usuarios', 'seccion', 'biblioteca', 'reconocimiento-facial'];
     modulos.forEach(m => {
         const el = document.getElementById(`modulo-${m}`);
-        if (el) el.classList.add('oculto');
+        if (el) {
+            el.classList.add('oculto');
+            el.style.display = '';
+        }
     });
 
     document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('activo'));
 
     const seleccionado = document.getElementById(`modulo-${modulo}`);
     if (seleccionado) {
+        seleccionado.classList.remove('oculto');
         if (modulo === 'crear' || modulo === 'crear-vehiculo') {
             seleccionado.style.display = 'flex';
+        } else if (modulo === 'dashboard') {
+            seleccionado.style.display = 'block';
         } else {
             seleccionado.style.display = 'block';
         }
-        seleccionado.classList.remove('oculto');
     }
 
     const btnNav = document.getElementById(`btn-tab-${modulo}`);
     if (btnNav) btnNav.classList.add('activo');
+
+    // Show/hide nav bar based on module
+    const navBar = document.querySelector('.nav-bar');
+    if (navBar) {
+        if (modulo === 'dashboard') {
+            navBar.classList.add('nav-hidden');
+            actualizarDashboard();
+        } else {
+            navBar.classList.remove('nav-hidden');
+        }
+    }
 
     if (modulo === 'fichas') buscarPersona();
     if (modulo === 'fichas-vehiculos') buscarVehiculo();
@@ -2746,15 +3237,266 @@ function cambiarModulo(modulo) {
     if (modulo === 'reconocimiento-facial') rfInicializarModulo();
 }
 
+// ===================== DASHBOARD =====================
+function actualizarDashboard() {
+    if (!usuarioSesionActual) return;
+    const rol = usuarioSesionActual.rol;
+    const modulos = usuarioSesionActual.modulosAsignados || [];
+    const esAdmin = rol === 'Administrador General';
+    const esAnalista = rol === 'Analista';
+    const esOperador = rol === 'Operador';
+    const esIngresadorExt = modulos.includes('extorsivos') && !esAdmin && !esAnalista && !esOperador;
+
+    // Update date display
+    const fechaEl = document.getElementById('dashboard-fecha');
+    if (fechaEl) {
+        const ahora = new Date();
+        fechaEl.textContent = ahora.toLocaleDateString('es-GT', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    }
+
+    // Card visibility based on role
+    const cards = document.querySelectorAll('.dashboard-card');
+    cards.forEach(c => c.style.display = 'none');
+
+    const show = (id) => { const el = document.getElementById(id); if (el) el.style.display = 'flex'; };
+
+    // All roles see search cards
+    show('dash-card-fichas');
+    show('dash-card-fichas-vehiculos');
+    show('dash-card-seccion');
+
+    if (esAdmin) {
+        show('dash-card-crear'); show('dash-card-crear-vehiculo'); show('dash-card-extorsivos');
+        show('dash-card-usuarios'); show('dash-card-biblioteca'); show('dash-card-reconocimiento-facial');
+    } else if (esOperador) {
+        show('dash-card-crear'); show('dash-card-crear-vehiculo');
+    } else if (esAnalista) {
+        // Analysts: search only
+    } else if (esIngresadorExt) {
+        show('dash-card-extorsivos');
+    }
+
+    // Also check individual module assignments
+    if (modulos.includes('crear')) show('dash-card-crear');
+    if (modulos.includes('crear-vehiculo')) show('dash-card-crear-vehiculo');
+    if (modulos.includes('extorsivos')) show('dash-card-extorsivos');
+    if (modulos.includes('usuarios')) show('dash-card-usuarios');
+    if (modulos.includes('biblioteca')) show('dash-card-biblioteca');
+    if (modulos.includes('reconocimiento-facial')) show('dash-card-reconocimiento-facial');
+}
+
+// ===================== PERFIL PROPIO =====================
+function abrirPerfilPropio() {
+    if (!usuarioSesionActual) return;
+    const overlay = document.getElementById('perfil-overlay');
+    if (!overlay) return;
+
+    const u = usuarioSesionActual;
+    const nombreCompleto = ((u.nombre || '') + ' ' + (u.apellido || '')).trim() || u.nombre || 'N/A';
+    const modulosTexto = (u.modulosAsignados && u.modulosAsignados.length) ? u.modulosAsignados.join(', ') : 'N/A';
+    const bibliotecaTexto = u.biblioteca === 'Si' ? 'Sí' : (u.biblioteca || 'No');
+    const estadoTexto = u.estado === 'Activo' ? 'Habilitado' : 'Deshabilitado';
+
+    document.getElementById('perfil-nombre').textContent = nombreCompleto;
+    document.getElementById('perfil-usuario').textContent = u.usuario || 'N/A';
+    document.getElementById('perfil-rol').textContent = u.rol || 'N/A';
+    document.getElementById('perfil-dpi').textContent = u.dpi || 'N/A';
+    document.getElementById('perfil-nip').textContent = u.nip || 'N/A';
+    document.getElementById('perfil-correo').textContent = u.correo || 'N/A';
+    document.getElementById('perfil-telefono').textContent = u.telefono || 'N/A';
+    document.getElementById('perfil-destino').textContent = u.destino || 'N/A';
+    document.getElementById('perfil-modulos').textContent = modulosTexto;
+    document.getElementById('perfil-biblioteca').textContent = bibliotecaTexto;
+    document.getElementById('perfil-estado').textContent = estadoTexto;
+    document.getElementById('perfil-creado-por').textContent = u.creadoPor || 'N/A';
+    document.getElementById('perfil-ultimo-login').textContent = u.ultimoLogin ? new Date(u.ultimoLogin).toLocaleString('es-GT') : 'N/A';
+
+    overlay.style.display = 'flex';
+    cargarSesionesPerfil();
+}
+
+function cerrarPerfil() {
+    const overlay = document.getElementById('perfil-overlay');
+    if (overlay) overlay.style.display = 'none';
+}
+
+function verPerfilUsuario(key) {
+    const usuarios = obtenerUsuarios();
+    const u = usuarios.find(x => x._key === key);
+    if (!u) return;
+
+    const overlay = document.getElementById('perfil-overlay');
+    if (!overlay) return;
+
+    const nombreCompleto = ((u.nombre || '') + ' ' + (u.apellido || '')).trim() || u.nombre || 'N/A';
+    const modulosTexto = (u.modulosAsignados && u.modulosAsignados.length) ? u.modulosAsignados.join(', ') : 'N/A';
+    const bibliotecaTexto = u.biblioteca === 'Si' ? 'Sí' : (u.biblioteca || 'No');
+    const estadoTexto = u.estado === 'Activo' ? 'Habilitado' : 'Deshabilitado';
+
+    document.getElementById('perfil-nombre').textContent = nombreCompleto;
+    document.getElementById('perfil-usuario').textContent = u.usuario || 'N/A';
+    document.getElementById('perfil-rol').textContent = u.rol || 'N/A';
+    document.getElementById('perfil-dpi').textContent = u.dpi || 'N/A';
+    document.getElementById('perfil-nip').textContent = u.nip || 'N/A';
+    document.getElementById('perfil-correo').textContent = u.correo || 'N/A';
+    document.getElementById('perfil-telefono').textContent = u.telefono || 'N/A';
+    document.getElementById('perfil-destino').textContent = u.destino || 'N/A';
+    document.getElementById('perfil-modulos').textContent = modulosTexto;
+    document.getElementById('perfil-biblioteca').textContent = bibliotecaTexto;
+    document.getElementById('perfil-estado').textContent = estadoTexto;
+    document.getElementById('perfil-creado-por').textContent = u.creadoPor || 'N/A';
+    document.getElementById('perfil-ultimo-login').textContent = u.ultimoLogin ? new Date(u.ultimoLogin).toLocaleString('es-GT') : 'N/A';
+
+    overlay.style.display = 'flex';
+    cargarSesionesPerfilDe(u.usuario);
+}
+
+function cambiarContrasenaPerfil() {
+    const nueva = prompt('Ingrese su nueva contraseña (mínimo 6 caracteres):');
+    if (!nueva || nueva.length < 6) {
+        if (nueva !== null) alert('❌ La contraseña debe tener al menos 6 caracteres.');
+        return;
+    }
+    const user = firebase.auth().currentUser;
+    if (user) {
+        user.updatePassword(nueva).then(() => {
+            alert('✅ Contraseña actualizada correctamente.');
+        }).catch(err => {
+            alert('❌ Error al cambiar contraseña: ' + err.message);
+        });
+    }
+}
+
+// ===================== SESIONES =====================
+function registrarSesion(tipo) {
+    // tipo: 'login' o 'logout'
+    if (!firebase.auth().currentUser) return;
+    const uid = firebase.auth().currentUser.uid;
+    const ref = firebase.database().ref('sesionesUsuarios/' + uid);
+    ref.push({
+        tipo: tipo,
+        usuario: usuarioSesionActual ? usuarioSesionActual.usuario : 'desconocido',
+        timestamp: firebase.database.ServerValue.TIMESTAMP,
+        ip: 'cliente'
+    });
+    // Update last login on user record
+    if (tipo === 'login') {
+        firebase.database().ref('usuariosSistema/' + uid).update({
+            ultimoLogin: firebase.database.ServerValue.TIMESTAMP
+        });
+    }
+}
+
+function cargarSesionesPerfil() {
+    if (!firebase.auth().currentUser) return;
+    const uid = firebase.auth().currentUser.uid;
+    const ref = firebase.database().ref('sesionesUsuarios/' + uid).orderByChild('timestamp').limitToLast(5);
+    ref.once('value', snap => {
+        const tbody = document.getElementById('perfil-sesiones-body');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+        if (!snap.exists()) {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#aaa;">Sin sesiones registradas</td></tr>';
+            return;
+        }
+        const rows = [];
+        snap.forEach(child => {
+            const s = child.val();
+            rows.push(s);
+        });
+        rows.reverse(); // newest first
+        rows.forEach(s => {
+            const tr = document.createElement('tr');
+            const fecha = s.timestamp ? new Date(s.timestamp).toLocaleString('es-GT') : 'N/A';
+            const tipoTexto = s.tipo === 'login' ? '🟢 Inicio' : '🔴 Cierre';
+            tr.innerHTML = `<td>${fecha}</td><td>${tipoTexto}</td><td>${s.usuario || 'N/A'}</td><td>${s.ip || 'N/A'}</td>`;
+            tbody.appendChild(tr);
+        });
+    });
+}
+
+function cargarSesionesPerfilDe(usuarioNombre) {
+    // Search sessions by usuario name across all UIDs - limited
+    const ref = firebase.database().ref('sesionesUsuarios');
+    ref.limitToLast(100).once('value', snap => {
+        const tbody = document.getElementById('perfil-sesiones-body');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+        const rows = [];
+        snap.forEach(uidSnap => {
+            uidSnap.forEach(sSnap => {
+                const s = sSnap.val();
+                if (s.usuario === usuarioNombre) rows.push(s);
+            });
+        });
+        rows.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+        const top5 = rows.slice(0, 5);
+        if (top5.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#aaa;">Sin sesiones registradas</td></tr>';
+            return;
+        }
+        top5.forEach(s => {
+            const tr = document.createElement('tr');
+            const fecha = s.timestamp ? new Date(s.timestamp).toLocaleString('es-GT') : 'N/A';
+            const tipoTexto = s.tipo === 'login' ? '🟢 Inicio' : '🔴 Cierre';
+            tr.innerHTML = `<td>${fecha}</td><td>${tipoTexto}</td><td>${s.usuario || 'N/A'}</td><td>${s.ip || 'N/A'}</td>`;
+            tbody.appendChild(tr);
+        });
+    });
+}
+
+function verHistorialSesiones() {
+    // Expand session view - for now just re-load last 20
+    if (!firebase.auth().currentUser) return;
+    const uid = firebase.auth().currentUser.uid;
+    const ref = firebase.database().ref('sesionesUsuarios/' + uid).orderByChild('timestamp').limitToLast(20);
+    ref.once('value', snap => {
+        const tbody = document.getElementById('perfil-sesiones-body');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+        if (!snap.exists()) {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#aaa;">Sin sesiones registradas</td></tr>';
+            return;
+        }
+        const rows = [];
+        snap.forEach(child => rows.push(child.val()));
+        rows.reverse();
+        rows.forEach(s => {
+            const tr = document.createElement('tr');
+            const fecha = s.timestamp ? new Date(s.timestamp).toLocaleString('es-GT') : 'N/A';
+            const tipoTexto = s.tipo === 'login' ? '🟢 Inicio' : '🔴 Cierre';
+            tr.innerHTML = `<td>${fecha}</td><td>${tipoTexto}</td><td>${s.usuario || 'N/A'}</td><td>${s.ip || 'N/A'}</td>`;
+            tbody.appendChild(tr);
+        });
+    });
+}
+
+function verAuditoriaPerfil() {
+    alert('📋 Módulo de auditoría en desarrollo. Las acciones del sistema están siendo registradas automáticamente.');
+}
+
 // USUARIOS
 document.getElementById('form-nuevo-usuario').addEventListener('submit', function(e) {
     e.preventDefault();
     if (usuarioSesionActual.rol !== "Administrador General") return;
 
     const nombre = document.getElementById('nuevo-nombre').value.trim();
+    const apellido = document.getElementById('nuevo-apellido').value.trim();
+    const dpi = document.getElementById('nuevo-dpi').value.trim();
+    const nip = document.getElementById('nuevo-nip').value.trim();
+    const correo = document.getElementById('nuevo-correo').value.trim();
+    const telefono = document.getElementById('nuevo-telefono').value.trim();
+    const destino = document.getElementById('nuevo-destino').value;
     const user = document.getElementById('nuevo-user').value.trim();
     const pass = document.getElementById('nuevo-pass').value.trim();
     const rol = document.getElementById('nuevo-rol').value;
+    const estado = document.getElementById('nuevo-estado').value;
+    const biblioteca = document.getElementById('nuevo-biblioteca').value;
+
+    // Collect checked modules
+    const modulosCheckboxes = document.querySelectorAll('#modulos-checkbox-grid input[type="checkbox"]');
+    const modulosAsignados = [];
+    modulosCheckboxes.forEach(cb => { if (cb.checked) modulosAsignados.push(cb.value); });
 
     let usuarios = obtenerUsuarios();
     if (usuarios.some(u => u.usuario === user)) {
@@ -2764,11 +3506,19 @@ document.getElementById('form-nuevo-usuario').addEventListener('submit', functio
 
     // Usar Cloud Function para crear usuario en Firebase Auth + RTDB
     const crearUsuarioCF = firebase.functions().httpsCallable('crearUsuario');
-    crearUsuarioCF({ nombre, usuario: user, pass, rol })
+    crearUsuarioCF({ 
+        nombre, apellido, dpi, nip, correo, telefono, destino,
+        usuario: user, pass, rol, estado, biblioteca, modulosAsignados,
+        creadoPor: usuarioSesionActual.usuario
+    })
         .then(function(result) {
             if (result.data.success) {
                 alert(`✅ Usuario "${user}" creado en Firebase Auth y registrado.`);
                 document.getElementById('form-nuevo-usuario').reset();
+                // Reset checkboxes to default
+                modulosCheckboxes.forEach(cb => {
+                    cb.checked = ['crear','fichas','crear-vehiculo','fichas-vehiculos','extorsivos','seccion','biblioteca'].includes(cb.value);
+                });
             } else {
                 alert('❌ Error: ' + (result.data.error || 'Error desconocido'));
             }
@@ -2791,15 +3541,27 @@ function renderizarTablaUsuarios() {
 
     usuarios.forEach((u) => {
         const tr = document.createElement('tr');
+        tr.className = 'tabla-usuarios-row';
+        const nombreCompleto = ((u.nombre || '') + ' ' + (u.apellido || '')).trim();
+        const modulosTexto = (u.modulosAsignados && u.modulosAsignados.length) ? u.modulosAsignados.join(', ') : (u.rol || 'N/A');
+        const destinoTexto = u.destino || 'N/A';
+        const avatarHTML = u.foto 
+            ? '<img class="usuario-mini-avatar" src="' + u.foto + '" alt="avatar">' 
+            : '<span class="usuario-mini-avatar-placeholder">👤</span>';
+        const estadoTexto = u.estado === 'Activo' ? 'Habilitado' : 'Deshabilitado';
+
         tr.innerHTML = `
-            <td>${u.nombre}</td>
+            <td>${avatarHTML} ${nombreCompleto || u.nombre || 'N/A'}</td>
             <td><b>${u.usuario}</b></td>
             <td>${u.rol}</td>
-            <td><span style="color:${u.estado === 'Activo' ? 'green' : 'red'}; font-weight:bold;">${u.estado}</span></td>
+            <td style="font-size:11px;">${destinoTexto}</td>
+            <td><span style="color:${u.estado === 'Activo' ? 'green' : 'red'}; font-weight:bold;">${estadoTexto}</span></td>
+            <td style="font-size:11px;">${modulosTexto}</td>
             <td>
                 ${esAdmin && u.usuario !== 'admin' ? `
-                    <button onclick="restablecerClave('${u._key}')" style="background:#f39c12; color:white; border:none; padding:4px 8px; border-radius:3px; cursor:pointer; margin-right:4px;">Restablecer Clave</button>
-                    <button onclick="eliminarUsuario('${u._key}')" style="background:#e74c3c; color:white; border:none; padding:4px 8px; border-radius:3px; cursor:pointer;">Eliminar</button>
+                    <button onclick="verPerfilUsuario('${u._key}')" style="background:#00529b; color:white; border:none; padding:4px 8px; border-radius:3px; cursor:pointer; margin-right:4px;">👁 Ver</button>
+                    <button onclick="restablecerClave('${u._key}')" style="background:#f39c12; color:white; border:none; padding:4px 8px; border-radius:3px; cursor:pointer; margin-right:4px;">🔑 Clave</button>
+                    <button onclick="eliminarUsuario('${u._key}')" style="background:#e74c3c; color:white; border:none; padding:4px 8px; border-radius:3px; cursor:pointer;">🗑 Eliminar</button>
                 ` : '<span style="color:#aaa; font-size:12px;">Sin acciones</span>'}
             </td>
         `;
