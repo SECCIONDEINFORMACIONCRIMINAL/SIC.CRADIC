@@ -2896,6 +2896,9 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 const auth = firebase.auth();
+// Cloud Functions - especificar región explícitamente para evitar error 'internal'
+// Si las CF están desplegadas en otra región, cambiar aquí:
+const functionsInstance = firebase.functions('us-central1');
 const AUTH_EMAIL_DOMAIN = 'cradic.gt';
 // Storage no requerido - PDFs se guardan como Base64 en RTDB
 
@@ -3542,7 +3545,7 @@ document.getElementById('form-nuevo-usuario').addEventListener('submit', functio
     }
 
     // Usar Cloud Function para crear usuario en Firebase Auth + RTDB
-    const crearUsuarioCF = firebase.functions().httpsCallable('crearUsuario');
+    const crearUsuarioCF = functionsInstance.httpsCallable('crearUsuario');
     crearUsuarioCF({ 
         nombre, apellido, dpi, nip, correo, telefono, destino,
         usuario: user, pass, rol, estado, biblioteca, modulosAsignados,
@@ -3571,7 +3574,35 @@ document.getElementById('form-nuevo-usuario').addEventListener('submit', functio
         })
         .catch(function(err) {
             console.error('[CF] Error crearUsuario:', err);
-            alert('❌ Error al crear usuario: ' + err.message);
+            let mensaje = err.message;
+            if (err.code === 'internal' || mensaje === 'internal') {
+                mensaje = 'Error interno del servidor ("internal"). Posibles causas:\n\n' +
+                    '1. La Cloud Function "crearUsuario" NO está desplegada en Firebase.\n' +
+                    '   Solución: Desplegar las CF con "firebase deploy --only functions"\n\n' +
+                    '2. La CF está desplegada en una región diferente a us-central1.\n' +
+                    '   Solución: Verificar la región en Firebase Console > Functions\n\n' +
+                    '3. La CF no tiene permisos para crear usuarios en Firebase Auth.\n' +
+                    '   Solución: Verificar que la Service Account tenga rol "Firebase Auth Admin"\n\n' +
+                    '4. El plan de Firebase no soporta Cloud Functions (requiere plan Blaze/Pago).\n' +
+                    '   Solución: Actualizar al plan Blaze en Firebase Console > Usage & Billing';
+            }
+            // Ofrecer fallback: crear solo en RTDB (sin Firebase Auth)
+            if (confirm(mensaje + '\n\n---\n¿Desea crear el usuario SOLO en la base de datos (sin Firebase Auth)?\n\n⚠️ NOTA: El usuario NO podrá iniciar sesión hasta que se registre en Firebase Auth manualmente o se despliegue la Cloud Function.')) {
+                firebase.database().ref('usuariosSistema').push({
+                    nombre, apellido, dpi, nip, correo, telefono, destino,
+                    usuario: user, rol, estado, biblioteca, modulosAsignados,
+                    creadoPor: usuarioSesionActual.usuario,
+                    fechaCreacion: firebase.database.ServerValue.TIMESTAMP
+                }).then(() => {
+                    alert(`⚠️ Usuario "${user}" creado SOLO en base de datos.\nRecuerde: Necesita registrarse en Firebase Auth para poder iniciar sesión.`);
+                    document.getElementById('form-nuevo-usuario').reset();
+                    modulosCheckboxes.forEach(cb => {
+                        cb.checked = ['crear','fichas','crear-vehiculo','fichas-vehiculos','extorsivos','seccion','biblioteca'].includes(cb.value);
+                    });
+                }).catch(e2 => {
+                    alert('❌ Error al crear usuario en base de datos: ' + e2.message);
+                });
+            }
         });
 });
 
@@ -3633,7 +3664,7 @@ function restablecerClave(key) {
         return;
     }
     
-    const restablecerCF = firebase.functions().httpsCallable('restablecerPassword');
+    const restablecerCF = functionsInstance.httpsCallable('restablecerPassword');
     restablecerCF({ 
         authUid: usuario.authUid,
         nuevaPassword: nuevaPass || 'Cradic2024!'
@@ -3650,13 +3681,13 @@ function restablecerClave(key) {
         let mensaje = err.message;
         if (err.code === 'internal' || mensaje === 'internal') {
             mensaje = 'Error interno del servidor. Posibles causas:\n\n' +
-                '1. El authUid enviado no corresponde a un usuario válido en Firebase Auth.\n' +
+                '1. El authUid no corresponde a un usuario válido en Firebase Auth.\n' +
                 '2. La Cloud Function "restablecerPassword" no está desplegada o tiene errores.\n' +
-                '3. El usuario fue creado manualmente en la base de datos sin registrarse en Firebase Auth.\n\n' +
+                '3. La CF está en una región diferente a us-central1.\n\n' +
                 'authUid enviado: ' + usuario.authUid + '\n' +
                 'pushId (RTDB): ' + key;
         }
-        alert('❌ Error al restablecer contraseña: ' + mensaje);
+        alert('❌ Error al restablecer contraseña: ' + mensaje + '\n\n💡 Alternativa: Pida al usuario que cambie su propia contraseña desde su perfil (ícono de usuario arriba a la derecha).');
     });
 }
 
@@ -3670,7 +3701,7 @@ function eliminarUsuario(key) {
             return;
         }
         // Usar Cloud Function para eliminar de Firebase Auth + RTDB
-        const eliminarUsuarioCF = firebase.functions().httpsCallable('eliminarUsuario');
+        const eliminarUsuarioCF = functionsInstance.httpsCallable('eliminarUsuario');
         eliminarUsuarioCF({ authUid: usuario.authUid || null, pushId: key, usuario: usuario.usuario })
             .then(function(result) {
                 if (result.data.success) {
@@ -3681,7 +3712,21 @@ function eliminarUsuario(key) {
             })
             .catch(function(err) {
                 console.error('[CF] Error eliminarUsuario:', err);
-                alert('❌ Error al eliminar usuario: ' + err.message);
+                let mensaje = err.message;
+                if (err.code === 'internal' || mensaje === 'internal') {
+                    mensaje = 'Error interno del servidor. Posibles causas:\n\n' +
+                        '1. La Cloud Function "eliminarUsuario" no está desplegada.\n' +
+                        '2. La CF está en una región diferente a us-central1.\n' +
+                        '3. No tiene permisos para eliminar usuarios de Firebase Auth.';
+                }
+                // Fallback: eliminar solo de RTDB
+                if (confirm(mensaje + '\n\n---\n¿Desea eliminar el usuario SOLO de la base de datos (conservando su cuenta de Firebase Auth)?')) {
+                    firebase.database().ref('usuariosSistema/' + key).remove().then(() => {
+                        alert('⚠️ Usuario eliminado de la base de datos.\nNota: Su cuenta de Firebase Auth podría seguir existiendo.');
+                    }).catch(e2 => {
+                        alert('❌ Error al eliminar de la base de datos: ' + e2.message);
+                    });
+                }
             });
     }
 }
