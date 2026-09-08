@@ -3419,9 +3419,9 @@ function registrarSesion(tipo) {
         timestamp: firebase.database.ServerValue.TIMESTAMP,
         ip: 'cliente'
     });
-    // Update last login on user record
-    if (tipo === 'login') {
-        firebase.database().ref('usuariosSistema/' + uid).update({
+    // Update last login on user record (usar _key de RTDB, no auth UID)
+    if (tipo === 'login' && usuarioSesionActual && usuarioSesionActual._key) {
+        firebase.database().ref('usuariosSistema/' + usuarioSesionActual._key).update({
             ultimoLogin: firebase.database.ServerValue.TIMESTAMP
         });
     }
@@ -3544,66 +3544,57 @@ document.getElementById('form-nuevo-usuario').addEventListener('submit', functio
         return;
     }
 
-    // Usar Cloud Function para crear usuario en Firebase Auth + RTDB
-    const crearUsuarioCF = functionsInstance.httpsCallable('crearUsuario');
-    crearUsuarioCF({ 
-        nombre, apellido, dpi, nip, correo, telefono, destino,
-        usuario: user, pass, rol, estado, biblioteca, modulosAsignados,
-        creadoPor: usuarioSesionActual.usuario
-    })
-        .then(function(result) {
-            if (result.data.success) {
-                // Si la CF devolvió el authUid, guardarlo en RTDB para referencia futura
-                if (result.data.authUid) {
-                    const usuariosRef = firebase.database().ref('usuariosSistema');
-                    usuariosRef.orderByChild('usuario').equalTo(user).limitToFirst(1).once('value', snap => {
-                        snap.forEach(child => {
-                            child.ref.update({ authUid: result.data.authUid });
-                        });
-                    });
-                }
-                alert(`✅ Usuario "${user}" creado en Firebase Auth y registrado.`);
+    // ===== CREAR USUARIO (sin Cloud Functions - plan Spark) =====
+    // Estrategia: usar el SDK del cliente para crear la cuenta en Auth,
+    // luego volver a iniciar sesión como admin, y guardar datos en RTDB.
+    const adminEmail = firebase.auth().currentUser.email;
+    const adminPass = prompt('🔒 Para crear un nuevo usuario, el sistema necesita registrar la cuenta en Firebase Auth.\n\nIngrese SU contraseña actual de administrador para continuar:');
+    if (!adminPass) { alert('Operación cancelada.'); return; }
+
+    const btnSubmit = document.getElementById('form-nuevo-usuario').querySelector('button[type="submit"]');
+    if (btnSubmit) { btnSubmit.disabled = true; btnSubmit.textContent = 'Creando...'; }
+
+    // Paso 1: Crear cuenta del nuevo usuario en Auth
+    firebase.auth().createUserWithEmailAndPassword(correo, pass).then(function(newUserCred) {
+        const newUid = newUserCred.user.uid;
+        console.log('[CREAR] Cuenta Auth creada, UID:', newUid);
+
+        // Paso 2: Volver a iniciar sesión como admin (restaurar sesión)
+        return firebase.auth().signInWithEmailAndPassword(adminEmail, adminPass).then(function() {
+            console.log('[CREAR] Sesión de admin restaurada');
+
+            // Paso 3: Guardar datos del nuevo usuario en RTDB
+            const ref = firebase.database().ref('usuariosSistema').push();
+            return ref.set({
+                nombre, apellido, dpi, nip, correo, telefono, destino,
+                usuario: user, rol, estado, biblioteca, modulosAsignados,
+                creadoPor: usuarioSesionActual.usuario,
+                authUid: newUid,
+                fechaCreacion: firebase.database.ServerValue.TIMESTAMP
+            }).then(function() {
+                alert(`✅ Usuario "${user}" creado exitosamente en Firebase Auth y registrado en la base de datos.`);
                 document.getElementById('form-nuevo-usuario').reset();
-                // Reset checkboxes to default
                 modulosCheckboxes.forEach(cb => {
                     cb.checked = ['crear','fichas','crear-vehiculo','fichas-vehiculos','extorsivos','seccion','biblioteca'].includes(cb.value);
                 });
-            } else {
-                alert('❌ Error: ' + (result.data.error || 'Error desconocido'));
-            }
-        })
-        .catch(function(err) {
-            console.error('[CF] Error crearUsuario:', err);
-            let mensaje = err.message;
-            if (err.code === 'internal' || mensaje === 'internal') {
-                mensaje = 'Error interno del servidor ("internal"). Posibles causas:\n\n' +
-                    '1. La Cloud Function "crearUsuario" NO está desplegada en Firebase.\n' +
-                    '   Solución: Desplegar las CF con "firebase deploy --only functions"\n\n' +
-                    '2. La CF está desplegada en una región diferente a us-central1.\n' +
-                    '   Solución: Verificar la región en Firebase Console > Functions\n\n' +
-                    '3. La CF no tiene permisos para crear usuarios en Firebase Auth.\n' +
-                    '   Solución: Verificar que la Service Account tenga rol "Firebase Auth Admin"\n\n' +
-                    '4. El plan de Firebase no soporta Cloud Functions (requiere plan Blaze/Pago).\n' +
-                    '   Solución: Actualizar al plan Blaze en Firebase Console > Usage & Billing';
-            }
-            // Ofrecer fallback: crear solo en RTDB (sin Firebase Auth)
-            if (confirm(mensaje + '\n\n---\n¿Desea crear el usuario SOLO en la base de datos (sin Firebase Auth)?\n\n⚠️ NOTA: El usuario NO podrá iniciar sesión hasta que se registre en Firebase Auth manualmente o se despliegue la Cloud Function.')) {
-                firebase.database().ref('usuariosSistema').push({
-                    nombre, apellido, dpi, nip, correo, telefono, destino,
-                    usuario: user, rol, estado, biblioteca, modulosAsignados,
-                    creadoPor: usuarioSesionActual.usuario,
-                    fechaCreacion: firebase.database.ServerValue.TIMESTAMP
-                }).then(() => {
-                    alert(`⚠️ Usuario "${user}" creado SOLO en base de datos.\nRecuerde: Necesita registrarse en Firebase Auth para poder iniciar sesión.`);
-                    document.getElementById('form-nuevo-usuario').reset();
-                    modulosCheckboxes.forEach(cb => {
-                        cb.checked = ['crear','fichas','crear-vehiculo','fichas-vehiculos','extorsivos','seccion','biblioteca'].includes(cb.value);
-                    });
-                }).catch(e2 => {
-                    alert('❌ Error al crear usuario en base de datos: ' + e2.message);
-                });
-            }
+            });
         });
+    }).catch(function(err) {
+        console.error('[CREAR] Error:', err);
+        let msg = err.message;
+        if (err.code === 'auth/email-already-in-use') {
+            msg = '❌ El correo "' + correo + '" ya está registrado en Firebase Auth.\n\nSi desea usar este correo, primero elimine el usuario existente o use otro correo.';
+        } else if (err.code === 'auth/weak-password') {
+            msg = '❌ La contraseña es muy débil. Use al menos 6 caracteres.';
+        } else if (err.code === 'auth/invalid-email') {
+            msg = '❌ El correo electrónico no es válido: ' + correo;
+        } else if (err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
+            msg = '❌ Contraseña de administrador incorrecta. Intente de nuevo.';
+        }
+        alert('Error al crear usuario:\n' + msg);
+    }).finally(function() {
+        if (btnSubmit) { btnSubmit.disabled = false; btnSubmit.textContent = 'Crear Usuario'; }
+    });
 });
 
 function renderizarTablaUsuarios() {
@@ -3637,7 +3628,7 @@ function renderizarTablaUsuarios() {
             <td>
                 ${esAdmin && u.usuario !== 'admin' ? `
                     <button onclick="verPerfilUsuario('${u._key}')" style="background:#00529b; color:white; border:none; padding:4px 8px; border-radius:3px; cursor:pointer; margin-right:4px;">👁 Ver</button>
-                    <button onclick="restablecerClave('${u._key}')" style="background:#f39c12; color:white; border:none; padding:4px 8px; border-radius:3px; cursor:pointer; margin-right:4px;">🔑 Clave</button>
+                    <button onclick="restablecerClave('${u._key}')" style="background:#f39c12; color:white; border:none; padding:4px 8px; border-radius:3px; cursor:pointer; margin-right:4px;">📧 Restablecer</button>
                     <button onclick="eliminarUsuario('${u._key}')" style="background:#e74c3c; color:white; border:none; padding:4px 8px; border-radius:3px; cursor:pointer;">🗑 Eliminar</button>
                 ` : '<span style="color:#aaa; font-size:12px;">Sin acciones</span>'}
             </td>
@@ -3654,81 +3645,52 @@ function restablecerClave(key) {
         return;
     }
     
-    const nuevaPass = prompt('Ingrese la nueva contraseña para "' + usuario.usuario + '"\n(Mínimo 6 caracteres. Si deja vacío se restablecerá a: Cradic2024!)');
-    
-    if (nuevaPass === null) return; // Canceló
-    
-    // Verificar que tengamos un authUid válido (no el pushId de RTDB)
-    if (!usuario.authUid) {
-        alert('❌ Este usuario no tiene authUid registrado en la base de datos.\n\nEsto significa que el usuario fue creado manualmente en RTDB sin registrarse en Firebase Auth.\n\nSolución: Elimine este usuario desde la tabla y créelo nuevamente usando el formulario de creación (módulo Crear). Así se registrará correctamente en Firebase Auth y se guardará el authUid.');
+    if (!usuario.correo) {
+        alert('❌ Este usuario no tiene correo electrónico registrado.\nNo se puede enviar el enlace de restablecimiento.\n\nSolución: Elimine este usuario y créelo nuevamente con correo válido.');
         return;
     }
-    
-    const restablecerCF = functionsInstance.httpsCallable('restablecerPassword');
-    restablecerCF({ 
-        authUid: usuario.authUid,
-        nuevaPassword: nuevaPass || 'Cradic2024!'
-    })
-    .then(function(result) {
-        if (result.data.success) {
-            alert('✅ ' + result.data.mensaje);
-        } else {
-            alert('❌ Error: ' + (result.data.error || 'Error desconocido'));
+
+    const opcion = confirm('🔑 Restablecer contraseña para "' + usuario.usuario + '"\n\nSe enviará un correo electrónico a: ' + usuario.correo + '\ncon un enlace para que el usuario cree una nueva contraseña.\n\n¿Desea continuar?');
+
+    if (!opcion) return;
+
+    // Enviar email de restablecimiento (funciona en plan Spark)
+    firebase.auth().sendPasswordResetEmail(usuario.correo).then(function() {
+        alert('✅ Correo de restablecimiento enviado exitosamente a: ' + usuario.correo + '\n\nEl usuario recibirá un enlace para crear su nueva contraseña.\nRevise también la carpeta de spam/correo no deseado.');
+    }).catch(function(err) {
+        console.error('[RESTABLECER] Error:', err);
+        let msg = err.message;
+        if (err.code === 'auth/user-not-found') {
+            msg = '❌ No existe una cuenta de Firebase Auth con el correo: ' + usuario.correo + '\n\nEs posible que el usuario fue creado solo en la base de datos sin registro en Firebase Auth.\nSolución: Elimine el usuario y créelo nuevamente desde el formulario de creación.';
+        } else if (err.code === 'auth/invalid-email') {
+            msg = '❌ El correo no es válido: ' + usuario.correo;
         }
-    })
-    .catch(function(err) {
-        console.error('[CF] Error restablecerPassword:', err);
-        let mensaje = err.message;
-        if (err.code === 'internal' || mensaje === 'internal') {
-            mensaje = 'Error interno del servidor. Posibles causas:\n\n' +
-                '1. El authUid no corresponde a un usuario válido en Firebase Auth.\n' +
-                '2. La Cloud Function "restablecerPassword" no está desplegada o tiene errores.\n' +
-                '3. La CF está en una región diferente a us-central1.\n\n' +
-                'authUid enviado: ' + usuario.authUid + '\n' +
-                'pushId (RTDB): ' + key;
-        }
-        alert('❌ Error al restablecer contraseña: ' + mensaje + '\n\n💡 Alternativa: Pida al usuario que cambie su propia contraseña desde su perfil (ícono de usuario arriba a la derecha).');
+        alert('Error al enviar correo de restablecimiento:\n' + msg + '\n\n💡 Alternativa: Pida al usuario que inicie sesión y cambie su contraseña desde su perfil (ícono de usuario arriba a la derecha).');
     });
 }
 
 function eliminarUsuario(key) {
-    if (confirm("¿Estás seguro de eliminar este usuario?")) {
-        // Buscar el usuario por key para obtener su authUid
-        const usuarios = obtenerUsuarios();
-        const usuario = usuarios.find(u => u._key === key);
-        if (!usuario) {
-            alert('❌ No se encontró el usuario.');
-            return;
-        }
-        // Usar Cloud Function para eliminar de Firebase Auth + RTDB
-        const eliminarUsuarioCF = functionsInstance.httpsCallable('eliminarUsuario');
-        eliminarUsuarioCF({ authUid: usuario.authUid || null, pushId: key, usuario: usuario.usuario })
-            .then(function(result) {
-                if (result.data.success) {
-                    alert('✅ Usuario eliminado de Firebase Auth y RTDB.');
-                } else {
-                    alert('❌ Error: ' + (result.data.error || 'Error desconocido'));
-                }
-            })
-            .catch(function(err) {
-                console.error('[CF] Error eliminarUsuario:', err);
-                let mensaje = err.message;
-                if (err.code === 'internal' || mensaje === 'internal') {
-                    mensaje = 'Error interno del servidor. Posibles causas:\n\n' +
-                        '1. La Cloud Function "eliminarUsuario" no está desplegada.\n' +
-                        '2. La CF está en una región diferente a us-central1.\n' +
-                        '3. No tiene permisos para eliminar usuarios de Firebase Auth.';
-                }
-                // Fallback: eliminar solo de RTDB
-                if (confirm(mensaje + '\n\n---\n¿Desea eliminar el usuario SOLO de la base de datos (conservando su cuenta de Firebase Auth)?')) {
-                    firebase.database().ref('usuariosSistema/' + key).remove().then(() => {
-                        alert('⚠️ Usuario eliminado de la base de datos.\nNota: Su cuenta de Firebase Auth podría seguir existiendo.');
-                    }).catch(e2 => {
-                        alert('❌ Error al eliminar de la base de datos: ' + e2.message);
-                    });
-                }
-            });
+    const usuarios = obtenerUsuarios();
+    const usuario = usuarios.find(u => u._key === key);
+    if (!usuario) {
+        alert('❌ No se encontró el usuario.');
+        return;
     }
+    
+    const confirmar = confirm('⚠️ ¿Está seguro de eliminar al usuario "' + usuario.usuario + '"?\n\nSe eliminará de la base de datos del sistema.\nLa cuenta de Firebase Auth permanecerá activa (requiere plan Blaze para eliminarla automáticamente).');
+    if (!confirmar) return;
+
+    // Eliminar de RTDB
+    firebase.database().ref('usuariosSistema/' + key).remove().then(function() {
+        let msg = '✅ Usuario "' + usuario.usuario + '" eliminado de la base de datos del sistema.';
+        if (usuario.correo) {
+            msg += '\n\n📌 NOTA: La cuenta de Firebase Auth con correo "' + usuario.correo + '" sigue activa.\nPara eliminarla completamente, vaya a Firebase Console > Authentication > Users y elimínela manualmente.';
+        }
+        alert(msg);
+    }).catch(function(err) {
+        console.error('[ELIMINAR] Error:', err);
+        alert('❌ Error al eliminar usuario: ' + err.message);
+    });
 }
 
 function actualizarContadores() {
