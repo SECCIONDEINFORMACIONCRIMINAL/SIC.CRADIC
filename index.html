@@ -2896,9 +2896,8 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 const auth = firebase.auth();
-// Cloud Functions - especificar región explícitamente para evitar error 'internal'
-// Si las CF están desplegadas en otra región, cambiar aquí:
-const functionsInstance = firebase.functions('us-central1');
+// Cloud Functions deshabilitados (plan Spark no soporta CF externos)
+// Todas las operaciones se realizan directamente con Firebase Client SDK
 const AUTH_EMAIL_DOMAIN = 'cradic.gt';
 // Storage no requerido - PDFs se guardan como Base64 en RTDB
 
@@ -3082,7 +3081,10 @@ document.getElementById('login-form').addEventListener('submit', function(e) {
 
 // Espera a que usuariosGlobal se cargue desde RTDB, luego entra a la app
 function _cargarDatosUsuarioYEntrar(nombreUsuario) {
+    let intentos = 0;
+    const MAX_INTENTOS = 20; // ~6 segundos (20 × 300ms)
     const intentar = function() {
+        intentos++;
         const usuarios = obtenerUsuarios();
         const encontrado = usuarios.find(u => u.usuario === nombreUsuario && u.estado === "Activo");
         if (encontrado) {
@@ -3108,9 +3110,20 @@ function _cargarDatosUsuarioYEntrar(nombreUsuario) {
             // Restablecer botón
             const btnLogin = document.getElementById('login-form').querySelector('button[type="submit"]');
             if (btnLogin) { btnLogin.disabled = false; btnLogin.textContent = 'Ingresar'; }
+        } else if (intentos >= MAX_INTENTOS) {
+            // Tiempo de espera agotado — mostrar error claro al usuario
+            console.error('[AUTH] No se encontró el usuario "' + nombreUsuario + '" en usuariosSistema después de ' + MAX_INTENTOS + ' intentos.');
+            const errorMsg = document.getElementById('error-msg');
+            errorMsg.textContent = 'Usuario "' + nombreUsuario + '" no encontrado en el sistema o no está Activo. Contacte al administrador.';
+            errorMsg.classList.remove('oculto');
+            // Cerrar sesión de Firebase Auth porque el login quedó inconsistente
+            firebase.auth().signOut();
+            // Restablecer botón
+            const btnLogin = document.getElementById('login-form').querySelector('button[type="submit"]');
+            if (btnLogin) { btnLogin.disabled = false; btnLogin.textContent = 'Ingresar'; }
         } else {
             // Los datos de usuariosSistema aún no cargaron, reintentar
-            console.log('[AUTH] Esperando datos de usuariosSistema...');
+            console.log('[AUTH] Esperando datos de usuariosSistema... intento ' + intentos + '/' + MAX_INTENTOS);
             setTimeout(intentar, 300);
         }
     };
@@ -6824,9 +6837,23 @@ function rfActualizarEstadisticasMigracion() {
 <!-- PWA Service Worker -->
 <script>
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('./sw.js')
-    .then(reg => console.log('SW registrado:', reg.scope))
+  // Forzar actualización del SW para evitar caché vieja que pueda tener llamadas a Cloud Functions
+  navigator.serviceWorker.register('./sw.js?v=20260909')
+    .then(reg => {
+      console.log('SW registrado:', reg.scope);
+      // Forzar actualización inmediata del service worker
+      if (reg.waiting) { reg.waiting.postMessage({ type: 'SKIP_WAITING' }); }
+      if (reg.installing) {
+        reg.installing.addEventListener('statechange', function() {
+          if (this.state === 'activated') { window.location.reload(); }
+        });
+      }
+    })
     .catch(err => console.log('SW error:', err));
+  // Limpiar cachés viejos del SW al cargar
+  if (caches) {
+    caches.keys().then(names => { for (let name of names) caches.delete(name); });
+  }
 }
 
 // Detectar modo standalone y ocultar botón instalar si ya es PWA
