@@ -2818,7 +2818,6 @@
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-functions-compat.js"></script>
     <!-- face-api.js para Reconocimiento Facial -->
     <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
 
@@ -3558,8 +3557,12 @@ document.getElementById('form-nuevo-usuario').addEventListener('submit', functio
     }
 
     // ===== CREAR USUARIO (sin Cloud Functions - plan Spark) =====
-    // Estrategia: usar el SDK del cliente para crear la cuenta en Auth,
+    // Estrategia: crear la cuenta Auth con usuario@cradic.gt (el formato de login del sistema),
     // luego volver a iniciar sesión como admin, y guardar datos en RTDB.
+    // El correo personal se guarda solo como dato de referencia en RTDB.
+    const emailAuthNuevo = user + '@' + AUTH_EMAIL_DOMAIN;
+    console.log('[CREAR] Creando cuenta Auth para:', emailAuthNuevo);
+
     const adminEmail = firebase.auth().currentUser.email;
     const adminPass = prompt('🔒 Para crear un nuevo usuario, el sistema necesita registrar la cuenta en Firebase Auth.\n\nIngrese SU contraseña actual de administrador para continuar:');
     if (!adminPass) { alert('Operación cancelada.'); return; }
@@ -3567,10 +3570,10 @@ document.getElementById('form-nuevo-usuario').addEventListener('submit', functio
     const btnSubmit = document.getElementById('form-nuevo-usuario').querySelector('button[type="submit"]');
     if (btnSubmit) { btnSubmit.disabled = true; btnSubmit.textContent = 'Creando...'; }
 
-    // Paso 1: Crear cuenta del nuevo usuario en Auth
-    firebase.auth().createUserWithEmailAndPassword(correo, pass).then(function(newUserCred) {
+    // Paso 1: Crear cuenta del nuevo usuario en Auth (usar usuario@cradic.gt, NO el correo personal)
+    firebase.auth().createUserWithEmailAndPassword(emailAuthNuevo, pass).then(function(newUserCred) {
         const newUid = newUserCred.user.uid;
-        console.log('[CREAR] Cuenta Auth creada, UID:', newUid);
+        console.log('[CREAR] Cuenta Auth creada, UID:', newUid, 'email:', emailAuthNuevo);
 
         // Paso 2: Volver a iniciar sesión como admin (restaurar sesión)
         return firebase.auth().signInWithEmailAndPassword(adminEmail, adminPass).then(function() {
@@ -3583,9 +3586,10 @@ document.getElementById('form-nuevo-usuario').addEventListener('submit', functio
                 usuario: user, rol, estado, biblioteca, modulosAsignados,
                 creadoPor: usuarioSesionActual.usuario,
                 authUid: newUid,
+                emailAuth: emailAuthNuevo,
                 fechaCreacion: firebase.database.ServerValue.TIMESTAMP
             }).then(function() {
-                alert(`✅ Usuario "${user}" creado exitosamente en Firebase Auth y registrado en la base de datos.`);
+                alert(`✅ Usuario "${user}" creado exitosamente.\nEmail de login: ${emailAuthNuevo}\nContraseña: la ingresada en el formulario.`);
                 document.getElementById('form-nuevo-usuario').reset();
                 modulosCheckboxes.forEach(cb => {
                     cb.checked = ['crear','fichas','crear-vehiculo','fichas-vehiculos','extorsivos','seccion','biblioteca'].includes(cb.value);
@@ -3596,13 +3600,15 @@ document.getElementById('form-nuevo-usuario').addEventListener('submit', functio
         console.error('[CREAR] Error:', err);
         let msg = err.message;
         if (err.code === 'auth/email-already-in-use') {
-            msg = '❌ El correo "' + correo + '" ya está registrado en Firebase Auth.\n\nSi desea usar este correo, primero elimine el usuario existente o use otro correo.';
+            msg = '❌ El usuario "' + user + '" ya está registrado en Firebase Auth (email: ' + emailAuthNuevo + ').\n\nSi desea reutilizarlo, primero elimine el usuario existente en la Firebase Console o use otro nombre de usuario.';
         } else if (err.code === 'auth/weak-password') {
             msg = '❌ La contraseña es muy débil. Use al menos 6 caracteres.';
         } else if (err.code === 'auth/invalid-email') {
-            msg = '❌ El correo electrónico no es válido: ' + correo;
+            msg = '❌ El email de autenticación no es válido: ' + emailAuthNuevo;
         } else if (err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
             msg = '❌ Contraseña de administrador incorrecta. Intente de nuevo.';
+        } else if (err.code === 'auth/missing-email') {
+            msg = '❌ Error: no se pudo generar el email de autenticación. Verifique que el campo "Usuario Login" tenga un valor válido.';
         }
         alert('Error al crear usuario:\n' + msg);
     }).finally(function() {
@@ -3658,25 +3664,23 @@ function restablecerClave(key) {
         return;
     }
     
-    if (!usuario.correo) {
-        alert('❌ Este usuario no tiene correo electrónico registrado.\nNo se puede enviar el enlace de restablecimiento.\n\nSolución: Elimine este usuario y créelo nuevamente con correo válido.');
-        return;
-    }
+    // El email de Firebase Auth es usuario@cradic.gt, NO el correo personal
+    const emailAuthUsuario = usuario.emailAuth || (usuario.usuario + '@' + AUTH_EMAIL_DOMAIN);
 
-    const opcion = confirm('🔑 Restablecer contraseña para "' + usuario.usuario + '"\n\nSe enviará un correo electrónico a: ' + usuario.correo + '\ncon un enlace para que el usuario cree una nueva contraseña.\n\n¿Desea continuar?');
+    const opcion = confirm('🔑 Restablecer contraseña para "' + usuario.usuario + '"\n\nSe enviará un correo electrónico a: ' + emailAuthUsuario + '\ncon un enlace para que el usuario cree una nueva contraseña.\n\n⚠️ NOTA: El correo de Firebase Auth es "' + emailAuthUsuario + '". Si el usuario no tiene acceso a esa bandeja, puede cambiar la contraseña desde su perfil dentro del sistema.\n\n¿Desea continuar?');
 
     if (!opcion) return;
 
     // Enviar email de restablecimiento (funciona en plan Spark)
-    firebase.auth().sendPasswordResetEmail(usuario.correo).then(function() {
-        alert('✅ Correo de restablecimiento enviado exitosamente a: ' + usuario.correo + '\n\nEl usuario recibirá un enlace para crear su nueva contraseña.\nRevise también la carpeta de spam/correo no deseado.');
+    firebase.auth().sendPasswordResetEmail(emailAuthUsuario).then(function() {
+        alert('✅ Correo de restablecimiento enviado exitosamente a: ' + emailAuthUsuario + '\n\nEl usuario recibirá un enlace para crear su nueva contraseña.\nRevise también la carpeta de spam/correo no deseado.');
     }).catch(function(err) {
         console.error('[RESTABLECER] Error:', err);
         let msg = err.message;
         if (err.code === 'auth/user-not-found') {
-            msg = '❌ No existe una cuenta de Firebase Auth con el correo: ' + usuario.correo + '\n\nEs posible que el usuario fue creado solo en la base de datos sin registro en Firebase Auth.\nSolución: Elimine el usuario y créelo nuevamente desde el formulario de creación.';
+            msg = '❌ No existe una cuenta de Firebase Auth con el correo: ' + emailAuthUsuario + '\n\nEs posible que el usuario fue creado solo en la base de datos sin registro en Firebase Auth.\nSolución: Elimine el usuario y créelo nuevamente desde el formulario de creación.';
         } else if (err.code === 'auth/invalid-email') {
-            msg = '❌ El correo no es válido: ' + usuario.correo;
+            msg = '❌ El correo no es válido: ' + emailAuthUsuario;
         }
         alert('Error al enviar correo de restablecimiento:\n' + msg + '\n\n💡 Alternativa: Pida al usuario que inicie sesión y cambie su contraseña desde su perfil (ícono de usuario arriba a la derecha).');
     });
@@ -3690,15 +3694,14 @@ function eliminarUsuario(key) {
         return;
     }
     
-    const confirmar = confirm('⚠️ ¿Está seguro de eliminar al usuario "' + usuario.usuario + '"?\n\nSe eliminará de la base de datos del sistema.\nLa cuenta de Firebase Auth permanecerá activa (requiere plan Blaze para eliminarla automáticamente).');
+    const emailAuthUsuario = usuario.emailAuth || (usuario.usuario + '@' + AUTH_EMAIL_DOMAIN);
+    const confirmar = confirm('⚠️ ¿Está seguro de eliminar al usuario "' + usuario.usuario + '"?\n\nSe eliminará de la base de datos del sistema.\nLa cuenta de Firebase Auth (' + emailAuthUsuario + ') permanecerá activa (requiere plan Blaze para eliminarla automáticamente desde el cliente).\nPara eliminarla completamente, vaya a Firebase Console > Authentication > Users.');
     if (!confirmar) return;
 
     // Eliminar de RTDB
     firebase.database().ref('usuariosSistema/' + key).remove().then(function() {
         let msg = '✅ Usuario "' + usuario.usuario + '" eliminado de la base de datos del sistema.';
-        if (usuario.correo) {
-            msg += '\n\n📌 NOTA: La cuenta de Firebase Auth con correo "' + usuario.correo + '" sigue activa.\nPara eliminarla completamente, vaya a Firebase Console > Authentication > Users y elimínela manualmente.';
-        }
+        msg += '\n\n📌 NOTA: La cuenta de Firebase Auth con correo "' + emailAuthUsuario + '" sigue activa.\nPara eliminarla completamente, vaya a Firebase Console > Authentication > Users y elimínela manualmente.';
         alert(msg);
     }).catch(function(err) {
         console.error('[ELIMINAR] Error:', err);
