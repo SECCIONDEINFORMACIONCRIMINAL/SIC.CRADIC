@@ -41,21 +41,8 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
 
-    event.respondWith(
-      fetch(event.request)
-        .then(response => {
-          // Cachear la respuesta para offline parcial
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
-          return response;
-        })
-        .catch(() => caches.match(event.request))
-    );
-    return;
-  }
-
   // HTML: network-first
-  if (event.request.headers.get('accept')?.includes('text/html')) {
+  if (event.request.headers.get('accept') && event.request.headers.get('accept').includes('text/html')) {
     event.respondWith(
       fetch(event.request)
         .then(response => {
@@ -79,6 +66,11 @@ self.addEventListener('fetch', event => {
           return response;
         }))
     );
+    return;
+  }
+
+  // Firebase RTDB WebSocket: no cachear
+  if (url.protocol === 'wss:' || url.hostname.includes('firebaseio.com')) {
     return;
   }
 
