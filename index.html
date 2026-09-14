@@ -439,6 +439,36 @@
             display: none !important;
         }
 
+        /* === LOADING OVERLAY === */
+        #argos-loading-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(255,255,255,0.85);
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            z-index: 99999;
+            transition: opacity 0.4s;
+        }
+        #argos-loading-overlay.fade-out {
+            opacity: 0; pointer-events: none;
+        }
+        .argos-spinner {
+            width: 48px; height: 48px;
+            border: 5px solid #d0d7e0;
+            border-top: 5px solid #0b2545;
+            border-radius: 50%;
+            animation: argos-spin 0.8s linear infinite;
+        }
+        @keyframes argos-spin {
+            to { transform: rotate(360deg); }
+        }
+        .argos-loading-text {
+            margin-top: 14px;
+            color: #0b2545;
+            font-size: 15px;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
         /* === PANTALLA DE LOGIN === */
         #login-screen {
             display: flex;
@@ -3558,6 +3588,13 @@
         </div>
     </div>
 
+    <!-- ARGOS Loading Overlay -->
+    <div id="argos-loading-overlay" class="oculto">
+        <div class="argos-spinner"></div>
+        <div class="argos-loading-text">Cargando datos del sistema...</div>
+        <div id="argos-loading-status" style="margin-top:6px;font-size:12px;color:#64748b;"></div>
+    </div>
+
     <!-- APP PRINCIPAL -->
     <div id="app-screen" class="oculto">
         
@@ -4937,6 +4974,10 @@ auth.onAuthStateChanged(function(user) {
         console.log('[AUTH] Usuario autenticado:', user.email);
         listenersActivos = true;
         _registrarListenersRTDB();
+        // Si la sesión fue restaurada automáticamente (refresh PWA),
+        // entrar a la app sin pasar por el formulario de login
+        var nombreUsuario = user.email.replace('@' + AUTH_EMAIL_DOMAIN, '');
+        _cargarDatosUsuarioYEntrar(nombreUsuario);
     } else if (!user) {
         console.log('[AUTH] No hay usuario autenticado. Cerrando sesión...');
         listenersActivos = false;
@@ -4948,7 +4989,52 @@ auth.onAuthStateChanged(function(user) {
     }
 });
 
+// === LOADING OVERLAY ===
+var _argosDataLoaded = { usuarios: false, personas: false, vehiculos: false, extorsivos: false };
+var _argosLoadingTimeout = null;
+var _argosShowDelay = null;
+function _argosShowLoading() {
+    _argosDataLoaded = { usuarios: false, personas: false, vehiculos: false, extorsivos: false };
+    // Retrasar 600ms antes de mostrar el overlay — si los datos cargan rapido nunca se muestra
+    if (_argosShowDelay) clearTimeout(_argosShowDelay);
+    _argosShowDelay = setTimeout(function() {
+        var el = document.getElementById('argos-loading-overlay');
+        if (el) { el.classList.remove('oculto'); el.classList.remove('fade-out'); }
+        var txt = document.getElementById('argos-loading-status');
+        if (txt) txt.textContent = 'Conectando a la base de datos...';
+    }, 600);
+    if (_argosLoadingTimeout) clearTimeout(_argosLoadingTimeout);
+    _argosLoadingTimeout = setTimeout(function() {
+        console.warn('[ARGOS] Loading timeout — forcing overlay hide after 15s');
+        _argosHideLoading();
+    }, 15000);
+}
+function _argosHideLoading() {
+    if (_argosShowDelay) { clearTimeout(_argosShowDelay); _argosShowDelay = null; }
+    if (_argosLoadingTimeout) { clearTimeout(_argosLoadingTimeout); _argosLoadingTimeout = null; }
+    var el = document.getElementById('argos-loading-overlay');
+    if (el) {
+        el.classList.add('fade-out');
+        setTimeout(function() { el.classList.add('oculto'); el.classList.remove('fade-out'); }, 400);
+    }
+}
+function _argosCheckAllLoaded() {
+    var txt = document.getElementById('argos-loading-status');
+    var loaded = [];
+    if (_argosDataLoaded.usuarios) loaded.push('usuarios');
+    if (_argosDataLoaded.personas) loaded.push('personas');
+    if (_argosDataLoaded.vehiculos) loaded.push('vehiculos');
+    if (_argosDataLoaded.extorsivos) loaded.push('extorsivos');
+    if (txt) txt.textContent = 'Cargando: ' + loaded.join(', ') + '...';
+    // Ocultar overlay cuando datos criticos del dashboard esten listos
+    // (personas + vehiculos). usuarios y extorsivos cargan en background.
+    if (_argosDataLoaded.personas && _argosDataLoaded.vehiculos) {
+        _argosHideLoading();
+    }
+}
+
 function _registrarListenersRTDB() {
+    _argosShowLoading();
     db.ref('usuariosSistema').on('value', snapshot => {
         usuariosGlobal = [];
         if (snapshot.exists()) {
@@ -4959,6 +5045,7 @@ function _registrarListenersRTDB() {
             });
         }
         renderizarTablaUsuarios();
+        _argosDataLoaded.usuarios = true; _argosCheckAllLoaded();
     });
 
     db.ref('fichasSIC').on('value', snapshot => {
@@ -4981,6 +5068,7 @@ function _registrarListenersRTDB() {
             });
         }
         actualizarContadores();
+        _argosDataLoaded.personas = true; _argosCheckAllLoaded();
     });
 
     db.ref('fichasVehiculos').on('value', snapshot => {
@@ -4996,6 +5084,7 @@ function _registrarListenersRTDB() {
             });
         }
         actualizarContadores();
+        _argosDataLoaded.vehiculos = true; _argosCheckAllLoaded();
     });
 
     db.ref('numerosExtorsivos').on('value', snapshot => {
@@ -5019,6 +5108,7 @@ function _registrarListenersRTDB() {
                 buscarNumeroExtorsivo();
             }
         }
+        _argosDataLoaded.extorsivos = true; _argosCheckAllLoaded();
     });
 }
 
@@ -5130,6 +5220,8 @@ document.getElementById('login-form').addEventListener('submit', function(e) {
 
 // Espera a que usuariosGlobal se cargue desde RTDB, luego entra a la app
 function _cargarDatosUsuarioYEntrar(nombreUsuario) {
+    // Guard: evitar doble ejecución (login manual + onAuthStateChanged)
+    if (usuarioSesionActual && usuarioSesionActual.usuario === nombreUsuario) return;
     let intentos = 0;
     const MAX_INTENTOS = 20; // ~6 segundos (20 × 300ms)
     const intentar = function() {
@@ -8588,7 +8680,7 @@ async function rfBuscarPorRostro() {
                 card.title = 'Click para ver la ficha de esta persona';
                 card.onclick = function() {
                     // Mostrar la ficha consultada (solo lectura)
-                    const fichaCompleta = Object.assign({}, c.ficha, { _key: c.key });
+                    const fichaCompleta = _restaurarDatosPesados(Object.assign({}, c.ficha, { _key: c.key }));
                     mostrarFichaConsultada(fichaCompleta);
                 };
                 resultsEl.appendChild(card);
@@ -8764,12 +8856,9 @@ function rfBuscarPorTexto() {
         card.style.cursor = 'pointer';
         card.title = 'Click para ver la ficha de esta persona';
         card.onclick = function() {
-            if (c._key) {
-                const fichaCompleta = Object.assign({}, c, { _key: c._key });
-                mostrarFichaConsultada(fichaCompleta);
-            } else {
-                mostrarFichaConsultada(c);
-            }
+            // Restaurar datos pesados (fotos, PDFs, tatuajes con foto) antes de mostrar
+            const fichaCompleta = _restaurarDatosPesados(Object.assign({}, c, { _key: c._key || c.key }));
+            mostrarFichaConsultada(fichaCompleta);
         };
         resultsEl.appendChild(card);
     });
