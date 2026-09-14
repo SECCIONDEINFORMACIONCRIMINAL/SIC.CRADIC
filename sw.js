@@ -1,8 +1,9 @@
 /**
  * Service Worker - Sistema ARGOS - Investigación Criminal
- * v20260915 - Plan B: eliminado Storage, nodos _heavy, compresión imágenes
+ * v20260915b - Plan B: eliminado Storage, nodos _heavy, compresión imágenes
+ * Fix: ignorar peticiones POST/PUT/DELETE (no se pueden cachear)
  */
-const CACHE_NAME = 'argos-v20260915';
+const CACHE_NAME = 'argos-v20260915b';
 const PRECACHE_URLS = [
   './',
   './index.html',
@@ -15,7 +16,7 @@ const PRECACHE_URLS = [
 
 // Instalación: precachear recursos esenciales
 self.addEventListener('install', event => {
-  console.log('[SW] Instalando v20260915');
+  console.log('[SW] Instalando v20260915b');
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => cache.addAll(PRECACHE_URLS))
@@ -25,7 +26,7 @@ self.addEventListener('install', event => {
 
 // Activación: limpiar cachés viejas
 self.addEventListener('activate', event => {
-  console.log('[SW] Activando v20260915');
+  console.log('[SW] Activando v20260915b');
   event.waitUntil(
     caches.keys().then(names => {
       return Promise.all(
@@ -39,7 +40,25 @@ self.addEventListener('activate', event => {
 
 // Fetch: network-first para HTML, cache-first para assets estáticos
 self.addEventListener('fetch', event => {
+  // ★ Solo cachear peticiones GET — POST/PUT/DELETE no son soportadas por Cache API
+  if (event.request.method !== 'GET') {
+    return;
+  }
+
   const url = new URL(event.request.url);
+
+  // Firebase RTDB WebSocket / REST no-GET: no cachear
+  if (url.protocol === 'wss:' || url.hostname.includes('firebaseio.com')) {
+    return;
+  }
+
+  // Firebase Auth / identidad: no cachear
+  if (url.hostname.includes('securetoken') ||
+      url.hostname.includes('identitytoolkit') ||
+      url.hostname.includes('firebaseauth') ||
+      url.hostname.includes('googleapis.com') && url.pathname.includes('/identity')) {
+    return;
+  }
 
   // HTML: network-first
   if (event.request.headers.get('accept') && event.request.headers.get('accept').includes('text/html')) {
@@ -69,12 +88,7 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // Firebase RTDB WebSocket: no cachear
-  if (url.protocol === 'wss:' || url.hostname.includes('firebaseio.com')) {
-    return;
-  }
-
-  // Default: network-first
+  // Default: network-first (solo GET, ya filtrado arriba)
   event.respondWith(
     fetch(event.request)
       .then(response => {
