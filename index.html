@@ -3585,6 +3585,7 @@
                 <button type="submit" class="btn-login">Ingresar</button>
             </form>
             <p id="error-msg" class="error-msg oculto">Usuario o contraseña incorrectos.</p>
+            <p id="login-hint" class="error-msg oculto" style="color:#13315c;font-size:13px;margin-top:4px;"></p>
         </div>
     </div>
 
@@ -4971,13 +4972,21 @@ function _abrirPDFConsulta(pdfIdx) {
 // seguridad bloquean todas las lecturas.
 auth.onAuthStateChanged(function(user) {
     if (user && !listenersActivos) {
-        console.log('[AUTH] Usuario autenticado:', user.email);
+        console.log('[AUTH] Sesión previa detectada:', user.email);
         listenersActivos = true;
         _registrarListenersRTDB();
-        // Si la sesión fue restaurada automáticamente (refresh PWA),
-        // entrar a la app sin pasar por el formulario de login
+        // NO entrar automáticamente — siempre mostrar pantalla de login
+        // por seguridad. Solo pre-llenar el nombre de usuario.
         var nombreUsuario = user.email.replace('@' + AUTH_EMAIL_DOMAIN, '');
-        _cargarDatosUsuarioYEntrar(nombreUsuario);
+        var inputUser = document.getElementById('login-username');
+        if (inputUser && !inputUser.value) {
+            inputUser.value = nombreUsuario;
+        }
+        var hintEl = document.getElementById('login-hint');
+        if (hintEl) {
+            hintEl.textContent = 'Sesión previa: ' + nombreUsuario + ' — ingrese su contraseña';
+            hintEl.classList.remove('oculto');
+        }
     } else if (!user) {
         console.log('[AUTH] No hay usuario autenticado. Cerrando sesión...');
         listenersActivos = false;
@@ -5184,6 +5193,7 @@ document.getElementById('login-form').addEventListener('submit', function(e) {
     const userIn = document.getElementById('login-username').value.trim();
     const passIn = document.getElementById('login-password').value.trim();
     const errorMsg = document.getElementById('error-msg');
+    const hintMsg = document.getElementById('login-hint');
 
     // Agregar dominio automáticamente
     const emailAuth = userIn + '@' + AUTH_EMAIL_DOMAIN;
@@ -5197,6 +5207,7 @@ document.getElementById('login-form').addEventListener('submit', function(e) {
         .then(function(userCredential) {
             console.log('[AUTH] Login exitoso en Firebase Auth:', userCredential.user.email);
             errorMsg.classList.add('oculto');
+            if (hintMsg) { hintMsg.classList.add('oculto'); hintMsg.textContent = ''; }
             // Buscar datos del usuario en usuariosSistema por su authUid o por su nombre
             _cargarDatosUsuarioYEntrar(userIn);
         })
@@ -5346,6 +5357,13 @@ function aplicarPermisosRol() {
 
 function cerrarSesion() {
     registrarSesion('logout');
+    // Resetear bandera de listeners para que onAuthStateChanged no re-registre
+    listenersActivos = false;
+    // Desregistrar listeners de RTDB
+    db.ref('usuariosSistema').off();
+    db.ref('fichasSIC').off();
+    db.ref('fichasVehiculos').off();
+    db.ref('numerosExtorsivos').off();
     // Cerrar sesión en Firebase Auth
     auth.signOut().then(function() {
         console.log('[AUTH] Sesión cerrada en Firebase Auth');
@@ -5357,6 +5375,10 @@ function cerrarSesion() {
     document.getElementById('login-screen').classList.remove('oculto');
     document.getElementById('login-username').value = '';
     document.getElementById('login-password').value = '';
+    var hintEl = document.getElementById('login-hint');
+    if (hintEl) { hintEl.textContent = ''; hintEl.classList.add('oculto'); }
+    var errorMsg = document.getElementById('error-msg');
+    if (errorMsg) { errorMsg.classList.add('oculto'); }
 }
 
 function cambiarModulo(modulo) {
