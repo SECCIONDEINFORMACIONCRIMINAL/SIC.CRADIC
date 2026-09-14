@@ -5171,6 +5171,16 @@ async function _restaurarDatosPesados(ficha) {
             if (heavy.foto) f.foto = heavy.foto;
             if (heavy.pdfsAdjuntos) f.pdfsAdjuntos = heavy.pdfsAdjuntos;
             if (heavy.tatuajesConFoto) f.tatuajesConFoto = heavy.tatuajesConFoto;
+        } else {
+            // FALLBACK: fichas legacy — datos pesados aún están en fichasSIC/{key}
+            const snapLegacy = await db.ref('fichasSIC/' + key).once('value');
+            const legacy = snapLegacy.val();
+            if (legacy) {
+                if (legacy.fotosPersona && legacy.fotosPersona.some(f => f && f.startsWith('data:'))) f.fotosPersona = legacy.fotosPersona;
+                if (legacy.foto && legacy.foto.startsWith('data:')) f.foto = legacy.foto;
+                if (legacy.pdfsAdjuntos && legacy.pdfsAdjuntos.some(p => p.base64 && p.base64.startsWith('data:'))) f.pdfsAdjuntos = legacy.pdfsAdjuntos;
+                if (legacy.tatuajesConFoto && legacy.tatuajesConFoto.some(t => t.foto && t.foto.startsWith('data:'))) f.tatuajesConFoto = legacy.tatuajesConFoto;
+            }
         }
     } catch (e) {
         console.warn('[Restaurar persona heavy] Error:', e);
@@ -5190,6 +5200,14 @@ async function _restaurarDatosPesadosVehiculo(v) {
         if (heavy) {
             if (heavy.fotoVehiculo) ve.fotoVehiculo = heavy.fotoVehiculo;
             if (heavy.fotoPropietario) ve.fotoPropietario = heavy.fotoPropietario;
+        } else {
+            // FALLBACK: vehículos legacy — datos pesados aún están en fichasVehiculos/{key}
+            const snapLegacy = await db.ref('fichasVehiculos/' + key).once('value');
+            const legacy = snapLegacy.val();
+            if (legacy) {
+                if (legacy.fotoVehiculo && legacy.fotoVehiculo.startsWith('data:')) ve.fotoVehiculo = legacy.fotoVehiculo;
+                if (legacy.fotoPropietario && legacy.fotoPropietario.startsWith('data:')) ve.fotoPropietario = legacy.fotoPropietario;
+            }
         }
     } catch (e) {
         console.warn('[Restaurar vehiculo heavy] Error:', e);
