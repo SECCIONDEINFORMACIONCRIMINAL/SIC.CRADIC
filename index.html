@@ -4740,6 +4740,34 @@
                             </div>
                             <div id="rf-migrate-log" style="max-height:120px;overflow-y:auto;font-size:11px;color:#555;margin-top:8px;"></div>
                         </div>
+
+                        <!-- PLAN B: Optimización de Carga (compresión + nodos separados _heavy) -->
+                        <div class="rf-migrate-section" id="planb-optimize-section" style="background:#e3f2fd;border-color:#90caf9;">
+                            <h4>⚡ Optimización Plan B — Compresión + Nodos Separados</h4>
+                            <p style="font-size:12px;color:#555;margin-bottom:8px;">
+                                Las imágenes se comprimen a ~50KB JPEG antes de guardar. Los datos pesados (fotos, PDFs, tatuajes) se almacenan en nodos RTDB separados (<code>_heavy</code>) y solo se cargan al abrir una ficha. Esto reduce la carga inicial de 30-40MB a ~2-3MB.
+                            </p>
+                            <div class="rf-migrate-stats" id="planb-stats">
+                                <div class="rf-migrate-stat">
+                                    <div class="num" id="planb-fichas-personas">—</div>
+                                    <div class="label">Fichas personas</div>
+                                </div>
+                                <div class="rf-migrate-stat">
+                                    <div class="num" id="planb-fichas-vehiculos">—</div>
+                                    <div class="label">Fichas vehiculares</div>
+                                </div>
+                                <div class="rf-migrate-stat">
+                                    <div class="num" id="planb-heavy-personas">—</div>
+                                    <div class="label">Nodos _heavy personas</div>
+                                </div>
+                                <div class="rf-migrate-stat">
+                                    <div class="num" id="planb-heavy-vehiculos">—</div>
+                                    <div class="label">Nodos _heavy vehículos</div>
+                                </div>
+                            </div>
+                            <button class="rf-btn rf-btn-primary" id="planb-btn-stats" onclick="planBActualizarEstadisticas()" style="background:#0b2545;">🔄 Actualizar Estadísticas</button>
+                            <div id="planb-optimize-log" style="max-height:100px;overflow-y:auto;font-size:11px;color:#555;margin-top:8px;"></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -4831,7 +4859,7 @@ const auth = firebase.auth();
 // Cloud Functions deshabilitados (plan Spark no soporta CF externos)
 // Todas las operaciones se realizan directamente con Firebase Client SDK
 const AUTH_EMAIL_DOMAIN = 'cradic.gt';
-// Storage no requerido - PDFs se guardan como Base64 en RTDB
+// Archivos pesados (fotos, PDFs) se almacenan en Firebase Storage, solo URLs en RTDB
 
 const USUARIOS_DEFECTO = [];
 // Los usuarios ahora se gestionan con Firebase Authentication.
@@ -4851,17 +4879,18 @@ let _cacheIdxPersona = 0;
 let _cacheIdxVehiculo = 0;
 function _cachePersona(ficha) {
     const id = '__fp' + (_cacheIdxPersona++);
-    // Restaurar datos pesados antes de cachear para que Ver Ficha funcione correctamente
-    const restaurada = _restaurarDatosPesados(ficha);
-    restaurada._ts = Date.now();
-    _fichaCachePersonas.set(id, restaurada);
+    // No restaurar datos pesados aquí; se restauran bajo demanda al abrir la ficha
+    const copia = Object.assign({}, ficha);
+    copia._ts = Date.now();
+    _fichaCachePersonas.set(id, copia);
     return id;
 }
 function _cacheVehiculo(vehiculo) {
     const id = '__fv' + (_cacheIdxVehiculo++);
-    const restaurado = _restaurarDatosPesadosVehiculo(vehiculo);
-    restaurado._ts = Date.now();
-    _fichaCacheVehiculos.set(id, restaurado);
+    // No restaurar datos pesados aquí; se restauran bajo demanda al abrir la ficha
+    const copia = Object.assign({}, vehiculo);
+    copia._ts = Date.now();
+    _fichaCacheVehiculos.set(id, copia);
     return id;
 }
 function _getPersonaCache(id) { return _fichaCachePersonas.get(id); }
@@ -4874,8 +4903,8 @@ setInterval(() => {
 }, 120000);
 
 // ===== ABRIR FICHA VEHÍCULO EN NUEVA VENTANA =====
-function _abrirFichaVehiculoWin(vehiculo) {
-    const v = vehiculo;
+async function _abrirFichaVehiculoWin(vehiculo) {
+    const v = await _restaurarDatosPesadosVehiculo(vehiculo);
     const nomComp = (v.p_nombre || 'N/A');
     let html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Ficha Vehicular - ${v.v_placa || 'Sin Placa'}</title>
     <style>
@@ -4928,42 +4957,46 @@ function _abrirFichaVehiculoWin(vehiculo) {
     else { alert('⚠️ El navegador bloqueó la ventana emergente. Permita ventanas emergentes para este sitio.'); }
 }
 
-function verVehiculoVinculadoEnVentana(placa) {
+async function verVehiculoVinculadoEnVentana(placa) {
     const veh = historialVehiculosGlobal.find(v => v.v_placa && v.v_placa.toUpperCase() === placa.toUpperCase());
-    if (veh) { _abrirFichaVehiculoWin(_restaurarDatosPesadosVehiculo(veh)); }
+    if (veh) { await _abrirFichaVehiculoWin(veh); }
     else { alert('⚠️ No se encontró la ficha del vehículo con placa ' + placa + '\nEs posible que haya sido eliminado.'); }
 }
 
-function verVehiculoVinculadoPorKey(key) {
+async function verVehiculoVinculadoPorKey(key) {
     const veh = historialVehiculosGlobal.find(v => v._key === key);
-    if (veh) { _abrirFichaVehiculoWin(_restaurarDatosPesadosVehiculo(veh)); }
+    if (veh) { await _abrirFichaVehiculoWin(veh); }
     else { alert('⚠️ No se encontró la ficha del vehículo.\nEs posible que haya sido eliminado.'); }
 }
 
 function abrirPDFVinculado(pdfIdx) {
     const el = document.getElementById('v-pdfs-vinc');
-    const base64 = el && el._pdfBase64Refs ? el._pdfBase64Refs[pdfIdx] : null;
-    if (!base64) { alert('⚠️ El archivo PDF no está disponible.'); return; }
+    const ref = el && el._pdfBase64Refs ? el._pdfBase64Refs[pdfIdx] : null;
+    if (!ref) { alert('⚠️ El archivo PDF no está disponible.'); return; }
     const w = window.open('', '_blank', 'width=900,height=700');
-    if (w) {
-        w.document.write('<!DOCTYPE html><html><head><title>PDF - ARGOS</title><style>*{margin:0;padding:0;}body{background:#f0f4f8;overflow:hidden;}</style></head><body><iframe src="' + base64 + '" style="width:100%;height:100vh;border:none;"></iframe></body></html>');
-        w.document.close();
+    if (!w) { alert('⚠️ El navegador bloqueó la ventana emergente. Permita ventanas emergentes para este sitio.'); return; }
+    if (ref.startsWith('http')) {
+        // URL de Storage → abrir directamente
+        w.document.write('<!DOCTYPE html><html><head><title>PDF - ARGOS</title><style>*{margin:0;padding:0;}body{background:#f0f4f8;overflow:hidden;}</style></head><body><iframe src="' + ref + '" style="width:100%;height:100vh;border:none;"></iframe></body></html>');
     } else {
-        alert('⚠️ El navegador bloqueó la ventana emergente. Permita ventanas emergentes para este sitio.');
+        // Base64 legacy → abrir como data URI
+        w.document.write('<!DOCTYPE html><html><head><title>PDF - ARGOS</title><style>*{margin:0;padding:0;}body{background:#f0f4f8;overflow:hidden;}</style></head><body><iframe src="' + ref + '" style="width:100%;height:100vh;border:none;"></iframe></body></html>');
     }
+    w.document.close();
 }
 
 function _abrirPDFConsulta(pdfIdx) {
     const el = document.getElementById('detalle-persona-consultada');
-    const base64 = el && el._pdfBase64Refs ? el._pdfBase64Refs[pdfIdx] : null;
-    if (!base64) { alert('⚠️ El archivo PDF no está disponible.'); return; }
+    const ref = el && el._pdfBase64Refs ? el._pdfBase64Refs[pdfIdx] : null;
+    if (!ref) { alert('⚠️ El archivo PDF no está disponible.'); return; }
     const w = window.open('', '_blank', 'width=900,height=700');
-    if (w) {
-        w.document.write('<!DOCTYPE html><html><head><title>PDF - ARGOS</title><style>*{margin:0;padding:0;}body{background:#f0f4f8;overflow:hidden;}</style></head><body><iframe src="' + base64 + '" style="width:100%;height:100vh;border:none;"></iframe></body></html>');
-        w.document.close();
+    if (!w) { alert('⚠️ El navegador bloqueó la ventana emergente. Permita ventanas emergentes para este sitio.'); return; }
+    if (ref.startsWith('http')) {
+        w.document.write('<!DOCTYPE html><html><head><title>PDF - ARGOS</title><style>*{margin:0;padding:0;}body{background:#f0f4f8;overflow:hidden;}</style></head><body><iframe src="' + ref + '" style="width:100%;height:100vh;border:none;"></iframe></body></html>');
     } else {
-        alert('⚠️ El navegador bloqueó la ventana emergente. Permita ventanas emergentes para este sitio.');
+        w.document.write('<!DOCTYPE html><html><head><title>PDF - ARGOS</title><style>*{margin:0;padding:0;}body{background:#f0f4f8;overflow:hidden;}</style></head><body><iframe src="' + ref + '" style="width:100%;height:100vh;border:none;"></iframe></body></html>');
     }
+    w.document.close();
 }
 
 // === LISTENER DE AUTENTICACIÓN ===
@@ -5063,16 +5096,8 @@ function _registrarListenersRTDB() {
             snapshot.forEach(child => {
                 let p = child.val();
                 p._key = child.key;
-                // Almacenar datos pesados (base64) en propiedades _prefixed para no saturar la memoria
-                // y quitarlos del objeto de búsqueda para acelerar iteraciones
-                if (p.fotosPersona) { p._fotosPersona = p.fotosPersona; delete p.fotosPersona; }
-                if (p.foto) { p._foto = p.foto; delete p.foto; }
-                if (p.pdfsAdjuntos) { p._pdfsAdjuntos = p.pdfsAdjuntos; delete p.pdfsAdjuntos; }
-                if (p.tatuajesConFoto) {
-                    p._tatuajesConFoto = p.tatuajesConFoto;
-                    // Guardar solo texto de tatuajes para búsqueda, sin fotos base64
-                    p.tatuajesConFoto = p.tatuajesConFoto.map(t => ({ubicacion: t.ubicacion||'', descripcion: t.descripcion||'', tipo: t.tipo||''}));
-                }
+                // Plan B: datos pesados están en fichasSIC_heavy, no aquí
+                // El nodo principal solo contiene datos ligeros
                 historialPersonasGlobal.push(p);
             });
         }
@@ -5086,9 +5111,7 @@ function _registrarListenersRTDB() {
             snapshot.forEach(child => {
                 let v = child.val();
                 v._key = child.key;
-                // Quitar datos pesados de base64 para aligerar la memoria
-                if (v.fotoVehiculo) { v._fotoVehiculo = v.fotoVehiculo; delete v.fotoVehiculo; }
-                if (v.fotoPropietario) { v._fotoPropietario = v.fotoPropietario; delete v.fotoPropietario; }
+                // Plan B: datos pesados están en fichasVehiculos_heavy, no aquí
                 historialVehiculosGlobal.push(v);
             });
         }
@@ -5135,23 +5158,104 @@ function obtenerUsuarios() { return usuariosGlobal; }
 function obtenerHistorial() { return historialPersonasGlobal; }
 
 // Restaurar datos pesados (base64) de una ficha desde sus propiedades _prefixed
-function _restaurarDatosPesados(ficha) {
+async function _restaurarDatosPesados(ficha) {
     if (!ficha) return ficha;
     const f = Object.assign({}, ficha);
-    if (f._fotosPersona) f.fotosPersona = f._fotosPersona;
-    if (f._foto) f.foto = f._foto;
-    if (f._pdfsAdjuntos) f.pdfsAdjuntos = f._pdfsAdjuntos;
-    if (f._tatuajesConFoto) f.tatuajesConFoto = f._tatuajesConFoto;
+    const key = f._key || f.key;
+    if (!key) return f;
+    try {
+        const snap = await db.ref('fichasSIC_heavy/' + key).once('value');
+        const heavy = snap.val();
+        if (heavy) {
+            if (heavy.fotosPersona) f.fotosPersona = heavy.fotosPersona;
+            if (heavy.foto) f.foto = heavy.foto;
+            if (heavy.pdfsAdjuntos) f.pdfsAdjuntos = heavy.pdfsAdjuntos;
+            if (heavy.tatuajesConFoto) f.tatuajesConFoto = heavy.tatuajesConFoto;
+        }
+    } catch (e) {
+        console.warn('[Restaurar persona heavy] Error:', e);
+    }
     return f;
 }
 
 // Restaurar datos pesados de un vehiculo
-function _restaurarDatosPesadosVehiculo(v) {
+async function _restaurarDatosPesadosVehiculo(v) {
     if (!v) return v;
     const ve = Object.assign({}, v);
-    if (ve._fotoVehiculo) ve.fotoVehiculo = ve._fotoVehiculo;
-    if (ve._fotoPropietario) ve.fotoPropietario = ve._fotoPropietario;
+    const key = ve._key || ve.key;
+    if (!key) return ve;
+    try {
+        const snap = await db.ref('fichasVehiculos_heavy/' + key).once('value');
+        const heavy = snap.val();
+        if (heavy) {
+            if (heavy.fotoVehiculo) ve.fotoVehiculo = heavy.fotoVehiculo;
+            if (heavy.fotoPropietario) ve.fotoPropietario = heavy.fotoPropietario;
+        }
+    } catch (e) {
+        console.warn('[Restaurar vehiculo heavy] Error:', e);
+    }
     return ve;
+}
+
+// === FUNCIONES DE COMPRESIÓN Y NODOS SEPARADOS ===
+// (Plan B: sin Firebase Storage, todo en RTDB con compresión y nodos _heavy)
+
+// Comprime una imagen base64 a JPEG con calidad configurable (0.7 = 70% calidad, ~50KB por foto)
+function _comprimirImagenBase64(base64, calidad = 0.7, maxAncho = 640) {
+    return new Promise((resolve) => {
+        if (!base64 || !base64.startsWith('data:')) { resolve(base64 || ''); return; }
+        // Si ya es pequeña (< 100KB en base64 ~133K chars), no comprimir
+        if (base64.length < 133000) { resolve(base64); return; }
+        const img = new Image();
+        img.onload = function() {
+            let w = img.width, h = img.height;
+            // Redimensionar si excede maxAncho
+            if (w > maxAncho) {
+                h = Math.round(h * (maxAncho / w));
+                w = maxAncho;
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = w; canvas.height = h;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, w, h);
+            resolve(canvas.toDataURL('image/jpeg', calidad));
+        };
+        img.onerror = function() { resolve(base64); }; // Si falla, dejar original
+        img.src = base64;
+    });
+}
+
+// Carga datos pesados (fotos/PDFs) de una ficha desde nodo separado _heavy
+async function _cargarDatosPesadosPersona(key) {
+    try {
+        const snap = await db.ref('fichasSIC_heavy/' + key).once('value');
+        return snap.val() || {};
+    } catch (e) {
+        console.warn('[Heavy] Error cargando datos pesados:', key, e);
+        return {};
+    }
+}
+
+// Carga datos pesados de un vehículo desde nodo separado _heavy
+async function _cargarDatosPesadosVehiculo(key) {
+    try {
+        const snap = await db.ref('fichasVehiculos_heavy/' + key).once('value');
+        return snap.val() || {};
+    } catch (e) {
+        console.warn('[Heavy] Error cargando datos pesados vehículo:', key, e);
+        return {};
+    }
+}
+
+// Convierte Image a objeto para face-api (soporta base64 directamente)
+function _cargarImagenParaFaceApi(src) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = src;
+    });
 }
 
 function _mergeExtorsivosFromFB(snapshot) {
@@ -6532,11 +6636,12 @@ function actualizarFicha() {
     const vPdf = document.getElementById('v-pdfs-vinc');
     if (vPdf) {
         const pdfs = d.pdfsAdjuntos || [];
-        vPdf.innerHTML = pdfs.length ? pdfs.map((p, i) =>
-            '<div class="vinc-vista-item" style="display:flex;align-items:center;justify-content:space-between;gap:8px;">📄 ' + p.nombre + (p.base64 ? '<button onclick="abrirPDFVinculado(\'' + i + '\')" data-pdfidx="' + i + '" style="padding:3px 10px;font-size:11px;background:#f59e0b;color:#0b2545;border:none;border-radius:4px;cursor:pointer;white-space:nowrap;">📂 Abrir PDF</button>' : '') + '</div>'
-        ).join('') : '<div style="color:#777;padding:4px;">Sin archivos PDF adjuntos</div>';
-        // Store base64 refs for onclick access
-        if (pdfs.length) { vPdf._pdfBase64Refs = pdfs.map(p => p.base64 || ''); }
+        vPdf.innerHTML = pdfs.length ? pdfs.map((p, i) => {
+            const tieneArchivo = p.base64 || p.url;
+            return '<div class="vinc-vista-item" style="display:flex;align-items:center;justify-content:space-between;gap:8px;">📄 ' + p.nombre + (tieneArchivo ? '<button onclick="abrirPDFVinculado(\'' + i + '\')" data-pdfidx="' + i + '" style="padding:3px 10px;font-size:11px;background:#f59e0b;color:#0b2545;border:none;border-radius:4px;cursor:pointer;white-space:nowrap;">📂 Abrir PDF</button>' : '') + '</div>';
+        }).join('') : '<div style="color:#777;padding:4px;">Sin archivos PDF adjuntos</div>';
+        // Store refs for onclick access (URLs o base64)
+        if (pdfs.length) { vPdf._pdfBase64Refs = pdfs.map(p => p.url || p.base64 || ''); }
     }
 
     document.getElementById('v-fin_info').textContent = `Banco: ${d.fin_banco} | Cuenta: ${d.fin_cuenta} | Monto: ${d.fin_monto} | Obs: ${d.fin_obs}`;
@@ -6547,31 +6652,105 @@ function actualizarFicha() {
     // Photo updates handled in 4-photo grid rendering
 }
 
-function guardarFichaConsolidada() {
+async function guardarFichaConsolidada() {
     const d = obtenerDatosFormulario();
     if (!d.g_pnombre && !d.g_dpi) {
         alert('⚠️ Ingresa al menos el primer nombre o el DPI.');
         return;
     }
-    
-    const key = document.getElementById('key_persona_editar').value;
 
-    if (key) {
-        db.ref('fichasSIC/' + key).update(d)
-            .then(() => {
-                alert(`✅ Ficha -SIC- actualizada con éxito.`);
-                limpiarFormulario();
-                cambiarModulo('fichas');
-            })
-            .catch(err => alert("❌ Error en actualización: " + err.message));
-    } else {
-        db.ref('fichasSIC').push(d)
-            .then(() => alert(`✅ Ficha -SIC- guardada con éxito.`))
-            .catch(err => alert("❌ Error en guardado: " + err.message));
+    // Mostrar indicador de compresión
+    const guardarBtn = document.querySelector('[onclick="guardarFichaConsolidada()"]');
+    if (guardarBtn) { guardarBtn.disabled = true; guardarBtn.textContent = '⏳ Comprimiendo y guardando...'; }
+
+    let key = document.getElementById('key_persona_editar').value;
+
+    try {
+        // Si es nueva ficha, crear registro temporal para obtener key
+        if (!key) {
+            const tempRef = await db.ref('fichasSIC').push({ _temp: true });
+            key = tempRef.key;
+        }
+
+        // === COMPRIMIR FOTOS DE PERSONA ===
+        const fotosComprimidas = [];
+        for (let i = 0; i < (d.fotosPersona || []).length; i++) {
+            const fotoData = d.fotosPersona[i];
+            if (fotoData && fotoData.startsWith('data:')) {
+                // Es base64 nuevo → comprimir antes de guardar
+                const comprimida = await _comprimirImagenBase64(fotoData, 0.65, 640);
+                fotosComprimidas.push(comprimida);
+            } else {
+                fotosComprimidas.push(fotoData || '');
+            }
+        }
+
+        // === COMPRIMIR FOTO PRINCIPAL ===
+        let fotoPrincipal = d.foto || '';
+        if (fotoPrincipal && fotoPrincipal.startsWith('data:')) {
+            fotoPrincipal = await _comprimirImagenBase64(fotoPrincipal, 0.65, 640);
+        }
+
+        // === COMPRIMIR FOTOS DE TATUAJES ===
+        const tatsComprimidos = [];
+        for (let i = 0; i < (d.tatuajesConFoto || []).length; i++) {
+            const tat = d.tatuajesConFoto[i];
+            const tatCopy = { ubicacion: tat.ubicacion || '', descripcion: tat.descripcion || '', tipo: tat.tipo || '' };
+            if (tat.foto && tat.foto.startsWith('data:')) {
+                tatCopy.foto = await _comprimirImagenBase64(tat.foto, 0.6, 480);
+            } else {
+                tatCopy.foto = tat.foto || '';
+            }
+            tatsComprimidos.push(tatCopy);
+        }
+
+        // === SEPARAR DATOS PESADOS (base64) EN NODO _heavy ===
+        // Datos ligeros van en fichasSIC (para listado/búsqueda)
+        // Datos pesados (fotos, PDFs) van en fichasSIC_heavy (se cargan bajo demanda)
+        const datosLigeros = Object.assign({}, d);
+        const datosPesados = {};
+
+        // Separar fotos comprimidas
+        datosPesados.fotosPersona = fotosComprimidas;
+        datosPesados.foto = fotoPrincipal;
+        datosLigeros.fotosPersona = fotosComprimidas.map(f => f && f.startsWith('data:') ? '' : f);
+        datosLigeros.foto = (fotoPrincipal && fotoPrincipal.startsWith('data:')) ? '' : fotoPrincipal;
+
+        // Separar PDFs (siempre van al nodo pesado)
+        datosPesados.pdfsAdjuntos = d.pdfsAdjuntos || [];
+        datosLigeros.pdfsAdjuntos = (d.pdfsAdjuntos || []).map(p => ({ nombre: p.nombre || '', url: p.url || '', base64: '' }));
+
+        // Separar tatuajes con foto
+        datosPesados.tatuajesConFoto = tatsComprimidos;
+        datosLigeros.tatuajesConFoto = tatsComprimidos.map(t => ({ ubicacion: t.ubicacion, descripcion: t.descripcion, tipo: t.tipo, foto: (t.foto && t.foto.startsWith('data:')) ? '' : t.foto }));
+
+        // Limpiar marca temporal si existía
+        delete datosLigeros._temp;
+
+        // === GUARDAR EN RTDB (dos nodos: ligero + pesado) ===
+        const updates = {};
+        updates['fichasSIC/' + key] = datosLigeros;
+        updates['fichasSIC_heavy/' + key] = datosPesados;
+        await db.ref().update(updates);
+
+        if (document.getElementById('key_persona_editar').value) {
+            alert(`✅ Ficha -SIC- actualizada con éxito.`);
+        } else {
+            alert(`✅ Ficha -SIC- guardada con éxito.`);
+        }
+        limpiarFormulario();
+        cambiarModulo('fichas');
+
+    } catch (err) {
+        console.error('[Guardar Ficha] Error:', err);
+        alert("❌ Error al guardar: " + err.message);
+    } finally {
+        if (guardarBtn) { guardarBtn.disabled = false; guardarBtn.textContent = '💾 GUARDAR FICHA CONSOLIDADA'; }
     }
 }
 
-function CargarPersonaParaEditar(ficha) {
+async function CargarPersonaParaEditar(ficha) {
+    ficha = await _restaurarDatosPesados(ficha);
     document.getElementById('key_persona_editar').value = ficha._key || '';
     
     const setV = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
@@ -6949,7 +7128,9 @@ function _buscarPersonaReal() {
     });
 }
 
-function mostrarFichaConsultada(d) {
+async function mostrarFichaConsultada(d) {
+    // Restaurar datos pesados desde nodo _heavy antes de mostrar
+    d = await _restaurarDatosPesados(d);
     const contenedor = document.getElementById('detalle-persona-consultada');
     const nomComp = `${d.g_pnombre || ''} ${d.g_snombre || ''} ${d.g_papellido || ''} ${d.g_sapellido || ''}`.trim();
 
@@ -7031,12 +7212,12 @@ function mostrarFichaConsultada(d) {
         <div class="fila"><div class="celda-etiqueta">17. Fuentes:</div><div class="celda-dato">Abiertas: ${d.fue_abiertas || ''} | Cerradas: ${d.fue_cerradas || ''}</div></div>
         ${(d.vehiculosVinculados && d.vehiculosVinculados.length) ? '<div class="fila"><div class="celda-etiqueta">18. Vehículos Vinculados:</div><div class="celda-dato">' + d.vehiculosVinculados.map(v => '<span style="display:inline-flex;align-items:center;gap:4px;margin:2px 4px 2px 0;padding:2px 6px;background:#e2e8f0;border-radius:4px;"><b>' + v.placa + '</b> (' + v.marca + ' ' + v.color + ')<button onclick="verVehiculoVinculadoEnVentana(\'' + v.placa.replace(/'/g, "\\'") + '\')" style="padding:2px 8px;font-size:10px;background:#38bdf8;color:#0b2545;border:none;border-radius:3px;cursor:pointer;">👁 Ver Ficha</button></span>').join(' ') + '</div></div>' : ''}
         ${(d.extorsivosVinculados && d.extorsivosVinculados.length) ? '<div class="fila"><div class="celda-etiqueta">19. Números Extorsivos:</div><div class="celda-dato">' + d.extorsivosVinculados.map(e => e.telefonoExtorsionista + ' (Caso:' + e.casoNo + ')').join(', ') + '</div></div>' : ''}
-        ${(d.pdfsAdjuntos && d.pdfsAdjuntos.length) ? '<div class="fila"><div class="celda-etiqueta">20. PDFs Adjuntos:</div><div class="celda-dato">' + d.pdfsAdjuntos.map((p, i) => '<span style="display:inline-flex;align-items:center;gap:4px;margin:2px 4px 2px 0;padding:2px 6px;background:#e2e8f0;border-radius:4px;">📄 ' + p.nombre + (p.base64 ? '<button onclick="_abrirPDFConsulta(\'' + i + '\')" style="padding:2px 8px;font-size:10px;background:#f59e0b;color:#0b2545;border:none;border-radius:3px;cursor:pointer;">📂 Abrir</button>' : '') + '</span>').join(' ') + '</div></div>' : ''}
+        ${(d.pdfsAdjuntos && d.pdfsAdjuntos.length) ? '<div class="fila"><div class="celda-etiqueta">20. PDFs Adjuntos:</div><div class="celda-dato">' + d.pdfsAdjuntos.map((p, i) => '<span style="display:inline-flex;align-items:center;gap:4px;margin:2px 4px 2px 0;padding:2px 6px;background:#e2e8f0;border-radius:4px;">📄 ' + p.nombre + ((p.base64 || p.url) ? '<button onclick="_abrirPDFConsulta(\'' + i + '\')" style="padding:2px 8px;font-size:10px;background:#f59e0b;color:#0b2545;border:none;border-radius:3px;cursor:pointer;">📂 Abrir</button>' : '') + '</span>').join(' ') + '</div></div>' : ''}
     `;
 
-    // Store PDF base64 refs for consultation view
+    // Store PDF refs for consultation view (URLs o base64)
     if (d.pdfsAdjuntos && d.pdfsAdjuntos.length) {
-        contenedor._pdfBase64Refs = d.pdfsAdjuntos.map(p => p.base64 || '');
+        contenedor._pdfBase64Refs = d.pdfsAdjuntos.map(p => p.url || p.base64 || '');
     }
 
     document.getElementById('contenedor-ficha-consultada').classList.remove('oculto');
@@ -7138,7 +7319,7 @@ function actualizarFichaVehiculo() {
     if (lblUser) lblUser.textContent = document.getElementById('usuario').value || '';
 }
 
-function guardarVehiculo() {
+async function guardarVehiculo() {
     const v = id => document.getElementById(id)?.value || '';
     const datos = {
         v_placa: v('v_placa'), v_tipo: v('v_tipo'), v_marca: v('v_marca'),
@@ -7149,8 +7330,8 @@ function guardarVehiculo() {
         p_nombre: v('p_nombre'), p_dpi: v('p_dpi'), p_nit: v('p_nit'),
         p_edad: v('p_edad'), p_fnac: v('p_fnac'), p_lnac: v('p_lnac'),
         p_direccion: v('p_direccion'), p_padres: v('p_padres'), p_obs: v('p_obs'),
-        fotoVehiculo: fotoVehiculoBase64,
-        fotoPropietario: fotoPropietarioBase64,
+        fotoVehiculo: '',
+        fotoPropietario: '',
         usuario: document.getElementById('usuario').value || ''
     };
 
@@ -7159,24 +7340,73 @@ function guardarVehiculo() {
         return;
     }
 
-    const key = document.getElementById('key_vehiculo_editar').value;
+    // Mostrar indicador de compresión
+    const guardarBtn = document.querySelector('[onclick="guardarVehiculo()"]');
+    if (guardarBtn) { guardarBtn.disabled = true; guardarBtn.textContent = '⏳ Comprimiendo y guardando...'; }
 
-    if (key) {
-        db.ref('fichasVehiculos/' + key).update(datos)
-            .then(() => {
-                alert(`✅ Ficha Vehicular actualizada con éxito.`);
-                limpiarFormularioVehiculo();
-                cambiarModulo('fichas-vehiculos');
-            })
-            .catch(err => alert("❌ Error en actualización: " + err.message));
-    } else {
-        db.ref('fichasVehiculos').push(datos)
-            .then(() => alert(`✅ Ficha Vehicular guardada con éxito.`))
-            .catch(err => alert("❌ Error en guardado: " + err.message));
+    let key = document.getElementById('key_vehiculo_editar').value;
+
+    try {
+        // Si es nuevo, crear registro temporal para obtener key
+        if (!key) {
+            const tempRef = await db.ref('fichasVehiculos').push({ _temp: true });
+            key = tempRef.key;
+        }
+
+        // === COMPRIMIR FOTO VEHÍCULO ===
+        let fotoVehiculoComprimida = '';
+        if (fotoVehiculoBase64) {
+            if (fotoVehiculoBase64.startsWith('data:')) {
+                fotoVehiculoComprimida = await _comprimirImagenBase64(fotoVehiculoBase64, 0.65, 640);
+            } else {
+                fotoVehiculoComprimida = fotoVehiculoBase64;
+            }
+        }
+
+        // === COMPRIMIR FOTO PROPIETARIO ===
+        let fotoPropietarioComprimida = '';
+        if (fotoPropietarioBase64) {
+            if (fotoPropietarioBase64.startsWith('data:')) {
+                fotoPropietarioComprimida = await _comprimirImagenBase64(fotoPropietarioBase64, 0.65, 640);
+            } else {
+                fotoPropietarioComprimida = fotoPropietarioBase64;
+            }
+        }
+
+        // === SEPARAR DATOS PESADOS EN NODO _heavy ===
+        const datosPesados = {
+            fotoVehiculo: fotoVehiculoComprimida,
+            fotoPropietario: fotoPropietarioComprimida
+        };
+        datos.fotoVehiculo = (fotoVehiculoComprimida && fotoVehiculoComprimida.startsWith('data:')) ? '' : fotoVehiculoComprimida;
+        datos.fotoPropietario = (fotoPropietarioComprimida && fotoPropietarioComprimida.startsWith('data:')) ? '' : fotoPropietarioComprimida;
+
+        delete datos._temp;
+
+        // === GUARDAR EN RTDB (dos nodos) ===
+        const updates = {};
+        updates['fichasVehiculos/' + key] = datos;
+        updates['fichasVehiculos_heavy/' + key] = datosPesados;
+        await db.ref().update(updates);
+
+        if (document.getElementById('key_vehiculo_editar').value) {
+            alert(`✅ Ficha Vehicular actualizada con éxito.`);
+        } else {
+            alert(`✅ Ficha Vehicular guardada con éxito.`);
+        }
+        limpiarFormularioVehiculo();
+        cambiarModulo('fichas-vehiculos');
+
+    } catch (err) {
+        console.error('[Guardar Vehículo] Error:', err);
+        alert("❌ Error al guardar: " + err.message);
+    } finally {
+        if (guardarBtn) { guardarBtn.disabled = false; guardarBtn.textContent = '💾 GUARDAR FICHA VEHICULAR'; }
     }
 }
 
-function cargarVehiculoParaEditar(v) {
+async function cargarVehiculoParaEditar(v) {
+    v = await _restaurarDatosPesadosVehiculo(v);
     document.getElementById('key_vehiculo_editar').value = v._key || '';
 
     const setV = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
@@ -7265,7 +7495,8 @@ function buscarVehiculo() {
     });
 }
 
-function mostrarVehiculoConsultado(v) {
+async function mostrarVehiculoConsultado(v) {
+    v = await _restaurarDatosPesadosVehiculo(v);
     const contenedor = document.getElementById('detalle-vehiculo-consultado');
     contenedor.innerHTML = `
         <div class="ficha-vehiculo">
@@ -8571,12 +8802,10 @@ async function rfBuscarPorRostro() {
     statusEl.textContent = '✅ Rostro detectado. Buscando coincidencias en la base de datos...';
     progressFill.style.width = '15%';
 
-    // Obtener todas las fichas de Firebase
+    // Obtener fichas desde caché local (evita descargar ~30MB de base64)
     try {
-        const snapshot = await db.ref('fichasSIC').once('value');
-        const fichas = snapshot.val();
-
-        if (!fichas) {
+        const historial = obtenerHistorial();
+        if (!historial || historial.length === 0) {
             statusEl.className = 'rf-status rf-status-info';
             statusEl.textContent = 'ℹ️ No hay fichas en la base de datos.';
             btnSearch.disabled = false;
@@ -8584,7 +8813,7 @@ async function rfBuscarPorRostro() {
             return;
         }
 
-        const entries = Object.entries(fichas);
+        const entries = historial.map(f => [f._key || f.key, f]);
         let coincidencias = [];
         let procesadas = 0;
         let sinDescriptor = 0;
@@ -8619,6 +8848,7 @@ async function rfBuscarPorRostro() {
                 sinDescriptor++;
                 try {
                     const img = new Image();
+                    img.crossOrigin = 'anonymous';
                     img.src = ficha.foto;
                     await new Promise((resolve, reject) => {
                         img.onload = resolve;
@@ -8700,10 +8930,10 @@ async function rfBuscarPorRostro() {
                 `;
                 card.style.cursor = 'pointer';
                 card.title = 'Click para ver la ficha de esta persona';
-                card.onclick = function() {
+                card.onclick = async function() {
                     // Mostrar la ficha consultada (solo lectura)
-                    const fichaCompleta = _restaurarDatosPesados(Object.assign({}, c.ficha, { _key: c.key }));
-                    mostrarFichaConsultada(fichaCompleta);
+                    const fichaCompleta = await _restaurarDatosPesados(Object.assign({}, c.ficha, { _key: c.key }));
+                    await mostrarFichaConsultada(fichaCompleta);
                 };
                 resultsEl.appendChild(card);
             });
@@ -8877,10 +9107,10 @@ function rfBuscarPorTexto() {
         `;
         card.style.cursor = 'pointer';
         card.title = 'Click para ver la ficha de esta persona';
-        card.onclick = function() {
+        card.onclick = async function() {
             // Restaurar datos pesados (fotos, PDFs, tatuajes con foto) antes de mostrar
-            const fichaCompleta = _restaurarDatosPesados(Object.assign({}, c, { _key: c._key || c.key }));
-            mostrarFichaConsultada(fichaCompleta);
+            const fichaCompleta = await _restaurarDatosPesados(Object.assign({}, c, { _key: c._key || c.key }));
+            await mostrarFichaConsultada(fichaCompleta);
         };
         resultsEl.appendChild(card);
     });
@@ -8962,6 +9192,7 @@ async function rfMigrarDescriptores() {
                 totalSinDescriptor++;
                 try {
                     const img = new Image();
+                    img.crossOrigin = 'anonymous';
                     img.src = ficha.foto;
                     await new Promise((resolve, reject) => {
                         img.onload = resolve;
@@ -9036,7 +9267,7 @@ function rfActualizarEstadisticasMigracion() {
 <!-- PWA Service Worker -->
 <script>
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('./sw.js?v=20260914')
+  navigator.serviceWorker.register('./sw.js?v=20260915')
     .then(reg => {
       console.log('SW registrado:', reg.scope);
       // Si hay un SW nuevo esperando, pedirle que se active
@@ -9082,6 +9313,42 @@ if ('serviceWorker' in navigator) {
 // Detectar modo standalone y ocultar botón instalar si ya es PWA
 if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
   document.documentElement.classList.add('standalone');
+}
+
+// =============================================================
+// === PLAN B: Estadísticas de Optimización ===
+// =============================================================
+
+async function planBActualizarEstadisticas() {
+    const logEl = document.getElementById('planb-optimize-log');
+    try {
+        const [snapPersonas, snapVehiculos, snapHeavyPersonas, snapHeavyVehiculos] = await Promise.all([
+            db.ref('fichasSIC').once('value'),
+            db.ref('fichasVehiculos').once('value'),
+            db.ref('fichasSIC_heavy').once('value'),
+            db.ref('fichasVehiculos_heavy').once('value')
+        ]);
+
+        const totalPersonas = snapPersonas.exists() ? Object.keys(snapPersonas.val()).length : 0;
+        const totalVehiculos = snapVehiculos.exists() ? Object.keys(snapVehiculos.val()).length : 0;
+        const totalHeavyPersonas = snapHeavyPersonas.exists() ? Object.keys(snapHeavyPersonas.val()).length : 0;
+        const totalHeavyVehiculos = snapHeavyVehiculos.exists() ? Object.keys(snapHeavyVehiculos.val()).length : 0;
+
+        document.getElementById('planb-fichas-personas').textContent = totalPersonas;
+        document.getElementById('planb-fichas-vehiculos').textContent = totalVehiculos;
+        document.getElementById('planb-heavy-personas').textContent = totalHeavyPersonas;
+        document.getElementById('planb-heavy-vehiculos').textContent = totalHeavyVehiculos;
+
+        if (logEl) {
+            const pctPersonas = totalPersonas > 0 ? Math.round((totalHeavyPersonas / totalPersonas) * 100) : 0;
+            const pctVehiculos = totalVehiculos > 0 ? Math.round((totalHeavyVehiculos / totalVehiculos) * 100) : 0;
+            logEl.innerHTML = '<div style="color:#0b2545;">✅ Datos ligeros: ' + totalPersonas + ' personas, ' + totalVehiculos + ' vehículos</div>' +
+                '<div style="color:#13315c;">✅ Nodos _heavy: ' + totalHeavyPersonas + ' personas (' + pctPersonas + '%), ' + totalHeavyVehiculos + ' vehículos (' + pctVehiculos + '%)</div>';
+        }
+    } catch (e) {
+        console.error('[PlanB Stats] Error:', e);
+        if (logEl) logEl.innerHTML = '<div style="color:#c62828;">❌ Error: ' + e.message + '</div>';
+    }
 }
 </script>
 </body>
