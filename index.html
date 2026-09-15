@@ -4875,6 +4875,12 @@ let listenersActivos = false; // evita registrar listeners duplicados
 
 // ===== FICHA CACHE: lightweight lookup instead of JSON.stringify in onclick =====
 const _fichaCachePersonas = new Map();
+// HTML escape utility — prevents XSS when inserting user data into innerHTML
+function _esc(str) {
+    if (str === undefined || str === null || str === '') return '';
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
 const _fichaCacheVehiculos = new Map();
 let _cacheIdxPersona = 0;
 let _cacheIdxVehiculo = 0;
@@ -7151,87 +7157,161 @@ async function mostrarFichaConsultada(d) {
     // Restaurar datos pesados desde nodo _heavy antes de mostrar
     d = await _restaurarDatosPesados(d);
     const contenedor = document.getElementById('detalle-persona-consultada');
-    const nomComp = `${d.g_pnombre || ''} ${d.g_snombre || ''} ${d.g_papellido || ''} ${d.g_sapellido || ''}`.trim();
+    const nomComp = _esc(`${d.g_pnombre || ''} ${d.g_snombre || ''} ${d.g_onombres || ''} ${d.g_papellido || ''} ${d.g_sapellido || ''} ${d.g_oapellidos || ''}`.trim());
 
-    // Build 4-photo grid HTML
-    let fotosHTML = '';
-    const fotos = (d.fotosPersona && d.fotosPersona.length) ? d.fotosPersona.filter(f => f) : (d.foto ? [d.foto] : []);
-    if (fotos.length > 0) {
-        fotosHTML = '<div class="fotos-ficha-grid" style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:4px;margin-bottom:8px;">';
-        fotos.forEach(f => {
-            fotosHTML += '<div class="foto-ficha" style="text-align:center;"><img src="' + f + '" style="max-width:100%;border:1px solid #d0d7e0;border-radius:4px;"></div>';
-        });
-        fotosHTML += '</div>';
+    // Build 4-photo grid HTML (same style as vista previa)
+    let fotosHTML = '<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:4px;margin-bottom:8px;">';
+    for (let i = 0; i < 4; i++) {
+        const src = (d.fotosPersona && d.fotosPersona[i]) ? d.fotosPersona[i] : (i === 0 && d.foto ? d.foto : '');
+        fotosHTML += '<div class="foto-ficha">' + (src ? '<img src="' + src + '">' : '📷') + '</div>';
     }
+    fotosHTML += '</div>';
 
     // Build telefonos list HTML
-    let telsHTML = '';
     const tels = (d.telefonos && d.telefonos.length) ? d.telefonos : (d.tel_linea ? [{linea: d.tel_linea, imei: d.tel_imei || '', compania: d.tel_compania || ''}] : []);
-    tels.forEach(t => {
-        if (t.linea || t.imei) telsHTML += (telsHTML ? '<br>' : '') + (t.linea||'') + ' | IMEI: ' + (t.imei||'') + (t.compania ? ' (' + t.compania + ')' : '');
-    });
-    if (!telsHTML) telsHTML = 'N/A';
+    let telsHTML = tels.map(t =>
+        '<div style="padding:3px 0;border-bottom:1px solid #bdd7ee;font-size:12px;"><b>Línea:</b> ' + _esc(t.linea||'') + ' | <b>IMEI:</b> ' + _esc(t.imei||'') + ' | <b>Compañía:</b> ' + _esc(t.compania||'') + '</div>'
+    ).join('');
+    if (!telsHTML || (tels.length === 1 && !tels[0].linea && !tels[0].imei && !tels[0].compania)) telsHTML = '<div style="color:#777;padding:4px;">Sin teléfonos registrados</div>';
 
     // Build redes sociales list HTML
-    let redesHTML = '';
     const redes = (d.redesSociales && d.redesSociales.length) ? d.redesSociales : (d.red_url ? [{url: d.red_url, alias: d.red_alias||'', tipo: d.red_tipo||'', fconsulta: d.red_fconsulta||''}] : []);
-    redes.forEach(r => {
-        if (r.url || r.alias) redesHTML += (redesHTML ? '<br>' : '') + (r.tipo||'') + ': ' + (r.alias||'') + ' (' + (r.url||'') + ')' + (r.fconsulta ? ' | Consulta: ' + r.fconsulta : '');
-    });
-    if (!redesHTML) redesHTML = 'N/A';
+    let redesHTML = redes.map(r =>
+        '<div style="padding:3px 0;border-bottom:1px solid #bdd7ee;font-size:12px;"><b>' + _esc(r.tipo||'') + '</b>: ' + _esc(r.alias||'') + ' (' + _esc(r.url||'') + ')' + (r.fconsulta ? ' | Consulta: ' + _esc(r.fconsulta) : '') + '</div>'
+    ).join('');
+    if (!redesHTML || (redes.length === 1 && !redes[0].url && !redes[0].alias && !redes[0].tipo)) redesHTML = '<div style="color:#777;padding:4px;">Sin redes sociales registradas</div>';
 
     // Build armas list HTML
-    let armasHTML = '';
     const armas = (d.armasFuego && d.armasFuego.length) ? d.armasFuego : (d.arm_tipo ? [{tipo: d.arm_tipo, registro: d.arm_registro||'', licencia: d.arm_licencia||'', tenencia: d.arm_tenencia||'', estatus: d.arm_estatus||''}] : []);
-    armas.forEach(a => {
-        if (a.tipo || a.registro) armasHTML += (armasHTML ? '<br>' : '') + (a.tipo||'') + ' Reg:' + (a.registro||'') + ' Lic:' + (a.licencia||'') + ' Ten:' + (a.tenencia||'') + ' (' + (a.estatus||'') + ')';
-    });
-    if (!armasHTML) armasHTML = 'N/A';
+    let armasHTML = armas.map(a =>
+        '<div style="padding:3px 0;border-bottom:1px solid #bdd7ee;font-size:12px;"><b>Tipo:</b> ' + _esc(a.tipo||'') + ' | <b>Reg:</b> ' + _esc(a.registro||'') + ' | <b>Licencia:</b> ' + _esc(a.licencia||'') + ' | <b>Tenencia:</b> ' + _esc(a.tenencia||'') + ' | <b>Estatus:</b> ' + _esc(a.estatus||'') + '</div>'
+    ).join('');
+    if (!armasHTML || (armas.length === 1 && !armas[0].tipo && !armas[0].registro && !armas[0].estatus)) armasHTML = '<div style="color:#777;padding:4px;">Sin armas registradas</div>';
 
-    // Build tatuajes display for ficha consultada
+    // Build tatuajes display
     const tatsData = (d.tatuajesConFoto && d.tatuajesConFoto.length) ? d.tatuajesConFoto : [];
     const tatsWithFoto = tatsData.filter(t => t.foto);
     const tatTextParts = [];
     tatsData.forEach(t => {
-        if (t.ubicacion || t.descripcion) tatTextParts.push((t.ubicacion||'') + ': ' + (t.descripcion||''));
+        if (t.ubicacion || t.descripcion) tatTextParts.push(_esc(t.ubicacion||'') + ': ' + _esc(t.descripcion||''));
     });
-    const tatFichaLine = tatTextParts.length ? tatTextParts.join(' | ') : (d.foto_tatuajes || 'N/A');
+    const tatFichaLine = tatTextParts.length ? tatTextParts.join(' | ') : (d.foto_tatuajes ? _esc(d.foto_tatuajes) : 'N/A');
     let tatFichaFotosHTML = '';
     if (tatsWithFoto.length > 0) {
-        tatFichaFotosHTML = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:6px;margin-top:4px;">';
+        tatFichaFotosHTML = '<div class="tatuajes-fotos-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:6px;margin-top:4px;">';
         tatsWithFoto.forEach(t => {
-            tatFichaFotosHTML += '<div style="text-align:center;"><img src="' + t.foto + '" style="max-width:100%;border:1px solid #d0d7e0;border-radius:4px;"><div style="font-size:11px;color:#4a5568;">' + (t.ubicacion||'') + '</div><div style="font-size:10px;color:#718096;">' + (t.descripcion||'') + '</div></div>';
+            tatFichaFotosHTML += '<div class="tatuaje-vista-item" style="text-align:center;"><img src="' + t.foto + '" style="max-width:100%;border:1px solid #d0d7e0;border-radius:4px;"><div style="font-size:11px;color:#4a5568;">' + _esc(t.ubicacion||'') + '</div><div style="font-size:10px;color:#718096;">' + _esc(t.descripcion||'') + '</div></div>';
         });
         tatFichaFotosHTML += '</div>';
     }
 
-    // Build Lugar de Operatividad display for ficha consultada
+    // Build familiares list HTML
+    const fams = d.familiares || [];
+    let famsHTML = fams.map(f =>
+        '<div class="familiar-item-vista" style="padding:3px 0;border-bottom:1px solid #bdd7ee;font-size:12px;"><b>' + _esc(f.nombre||'') + '</b> (' + _esc(f.parentesco||'') + ') - DPI: ' + _esc(f.dpi||'') + (f.telefono ? ' | Tel: ' + _esc(f.telefono) : '') + '</div>'
+    ).join('');
+    if (!famsHTML) famsHTML = '<div style="color:#777;padding:4px;">Sin familiares registrados</div>';
+
+    // Build Lugar de Operatividad
     const lugarFichaParts = [d.crim_lugar_depto, d.crim_lugar_muni, d.crim_lugar_aldea, d.crim_lugar_zona, d.crim_lugar_calle].filter(p => p);
-    const lugarFichaLine = lugarFichaParts.length ? lugarFichaParts.join(" / ") : (d.crim_lugar || "N/A");
+    const lugarFichaLine = lugarFichaParts.length ? lugarFichaParts.map(p => _esc(p)).join(' / ') : (d.crim_lugar ? _esc(d.crim_lugar) : 'N/A');
+
+    // Build vehículos vinculados HTML
+    const vehs = d.vehiculosVinculados || [];
+    let vehsHTML = vehs.length ? vehs.map(v =>
+        '<div class="vinc-vista-item" style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:3px 0;border-bottom:1px solid #bdd7ee;font-size:12px;">🚗 Placa: <b>' + _esc(v.placa) + '</b> | Tipo: ' + _esc(v.tipo||'') + ' | Marca: ' + _esc(v.marca||'') + ' | Color: ' + _esc(v.color||'') + '<button onclick="verVehiculoVinculadoEnVentana(\'' + v.placa.replace(/'/g, "\\'") + '\')" style="padding:3px 10px;font-size:11px;background:#38bdf8;color:#0b2545;border:none;border-radius:4px;cursor:pointer;white-space:nowrap;">👁 Ver Ficha</button></div>'
+    ).join('') : '<div style="color:#777;padding:4px;">Sin vehículos vinculados</div>';
+
+    // Build extorsivos vinculados HTML
+    const exts = d.extorsivosVinculados || [];
+    let extsHTML = exts.length ? exts.map(e =>
+        '<div class="vinc-vista-item" style="padding:3px 0;border-bottom:1px solid #bdd7ee;font-size:12px;">📞 Tel: <b>' + _esc(e.telefonoExtorsionista) + '</b> | Caso: ' + _esc(e.casoNo||'') + ' | Org: ' + _esc(e.orgCriminalAtribuye||'') + '</div>'
+    ).join('') : '<div style="color:#777;padding:4px;">Sin números extorsivos vinculados</div>';
+
+    // Build PDFs vinculados HTML
+    const pdfs = d.pdfsAdjuntos || [];
+    let pdfsHTML = pdfs.length ? pdfs.map((p, i) => {
+        const tieneArchivo = p.base64 || p.url;
+        return '<div class="vinc-vista-item" style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:3px 0;border-bottom:1px solid #bdd7ee;font-size:12px;">📄 ' + _esc(p.nombre) + (tieneArchivo ? '<button onclick="_abrirPDFConsulta(\'' + i + '\')" data-pdfidx="' + i + '" style="padding:3px 10px;font-size:11px;background:#f59e0b;color:#0b2545;border:none;border-radius:4px;cursor:pointer;white-space:nowrap;">📂 Abrir PDF</button>' : '') + '</div>';
+    }).join('') : '<div style="color:#777;padding:4px;">Sin archivos PDF adjuntos</div>';
 
     contenedor.innerHTML = `
         ${fotosHTML}
-        <div class="fila"><div class="celda-etiqueta">1. Operativo / Tipo:</div><div class="celda-dato">${d.id_operativo || 'N/A'} (${d.id_fecha} ${d.id_hora})</div></div>
-        <div class="fila"><div class="celda-etiqueta">2. Nombre Completo:</div><div class="celda-dato"><b>${nomComp}</b> | DPI: ${d.g_dpi || ''} | Apodo: ${d.g_apodo || ''}</div></div>
-        <div class="fila"><div class="celda-etiqueta">3. Teléfono / IMEI:</div><div class="celda-dato">${telsHTML}</div></div>
-        <div class="fila"><div class="celda-etiqueta">4. Dirección Exacta:</div><div class="celda-dato">${d.dir_exacta || ''}, Zona ${d.dir_zona || ''}, ${d.dir_muni || ''}</div></div>
-        <div class="fila"><div class="celda-etiqueta">5. Familiares:</div><div class="celda-dato">${(d.familiares || []).map(f => f.nombre + ' (' + f.parentesco + ') DPI:' + f.dpi + (f.telefono ? ' Tel:' + f.telefono : '')).join(' | ') || (d.fam_nombre || '') + ' (' + (d.fam_parentesco || '') + ')'}</div></div>
-        <div class="fila"><div class="celda-etiqueta">6. Características Físicas:</div><div class="celda-dato">Estatura: ${d.fis_estatura || ''} | Piel: ${d.fis_piel || ''} | Cicatrices: ${d.fis_cicatrices || ''}</div></div>
-        <div class="fila"><div class="celda-etiqueta">7. Redes Sociales:</div><div class="celda-dato">${redesHTML}</div></div>
-        <div class="fila"><div class="celda-etiqueta">8. Académicos / Oficio:</div><div class="celda-dato">${d.aca_nivel || ''} - ${d.aca_profesion || ''}</div></div>
-        <div class="fila"><div class="celda-etiqueta">9. Historial Laboral:</div><div class="celda-dato">${d.lab_empresa || ''} (Jefe: ${d.lab_jefe || ''})</div></div>
-        <div class="fila"><div class="celda-etiqueta">10. Patrimonio:</div><div class="celda-dato">${d.pat_tipo || ''} - ${d.pat_caract || ''}</div></div>
-        <div class="fila"><div class="celda-etiqueta">11. Arma de Fuego:</div><div class="celda-dato">${armasHTML}</div></div>
-        <div class="fila"><div class="celda-etiqueta">12. Org. Criminal:</div><div class="celda-dato">${d.crim_org || ''} - Clica: ${d.crim_clica || ''} - Rango: ${d.crim_rango || ''}</div></div>
+
+        <div class="ficha-seccion-titulo" style="text-align:left;">1. Tipo de Identificación</div>
+        <div class="fila"><div class="celda-etiqueta">Operativo / Tipo:</div><div class="celda-dato">${_esc(d.id_operativo) || 'N/A'}</div></div>
+        <div class="fila"><div class="celda-etiqueta">Dirección / Fecha / Hora:</div><div class="celda-dato">${_esc(d.id_direccion) || 'N/A'} | ${_esc(d.id_fecha) || 'N/A'} ${_esc(d.id_hora) || ''}</div></div>
+        <div class="fila"><div class="celda-etiqueta">Coordenadas:</div><div class="celda-dato">${_esc(d.id_coordenadas) || 'N/A'}</div></div>
+
+        <div class="ficha-seccion-titulo" style="text-align:left;">2. Datos Generales</div>
+        <div class="fila"><div class="celda-etiqueta">Nombre Completo:</div><div class="celda-dato">${nomComp || 'N/A'}</div></div>
+        <div class="fila"><div class="celda-etiqueta">DPI:</div><div class="celda-dato">${_esc(d.g_dpi) || 'N/A'}</div></div>
+        <div class="fila"><div class="celda-etiqueta">Apodo / Sobrenombre:</div><div class="celda-dato">${_esc(d.g_apodo) || 'N/A'}</div></div>
+        <div class="fila"><div class="celda-etiqueta">Fecha / Lugar Nac.:</div><div class="celda-dato">${_esc(d.g_fnac) || 'N/A'} - ${_esc(d.g_lnac) || ''}</div></div>
+        <div class="fila"><div class="celda-etiqueta">Sexo / LGTBIQ+:</div><div class="celda-dato">${_esc(d.g_sexo) || 'N/A'} | LGTBIQ+: ${_esc(d.g_lgtbiq) || ''}</div></div>
+        <div class="fila"><div class="celda-etiqueta">Estado Civil / NIT / IGSS:</div><div class="celda-dato">Civil: ${_esc(d.g_ecivil) || ''} | NIT: ${_esc(d.g_nit) || ''} | IGSS: ${_esc(d.g_igss) || ''}</div></div>
+        <div class="fila"><div class="celda-etiqueta">Pueblo / Etnia / Idioma:</div><div class="celda-dato">Pueblo: ${_esc(d.g_pueblo) || ''} | Etnia: ${_esc(d.g_etnia) || ''} | Idioma: ${_esc(d.g_idioma) || ''}</div></div>
+        <div class="fila"><div class="celda-etiqueta">Nacionalidad / Situación:</div><div class="celda-dato">Nacionalidad: ${_esc(d.g_nacionalidad) || ''} | Estado: ${_esc(d.g_situacion) || ''}</div></div>
+        <div class="fila"><div class="celda-etiqueta">Licencia Conducir:</div><div class="celda-dato">Tipo: ${_esc(d.g_tiplicencia) || ''} | Estatus: ${_esc(d.g_estlicencia) || ''}</div></div>
+
+        <div class="ficha-seccion-titulo" style="text-align:left;">3. Teléfono - Celular</div>
+        ${telsHTML}
+
+        <div class="ficha-seccion-titulo" style="text-align:left;">4. Dirección Domiciliar</div>
+        <div class="fila"><div class="celda-etiqueta">Dirección Exacta:</div><div class="celda-dato">${_esc(d.dir_exacta) || 'N/A'}</div></div>
+        <div class="fila"><div class="celda-etiqueta">Ubicación:</div><div class="celda-dato">${_esc(d.dir_sector) || ''}, Zona ${_esc(d.dir_zona) || ''}, ${_esc(d.dir_muni) || ''}, ${_esc(d.dir_depto) || ''}, ${_esc(d.dir_pais) || ''}. Contador: ${_esc(d.dir_contador) || ''}</div></div>
+
+        <div class="ficha-seccion-titulo" style="text-align:left;">5. Información Familiar</div>
+        ${famsHTML}
+
+        <div class="ficha-seccion-titulo" style="text-align:left;">6. Características Físicas</div>
+        <div class="fila"><div class="celda-etiqueta">Rasgos Principales:</div><div class="celda-dato">Estatura: ${_esc(d.fis_estatura) || ''} | Complexión: ${_esc(d.fis_complexion) || ''} | Piel: ${_esc(d.fis_piel) || ''} | Ojos: ${_esc(d.fis_ojos) || ''} | Cabello: ${_esc(d.fis_colcabello) || ''} (${_esc(d.fis_estcabello) || ''})</div></div>
+        <div class="fila"><div class="celda-etiqueta">Cicatrices / Discapacidad:</div><div class="celda-dato">Cicatrices: ${_esc(d.fis_cicatrices) || ''} | Discapacidad: ${_esc(d.fis_discapacidad) || ''} | Otros: ${_esc(d.fis_otros) || ''}</div></div>
+
+        <div class="ficha-seccion-titulo" style="text-align:left;">7. Redes Sociales</div>
+        ${redesHTML}
+
+        <div class="ficha-seccion-titulo" style="text-align:left;">8. Antecedentes Académicos</div>
+        <div class="fila"><div class="celda-etiqueta">Nivel / Carrera / Profesión:</div><div class="celda-dato">Nivel: ${_esc(d.aca_nivel) || ''} | Carrera: ${_esc(d.aca_carrera) || ''} | Profesión: ${_esc(d.aca_profesion) || ''} | Colegiado: ${_esc(d.aca_colegiado) || ''} (${_esc(d.aca_estcolegiado) || ''})</div></div>
+
+        <div class="ficha-seccion-titulo" style="text-align:left;">9. Historial Laboral</div>
+        <div class="fila"><div class="celda-etiqueta">Empresa / Período / Contacto:</div><div class="celda-dato">Empresa: ${_esc(d.lab_empresa) || ''} | Jefe: ${_esc(d.lab_jefe) || ''} | Tel: ${_esc(d.lab_telefono) || ''} | Período: ${_esc(d.lab_finicio) || ''} a ${_esc(d.lab_ffin) || ''}</div></div>
+
+        <div class="ficha-seccion-titulo" style="text-align:left;">10. Patrimonio</div>
+        <div class="fila"><div class="celda-etiqueta">Bienes / Vehículos:</div><div class="celda-dato">Tipo: ${_esc(d.pat_tipo) || ''} | Caract: ${_esc(d.pat_caract) || ''} | Vehículo: ${_esc(d.pat_vehiculo) || ''}</div></div>
+
+        <div class="ficha-seccion-titulo" style="text-align:left;">11. Arma de Fuego</div>
+        ${armasHTML}
+
+        <div class="ficha-seccion-titulo" style="text-align:left;">12. Información Criminal</div>
+        <div class="fila"><div class="celda-etiqueta">Org / Clica / Rango / Estatus:</div><div class="celda-dato">Org: ${_esc(d.crim_org) || ''} | Act: ${_esc(d.crim_act) || ''} | Clica: ${_esc(d.crim_clica) || ''} | Rango: ${_esc(d.crim_rango) || ''} (${_esc(d.crim_estatus) || ''})</div></div>
         <div class="fila"><div class="celda-etiqueta">Lugar de Operatividad:</div><div class="celda-dato">${lugarFichaLine}</div></div>
-        <div class="fila"><div class="celda-etiqueta">13. Penitenciario:</div><div class="celda-dato">Centro: ${d.pen_centro || ''} | Delito: ${d.pen_delito || ''}</div></div>
-        <div class="fila"><div class="celda-etiqueta">14. Migratorio:</div><div class="celda-dato">${d.mig_motivo || ''} (${d.mig_fecha || ''}) - Destino: ${d.mig_destino || ''}</div></div>
-        <div class="fila"><div class="celda-etiqueta">15. Tatuajes:</div><div class="celda-dato">${tatFichaLine}${tatFichaFotosHTML ? '<br>' + tatFichaFotosHTML : ''}</div></div>
-        <div class="fila"><div class="celda-etiqueta">16. Financiero:</div><div class="celda-dato">Banco: ${d.fin_banco || ''} | Actividad: ${d.fin_actividad || ''}</div></div>
-        <div class="fila"><div class="celda-etiqueta">17. Fuentes:</div><div class="celda-dato">Abiertas: ${d.fue_abiertas || ''} | Cerradas: ${d.fue_cerradas || ''}</div></div>
-        ${(d.vehiculosVinculados && d.vehiculosVinculados.length) ? '<div class="fila"><div class="celda-etiqueta">18. Vehículos Vinculados:</div><div class="celda-dato">' + d.vehiculosVinculados.map(v => '<span style="display:inline-flex;align-items:center;gap:4px;margin:2px 4px 2px 0;padding:2px 6px;background:#e2e8f0;border-radius:4px;"><b>' + v.placa + '</b> (' + v.marca + ' ' + v.color + ')<button onclick="verVehiculoVinculadoEnVentana(\'' + v.placa.replace(/'/g, "\\'") + '\')" style="padding:2px 8px;font-size:10px;background:#38bdf8;color:#0b2545;border:none;border-radius:3px;cursor:pointer;">👁 Ver Ficha</button></span>').join(' ') + '</div></div>' : ''}
-        ${(d.extorsivosVinculados && d.extorsivosVinculados.length) ? '<div class="fila"><div class="celda-etiqueta">19. Números Extorsivos:</div><div class="celda-dato">' + d.extorsivosVinculados.map(e => e.telefonoExtorsionista + ' (Caso:' + e.casoNo + ')').join(', ') + '</div></div>' : ''}
-        ${(d.pdfsAdjuntos && d.pdfsAdjuntos.length) ? '<div class="fila"><div class="celda-etiqueta">20. PDFs Adjuntos:</div><div class="celda-dato">' + d.pdfsAdjuntos.map((p, i) => '<span style="display:inline-flex;align-items:center;gap:4px;margin:2px 4px 2px 0;padding:2px 6px;background:#e2e8f0;border-radius:4px;">📄 ' + p.nombre + ((p.base64 || p.url) ? '<button onclick="_abrirPDFConsulta(\'' + i + '\')" style="padding:2px 8px;font-size:10px;background:#f59e0b;color:#0b2545;border:none;border-radius:3px;cursor:pointer;">📂 Abrir</button>' : '') + '</span>').join(' ') + '</div></div>' : ''}
+        <div class="fila"><div class="celda-etiqueta">Antecedentes / Aprehensión:</div><div class="celda-dato">Penales: ${_esc(d.crim_penales) || ''} | Policiales: ${_esc(d.crim_policiales) || ''} | Aprehensión: ${_esc(d.crim_aprehension) || ''} | Causa: ${_esc(d.crim_causa) || ''}</div></div>
+
+        <div class="ficha-seccion-titulo" style="text-align:left;">13. Historial Penitenciario</div>
+        <div class="fila"><div class="celda-etiqueta">Centro / Delito / Período:</div><div class="celda-dato">Centro: ${_esc(d.pen_centro) || ''} | Delito: ${_esc(d.pen_delito) || ''} | Fechas: ${_esc(d.pen_fingreso) || ''} al ${_esc(d.pen_fsalida) || ''} | Exp: ${_esc(d.pen_expediente) || ''}</div></div>
+
+        <div class="ficha-seccion-titulo" style="text-align:left;">14. Flujo Migratorio</div>
+        <div class="fila"><div class="celda-etiqueta">Motivo / Fecha / Países / Transporte:</div><div class="celda-dato">Motivo: ${_esc(d.mig_motivo) || ''} | Fecha: ${_esc(d.mig_fecha) || ''} | Destino: ${_esc(d.mig_destino) || ''} | Origen: ${_esc(d.mig_procedencia) || ''} | Transp: ${_esc(d.mig_transporte) || ''}</div></div>
+
+        <div class="ficha-seccion-titulo" style="text-align:left;">15. Historial Fotográfico & Tatuajes</div>
+        <div class="fila"><div class="celda-etiqueta">Tatuajes (Texto) / Grafitis:</div><div class="celda-dato">Tatuajes: ${tatFichaLine} | Grafitis/Vehículos: ${_esc(d.foto_grafitis) || ''}</div></div>
+        ${tatFichaFotosHTML}
+
+        <div class="ficha-seccion-titulo" style="text-align:left;">16. Datos Financieros</div>
+        <div class="fila"><div class="celda-etiqueta">Banco / Cuenta / Actividad:</div><div class="celda-dato">Banco: ${_esc(d.fin_banco) || ''} | Cuenta: ${_esc(d.fin_cuenta) || ''} | Monto: ${_esc(d.fin_monto) || ''} | Obs: ${_esc(d.fin_obs) || ''}</div></div>
+
+        <div class="ficha-seccion-titulo" style="text-align:left;">17. Fuentes Consultadas</div>
+        <div class="fila"><div class="celda-etiqueta">Fuentes Abiertas / Cerradas:</div><div class="celda-dato">Abiertas: ${_esc(d.fue_abiertas) || ''} | Cerradas: ${_esc(d.fue_cerradas) || ''}</div></div>
+
+        <div class="ficha-seccion-titulo" style="text-align:left;">18. Vehículos Vinculados</div>
+        ${vehsHTML}
+
+        <div class="ficha-seccion-titulo" style="text-align:left;">19. Números Extorsivos Vinculados</div>
+        ${extsHTML}
+
+        <div class="ficha-seccion-titulo" style="text-align:left;">20. Archivos PDF Adjuntos</div>
+        ${pdfsHTML}
     `;
 
     // Store PDF refs for consultation view (URLs o base64)
