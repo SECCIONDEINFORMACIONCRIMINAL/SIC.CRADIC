@@ -278,6 +278,8 @@
         win.document.write('.fotos-ficha-grid { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 8px; }');
         win.document.write('.foto-ficha { width: 120px; height: 145px; border: 1px solid #999; background: #f0f0f0; display: flex; align-items: center; justify-content: center; overflow: hidden; font-size: 28px; }');
         win.document.write('.foto-ficha img { width: 100%; height: 100%; object-fit: cover; }');
+        win.document.write('.argos-redes-screen, .argos-fuentes-screen { display: none !important; }');
+        win.document.write('.argos-redes-print, .argos-fuentes-print { display: block !important; }');
         win.document.write('.pie-ficha { margin-top: 14px; background: #0b2545; color: #fff; padding: 0; page-break-inside: avoid; border-radius: 3px; overflow: hidden; border: 2px solid #c9a227; }');
         win.document.write('.fila-pie { display: flex; justify-content: space-between; flex-wrap: wrap; padding: 8px 14px; }');
         win.document.write('.fila-pie div { flex: 1; text-align: center; font-size: 9.5px; font-weight: bold; letter-spacing: .5px; text-transform: uppercase; padding: 3px 0; }');
@@ -1889,11 +1891,28 @@
 .btn-agregar-telefono { background: #1e40af; color: white; border: none; border-radius: 6px; padding: 8px 18px; cursor: pointer; font-size: 13px; margin-bottom: 15px; }
 .btn-agregar-telefono:hover { background: #2563eb; }
 
-.red-social-row { border: 1px solid #d0d7e0; border-radius: 6px; padding: 10px; margin-bottom: 10px; background: #f8f9fb; display: grid; grid-template-columns: 1fr 1fr 1fr 1fr auto; gap: 8px; align-items: end; }
+.red-social-row { border: 1px solid #d0d7e0; border-radius: 6px; padding: 10px; margin-bottom: 10px; background: #f8f9fb; display: grid; grid-template-columns: 1fr 1fr 1fr 1fr 1fr auto auto; gap: 8px; align-items: end; }
+.red-foto-preview { width: 70px; height: 70px; display: flex; align-items: center; justify-content: center; font-size: 28px; border-radius: 6px; background: #ffffff; border: 1px solid #d0d7e0; overflow: hidden; margin-bottom: 2px; }
+.red-foto-preview img { max-width: 65px; max-height: 65px; border-radius: 4px; }
 .btn-quitar-red { background: #dc2626; color: white; border: none; border-radius: 4px; cursor: pointer; padding: 8px 12px; font-size: 14px; margin-bottom: 2px; }
 .btn-quitar-red:hover { background: #ef4444; }
 .btn-agregar-red { background: #1e40af; color: white; border: none; border-radius: 6px; padding: 8px 18px; cursor: pointer; font-size: 13px; margin-bottom: 15px; }
 .btn-agregar-red:hover { background: #2563eb; }
+
+.fuente-inst-row { border: 1px solid #d0d7e0; border-radius: 6px; padding: 10px; margin-bottom: 10px; background: #f8f9fb; display: grid; grid-template-columns: 1fr 1fr 1fr 1fr auto auto; gap: 8px; align-items: end; }
+.fuente-foto-preview { width: 70px; height: 70px; display: flex; align-items: center; justify-content: center; font-size: 28px; border-radius: 6px; background: #ffffff; border: 1px solid #d0d7e0; overflow: hidden; margin-bottom: 2px; }
+.fuente-foto-preview img { max-width: 65px; max-height: 65px; border-radius: 4px; }
+.btn-quitar-fuente { background: #dc2626; color: white; border: none; border-radius: 4px; cursor: pointer; padding: 8px 12px; font-size: 14px; margin-bottom: 2px; }
+.btn-quitar-fuente:hover { background: #ef4444; }
+.btn-agregar-fuente { background: #1e40af; color: white; border: none; border-radius: 6px; padding: 8px 18px; cursor: pointer; font-size: 13px; margin-bottom: 15px; }
+.btn-agregar-fuente:hover { background: #2563eb; }
+
+/* En pantalla mostramos miniaturas; la versión de fotos grandes es solo para impresión/PDF */
+.argos-redes-print, .argos-fuentes-print { display: none; }
+@media print {
+  .argos-redes-print, .argos-fuentes-print { display: block !important; }
+  .argos-redes-screen, .argos-fuentes-screen { display: none !important; }
+}
 
 .arma-row { border: 1px solid #d0d7e0; border-radius: 6px; padding: 10px; margin-bottom: 10px; background: #f8f9fb; display: grid; grid-template-columns: 1fr 1fr 1fr 1fr 1fr auto; gap: 8px; align-items: end; }
 .btn-quitar-arma { background: #dc2626; color: white; border: none; border-radius: 4px; cursor: pointer; padding: 8px 12px; font-size: 14px; margin-bottom: 2px; }
@@ -1929,7 +1948,8 @@
 @media print {
   .btn-quitar-familiar, .btn-quitar-tatuaje, .btn-agregar-familiar, .btn-agregar-tatuaje,
   .btn-agregar-vinc, .btn-quitar-vinc, #pdfInput, #vehiculos-vinculados-container input,
-  #extorsivos-vinculados-container input, .tatuaje-foto-input, .fotos-grid-container input[type="file"] {
+  #extorsivos-vinculados-container input, .tatuaje-foto-input, .fotos-grid-container input[type="file"],
+  .red-foto-input, .fuente-foto-input, .btn-quitar-red, .btn-agregar-red, .btn-quitar-fuente, .btn-agregar-fuente {
     display: none !important;
   }
 }
@@ -3875,6 +3895,8 @@
                                 <select class="red-tipo"><option value="">Seleccione...</option><option value="Facebook">Facebook</option><option value="Twitter / X">Twitter / X</option><option value="TikTok">TikTok</option><option value="Instagram">Instagram</option><option value="WhatsApp">WhatsApp</option><option value="Telegram">Telegram</option><option value="Snapchat">Snapchat</option><option value="YouTube">YouTube</option><option value="LinkedIn">LinkedIn</option><option value="Signal">Signal</option><option value="Pinterest">Pinterest</option><option value="Reddit">Reddit</option><option value="Discord">Discord</option><option value="Otra">Otra</option></select>
                             </div>
                             <div class="grupo-form"><label>Fecha Consulta</label><input type="date" class="red-fconsulta"></div>
+                            <div class="grupo-form"><label>Imagen / Captura</label><input type="file" class="red-foto-input" accept="image/*"></div>
+                            <div class="red-foto-preview">📷</div>
                             <button type="button" class="btn-quitar-red" onclick="quitarRed(this)" title="Quitar red social">✖</button>
                         </div>
                     </div>
@@ -4076,6 +4098,22 @@
                     <div class="grupo-form"><label>Fuentes Abiertas (Redes, Periodistas)</label><textarea id="fue_abiertas"></textarea></div>
                     <div class="grupo-form"><label>Fuentes Cerradas (Sistemas de Info)</label><textarea id="fue_cerradas"></textarea></div>
 
+                    <div class="seccion-form-titulo" style="font-size:13px;margin-top:12px;">17B. Fuentes Institucionales Consultadas</div>
+                    <div id="fuentes-inst-container">
+                        <div class="fuente-inst-row" data-index="0">
+                            <div class="grupo-form">
+                                <label>Fuente Institucional</label>
+                                <select class="fuente-tipo"><option value="">Seleccione...</option><option value="RAP">RAP</option><option value="ESCRITORIO POLICIAL">ESCRITORIO POLICIAL</option><option value="GUATECOMPRAS">GUATECOMPRAS</option><option value="ORGANISMO JUDICIAL -DETENIDOS-">ORGANISMO JUDICIAL -DETENIDOS-</option><option value="SAT">SAT</option><option value="IGSS">IGSS</option><option value="CONSULTA DE TITULOS">CONSULTA DE TITULOS</option><option value="VACUNACION DE COVID-19">VACUNACION DE COVID-19</option><option value="Otra">Otra</option></select>
+                            </div>
+                            <div class="grupo-form"><label>Nombre / Detalle</label><input type="text" class="fuente-nombre" placeholder="Ej: nombre encontrado, no. expediente"></div>
+                            <div class="grupo-form"><label>Fecha Consulta</label><input type="date" class="fuente-fconsulta"></div>
+                            <div class="grupo-form"><label>Imagen / Captura</label><input type="file" class="fuente-foto-input" accept="image/*"></div>
+                            <div class="fuente-foto-preview">📷</div>
+                            <button type="button" class="btn-quitar-fuente" onclick="quitarFuente(this)" title="Quitar fuente">✖</button>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-agregar-fuente" onclick="agregarFuente()">➕ Agregar Fuente Institucional</button>
+
                     <!-- 18. VINCULACIÓN DE VEHÍCULOS -->
                     <div class="seccion-form-titulo">18. Vinculación de Vehículos</div>
                     <div id="vehiculos-vinculados-container" class="vinculacion-container">
@@ -4193,6 +4231,7 @@
 
                             <div class="ficha-seccion-titulo" style="text-align: left;">17. Fuentes Consultadas</div>
                             <div class="fila"><div class="celda-etiqueta">Fuentes Abiertas / Cerradas:</div><div class="celda-dato" id="v-fue_info"></div></div>
+                            <div id="v-fuentes-list"></div>
 
                             <div class="ficha-seccion-titulo" style="text-align: left;">18. Vehículos Vinculados</div>
                             <div id="v-vehiculos-vinc" class="vinculados-vista"></div>
@@ -5178,6 +5217,8 @@ async function _restaurarDatosPesados(ficha) {
             if (heavy.foto) f.foto = heavy.foto;
             if (heavy.pdfsAdjuntos) f.pdfsAdjuntos = heavy.pdfsAdjuntos;
             if (heavy.tatuajesConFoto) f.tatuajesConFoto = heavy.tatuajesConFoto;
+            if (heavy.redesSociales) f.redesSociales = heavy.redesSociales;
+            if (heavy.fuentesInstitucionales) f.fuentesInstitucionales = heavy.fuentesInstitucionales;
         } else {
             // FALLBACK: fichas legacy — datos pesados aún están en fichasSIC/{key}
             const snapLegacy = await db.ref('fichasSIC/' + key).once('value');
@@ -5187,6 +5228,8 @@ async function _restaurarDatosPesados(ficha) {
                 if (legacy.foto && legacy.foto.startsWith('data:')) f.foto = legacy.foto;
                 if (legacy.pdfsAdjuntos && legacy.pdfsAdjuntos.some(p => p.base64 && p.base64.startsWith('data:'))) f.pdfsAdjuntos = legacy.pdfsAdjuntos;
                 if (legacy.tatuajesConFoto && legacy.tatuajesConFoto.some(t => t.foto && t.foto.startsWith('data:'))) f.tatuajesConFoto = legacy.tatuajesConFoto;
+                if (legacy.redesSociales && legacy.redesSociales.some(r => r.foto && r.foto.startsWith('data:'))) f.redesSociales = legacy.redesSociales;
+                if (legacy.fuentesInstitucionales && legacy.fuentesInstitucionales.some(fu => fu.foto && fu.foto.startsWith('data:'))) f.fuentesInstitucionales = legacy.fuentesInstitucionales;
             }
         }
     } catch (e) {
@@ -6165,9 +6208,24 @@ function agregarRed() {
         '<div class="grupo-form"><label>Alias en Red Social</label><input type="text" class="red-alias"></div>' +
         '<div class="grupo-form"><label>Tipo de Red Social</label><select class="red-tipo"><option value="">Seleccione...</option><option value="Facebook">Facebook</option><option value="Twitter / X">Twitter / X</option><option value="TikTok">TikTok</option><option value="Instagram">Instagram</option><option value="WhatsApp">WhatsApp</option><option value="Telegram">Telegram</option><option value="Snapchat">Snapchat</option><option value="YouTube">YouTube</option><option value="LinkedIn">LinkedIn</option><option value="Signal">Signal</option><option value="Pinterest">Pinterest</option><option value="Reddit">Reddit</option><option value="Discord">Discord</option><option value="Otra">Otra</option></select></div>' +
         '<div class="grupo-form"><label>Fecha Consulta</label><input type="date" class="red-fconsulta"></div>' +
+        '<div class="grupo-form"><label>Imagen / Captura</label><input type="file" class="red-foto-input" accept="image/*"></div>' +
+        '<div class="red-foto-preview">📷</div>' +
         '<button type="button" class="btn-quitar-red" onclick="quitarRed(this)" title="Quitar red social">✖</button>';
     container.appendChild(row);
     redCounter++;
+    row.querySelectorAll('.grupo-form').forEach(g => g.classList.add('argos-animate'));
+    const fotoInputR = row.querySelector('.red-foto-input');
+    const previewR = row.querySelector('.red-foto-preview');
+    if (fotoInputR && previewR) {
+        fotoInputR.addEventListener('change', function(e) {
+            const archivo = e.target.files[0];
+            if (archivo) {
+                const lector = new FileReader();
+                lector.onload = function(ev) { previewR.innerHTML = '<img src="' + ev.target.result + '">'; actualizarFicha(); };
+                lector.readAsDataURL(archivo);
+            }
+        });
+    }
     row.querySelectorAll('input, select').forEach(inp => inp.addEventListener('input', actualizarFicha));
     row.querySelectorAll('select').forEach(sel => sel.addEventListener('change', actualizarFicha));
 }
@@ -6179,11 +6237,13 @@ function obtenerRedesSociales() {
     const rows = document.querySelectorAll('#redes-container .red-social-row');
     const list = [];
     rows.forEach(row => {
+        const fotoImg = row.querySelector('.red-foto-preview img');
         list.push({
             url: row.querySelector('.red-url') ? row.querySelector('.red-url').value : '',
             alias: row.querySelector('.red-alias') ? row.querySelector('.red-alias').value : '',
             tipo: row.querySelector('.red-tipo') ? row.querySelector('.red-tipo').value : '',
-            fconsulta: row.querySelector('.red-fconsulta') ? row.querySelector('.red-fconsulta').value : ''
+            fconsulta: row.querySelector('.red-fconsulta') ? row.querySelector('.red-fconsulta').value : '',
+            foto: fotoImg ? fotoImg.src : ''
         });
     });
     return list;
@@ -6202,14 +6262,106 @@ function cargarRedesSociales(redes) {
             '<div class="grupo-form"><label>Alias en Red Social</label><input type="text" class="red-alias" value="' + (red.alias||'').replace(/"/g,'&quot;') + '"></div>' +
             '<div class="grupo-form"><label>Tipo de Red Social</label><select class="red-tipo"><option value="">Seleccione...</option><option value="Facebook">Facebook</option><option value="Twitter / X">Twitter / X</option><option value="TikTok">TikTok</option><option value="Instagram">Instagram</option><option value="WhatsApp">WhatsApp</option><option value="Telegram">Telegram</option><option value="Snapchat">Snapchat</option><option value="YouTube">YouTube</option><option value="LinkedIn">LinkedIn</option><option value="Signal">Signal</option><option value="Pinterest">Pinterest</option><option value="Reddit">Reddit</option><option value="Discord">Discord</option><option value="Otra">Otra</option></select></div>' +
             '<div class="grupo-form"><label>Fecha Consulta</label><input type="date" class="red-fconsulta" value="' + (red.fconsulta||'') + '"></div>' +
+            '<div class="grupo-form"><label>Imagen / Captura</label><input type="file" class="red-foto-input" accept="image/*"></div>' +
+            '<div class="red-foto-preview">' + (red.foto ? '<img src="' + red.foto + '">' : '📷') + '</div>' +
             '<button type="button" class="btn-quitar-red" onclick="quitarRed(this)" title="Quitar red social">✖</button>';
         container.appendChild(row);
         // Set select value after innerHTML
         const sel = row.querySelector('.red-tipo');
         if (sel) sel.value = red.tipo || '';
+        row.querySelectorAll('.grupo-form').forEach(g => g.classList.add('argos-animate'));
+        const fotoInputR = row.querySelector('.red-foto-input');
+        const previewR = row.querySelector('.red-foto-preview');
+        if (fotoInputR && previewR) {
+            fotoInputR.addEventListener('change', function(e) {
+                const archivo = e.target.files[0];
+                if (archivo) {
+                    const lector = new FileReader();
+                    lector.onload = function(ev) { previewR.innerHTML = '<img src="' + ev.target.result + '">'; actualizarFicha(); };
+                    lector.readAsDataURL(archivo);
+                }
+            });
+        }
         row.querySelectorAll('input, select').forEach(inp => inp.addEventListener('input', actualizarFicha));
         row.querySelectorAll('select').forEach(sel2 => sel2.addEventListener('change', actualizarFicha));
         redCounter++;
+    });
+}
+
+// ===== DYNAMIC FUENTES INSTITUCIONALES =====
+const fuenteInstOpts = '<option value="">Seleccione...</option><option value="RAP">RAP</option><option value="ESCRITORIO POLICIAL">ESCRITORIO POLICIAL</option><option value="GUATECOMPRAS">GUATECOMPRAS</option><option value="ORGANISMO JUDICIAL -DETENIDOS-">ORGANISMO JUDICIAL -DETENIDOS-</option><option value="SAT">SAT</option><option value="IGSS">IGSS</option><option value="CONSULTA DE TITULOS">CONSULTA DE TITULOS</option><option value="VACUNACION DE COVID-19">VACUNACION DE COVID-19</option><option value="Otra">Otra</option>';
+let fuenteCounter = 1;
+function _bindFuenteFoto(row) {
+    row.querySelectorAll('.grupo-form').forEach(g => g.classList.add('argos-animate'));
+    const fotoInput = row.querySelector('.fuente-foto-input');
+    const preview = row.querySelector('.fuente-foto-preview');
+    if (fotoInput && preview) {
+        fotoInput.addEventListener('change', function(e) {
+            const archivo = e.target.files[0];
+            if (archivo) {
+                const lector = new FileReader();
+                lector.onload = function(ev) { preview.innerHTML = '<img src="' + ev.target.result + '">'; actualizarFicha(); };
+                lector.readAsDataURL(archivo);
+            }
+        });
+    }
+    row.querySelectorAll('input, select').forEach(inp => inp.addEventListener('input', actualizarFicha));
+    row.querySelectorAll('select').forEach(sel => sel.addEventListener('change', actualizarFicha));
+}
+function agregarFuente() {
+    const container = document.getElementById('fuentes-inst-container');
+    const row = document.createElement('div');
+    row.className = 'fuente-inst-row';
+    row.dataset.index = fuenteCounter;
+    row.innerHTML = '<div class="grupo-form"><label>Fuente Institucional</label><select class="fuente-tipo">' + fuenteInstOpts + '</select></div>' +
+        '<div class="grupo-form"><label>Nombre / Detalle</label><input type="text" class="fuente-nombre" placeholder="Ej: nombre encontrado, no. expediente"></div>' +
+        '<div class="grupo-form"><label>Fecha Consulta</label><input type="date" class="fuente-fconsulta"></div>' +
+        '<div class="grupo-form"><label>Imagen / Captura</label><input type="file" class="fuente-foto-input" accept="image/*"></div>' +
+        '<div class="fuente-foto-preview">📷</div>' +
+        '<button type="button" class="btn-quitar-fuente" onclick="quitarFuente(this)" title="Quitar fuente">✖</button>';
+    container.appendChild(row);
+    fuenteCounter++;
+    _bindFuenteFoto(row);
+}
+function quitarFuente(btn) {
+    btn.closest('.fuente-inst-row').remove();
+    actualizarFicha();
+}
+function obtenerFuentesInstitucionales() {
+    const rows = document.querySelectorAll('#fuentes-inst-container .fuente-inst-row');
+    const list = [];
+    rows.forEach(row => {
+        const fotoImg = row.querySelector('.fuente-foto-preview img');
+        list.push({
+            tipo: row.querySelector('.fuente-tipo') ? row.querySelector('.fuente-tipo').value : '',
+            nombre: row.querySelector('.fuente-nombre') ? row.querySelector('.fuente-nombre').value : '',
+            fconsulta: row.querySelector('.fuente-fconsulta') ? row.querySelector('.fuente-fconsulta').value : '',
+            foto: fotoImg ? fotoImg.src : ''
+        });
+    });
+    return list;
+}
+function cargarFuentesInstitucionales(fuentes) {
+    const container = document.getElementById('fuentes-inst-container');
+    if (!container) return;
+    container.innerHTML = '';
+    fuenteCounter = 0;
+    if (!fuentes || fuentes.length === 0) { agregarFuente(); return; }
+    fuentes.forEach(function(fu) {
+        const row = document.createElement('div');
+        row.className = 'fuente-inst-row';
+        row.dataset.index = fuenteCounter;
+        row.innerHTML = '<div class="grupo-form"><label>Fuente Institucional</label><select class="fuente-tipo">' + fuenteInstOpts + '</select></div>' +
+            '<div class="grupo-form"><label>Nombre / Detalle</label><input type="text" class="fuente-nombre" value="' + (fu.nombre||'').replace(/"/g,'&quot;') + '" placeholder="Ej: nombre encontrado, no. expediente"></div>' +
+            '<div class="grupo-form"><label>Fecha Consulta</label><input type="date" class="fuente-fconsulta" value="' + (fu.fconsulta||'') + '"></div>' +
+            '<div class="grupo-form"><label>Imagen / Captura</label><input type="file" class="fuente-foto-input" accept="image/*"></div>' +
+            '<div class="fuente-foto-preview">' + (fu.foto ? '<img src="' + fu.foto + '">' : '📷') + '</div>' +
+            '<button type="button" class="btn-quitar-fuente" onclick="quitarFuente(this)" title="Quitar fuente">✖</button>';
+        container.appendChild(row);
+        const sel = row.querySelector('.fuente-tipo');
+        if (sel) sel.value = fu.tipo || '';
+        _bindFuenteFoto(row);
+        fuenteCounter++;
     });
 }
 
@@ -6529,6 +6681,7 @@ function obtenerDatosFormulario() {
         fin_banco: v('fin_banco'), fin_cuenta: v('fin_cuenta'), fin_monto: v('fin_monto'),
         fin_actividad: v('fin_actividad'), fin_obs: v('fin_obs'),
         fue_abiertas: v('fue_abiertas'), fue_cerradas: v('fue_cerradas'),
+        fuentesInstitucionales: obtenerFuentesInstitucionales(),
         usuario: v('usuario')
     };
 }
@@ -6582,7 +6735,7 @@ function actualizarFicha() {
     if (redList) {
         const redes = d.redesSociales || [];
         redList.innerHTML = redes.map(r =>
-            '<div style="padding:3px 0;border-bottom:1px solid #bdd7ee;font-size:12px;"><b>' + (r.tipo||'') + '</b>: ' + (r.alias||'') + ' (' + (r.url||'') + ')' + (r.fconsulta ? ' | Consulta: ' + r.fconsulta : '') + '</div>'
+            '<div style="padding:3px 0;border-bottom:1px solid #bdd7ee;font-size:12px;display:flex;align-items:center;gap:8px;">' + (r.foto ? '<img src="' + r.foto + '" style="width:38px;height:38px;object-fit:cover;border-radius:4px;border:1px solid #bdd7ee;">' : '') + '<span><b>' + (r.tipo||'') + '</b>: ' + (r.alias||'') + ' (' + (r.url||'') + ')' + (r.fconsulta ? ' | Consulta: ' + r.fconsulta : '') + '</span></div>'
         ).join('');
         if (redes.length === 0 || (redes.length === 1 && !redes[0].url && !redes[0].alias && !redes[0].tipo)) redList.innerHTML = '<div style="color:#777;padding:4px;">Sin redes sociales registradas</div>';
     }
@@ -6673,6 +6826,16 @@ function actualizarFicha() {
 
     document.getElementById('v-fue_info').textContent = `Abiertas: ${d.fue_abiertas} | Cerradas: ${d.fue_cerradas}`;
 
+    // Render fuentes institucionales list
+    const fueList = document.getElementById('v-fuentes-list');
+    if (fueList) {
+        const fuentes = (d.fuentesInstitucionales || []).filter(f => f.tipo || f.nombre || f.foto);
+        fueList.innerHTML = fuentes.map(f =>
+            '<div style="padding:3px 0;border-bottom:1px solid #bdd7ee;font-size:12px;display:flex;align-items:center;gap:8px;">' + (f.foto ? '<img src="' + f.foto + '" style="width:38px;height:38px;object-fit:cover;border-radius:4px;border:1px solid #bdd7ee;">' : '') + '<span><b>' + (f.tipo||'') + '</b>' + (f.nombre ? ': ' + f.nombre : '') + (f.fconsulta ? ' | Consulta: ' + f.fconsulta : '') + '</span></div>'
+        ).join('');
+        if (fuentes.length === 0) fueList.innerHTML = '<div style="color:#777;padding:4px;">Sin fuentes institucionales registradas</div>';
+    }
+
     document.getElementById('v-usuario').textContent = d.usuario;
     // Photo updates handled in 4-photo grid rendering
 }
@@ -6729,6 +6892,32 @@ async function guardarFichaConsolidada() {
             tatsComprimidos.push(tatCopy);
         }
 
+        // === COMPRIMIR IMAGENES DE REDES SOCIALES ===
+        const redesComprimidas = [];
+        for (let i = 0; i < (d.redesSociales || []).length; i++) {
+            const r = d.redesSociales[i];
+            const rCopy = { url: r.url || '', alias: r.alias || '', tipo: r.tipo || '', fconsulta: r.fconsulta || '' };
+            if (r.foto && r.foto.startsWith('data:')) {
+                rCopy.foto = await _comprimirImagenBase64(r.foto, 0.6, 640);
+            } else {
+                rCopy.foto = r.foto || '';
+            }
+            redesComprimidas.push(rCopy);
+        }
+
+        // === COMPRIMIR IMAGENES DE FUENTES INSTITUCIONALES ===
+        const fuentesComprimidas = [];
+        for (let i = 0; i < (d.fuentesInstitucionales || []).length; i++) {
+            const fu = d.fuentesInstitucionales[i];
+            const fuCopy = { tipo: fu.tipo || '', nombre: fu.nombre || '', fconsulta: fu.fconsulta || '' };
+            if (fu.foto && fu.foto.startsWith('data:')) {
+                fuCopy.foto = await _comprimirImagenBase64(fu.foto, 0.6, 640);
+            } else {
+                fuCopy.foto = fu.foto || '';
+            }
+            fuentesComprimidas.push(fuCopy);
+        }
+
         // === SEPARAR DATOS PESADOS (base64) EN NODO _heavy ===
         // Datos ligeros van en fichasSIC (para listado/búsqueda)
         // Datos pesados (fotos, PDFs) van en fichasSIC_heavy (se cargan bajo demanda)
@@ -6748,6 +6937,14 @@ async function guardarFichaConsolidada() {
         // Separar tatuajes con foto
         datosPesados.tatuajesConFoto = tatsComprimidos;
         datosLigeros.tatuajesConFoto = tatsComprimidos.map(t => ({ ubicacion: t.ubicacion, descripcion: t.descripcion, tipo: t.tipo, foto: (t.foto && t.foto.startsWith('data:')) ? '' : t.foto }));
+
+        // Separar redes sociales con imagen
+        datosPesados.redesSociales = redesComprimidas;
+        datosLigeros.redesSociales = redesComprimidas.map(r => ({ url: r.url, alias: r.alias, tipo: r.tipo, fconsulta: r.fconsulta, foto: (r.foto && r.foto.startsWith('data:')) ? '' : r.foto }));
+
+        // Separar fuentes institucionales con imagen
+        datosPesados.fuentesInstitucionales = fuentesComprimidas;
+        datosLigeros.fuentesInstitucionales = fuentesComprimidas.map(fu => ({ tipo: fu.tipo, nombre: fu.nombre, fconsulta: fu.fconsulta, foto: (fu.foto && fu.foto.startsWith('data:')) ? '' : fu.foto }));
 
         // Limpiar marca temporal si existía
         delete datosLigeros._temp;
@@ -6937,6 +7134,13 @@ async function CargarPersonaParaEditar(ficha) {
     setV('fue_abiertas', ficha.fue_abiertas);
     setV('fue_cerradas', ficha.fue_cerradas);
 
+    // Cargar fuentes institucionales dinámicas
+    if (ficha.fuentesInstitucionales && Array.isArray(ficha.fuentesInstitucionales)) {
+        cargarFuentesInstitucionales(ficha.fuentesInstitucionales);
+    } else {
+        cargarFuentesInstitucionales([]);
+    }
+
     // Restaurar 4 fotos
     fotosPersonaBase64 = ficha.fotosPersona || ["", "", "", ""];
     if ((!ficha.fotosPersona || ficha.fotosPersona.length === 0) && ficha.foto) {
@@ -7069,6 +7273,13 @@ function _buscarPersonaReal() {
                 if (red.tipo && red.tipo.toLowerCase().includes(texto)) return true;
             }
         }
+        // Buscar en fuentes institucionales
+        if (i.fuentesInstitucionales && Array.isArray(i.fuentesInstitucionales)) {
+            for (const fu of i.fuentesInstitucionales) {
+                if (fu.tipo && fu.tipo.toLowerCase().includes(texto)) return true;
+                if (fu.nombre && fu.nombre.toLowerCase().includes(texto)) return true;
+            }
+        }
         // Fallback: buscar en campos antiguos de redes
         if (i.red_url && i.red_url.toLowerCase().includes(texto)) return true;
         if (i.red_alias && i.red_alias.toLowerCase().includes(texto)) return true;
@@ -7174,12 +7385,29 @@ async function mostrarFichaConsultada(d) {
     ).join('');
     if (!telsHTML || (tels.length === 1 && !tels[0].linea && !tels[0].imei && !tels[0].compania)) telsHTML = '<div style="color:#777;padding:4px;">Sin teléfonos registrados</div>';
 
-    // Build redes sociales list HTML
+    // Build redes sociales list HTML (versión pantalla = miniaturas / versión impresión = fotos grandes)
     const redes = (d.redesSociales && d.redesSociales.length) ? d.redesSociales : (d.red_url ? [{url: d.red_url, alias: d.red_alias||'', tipo: d.red_tipo||'', fconsulta: d.red_fconsulta||''}] : []);
-    let redesHTML = redes.map(r =>
-        '<div style="padding:3px 0;border-bottom:1px solid #bdd7ee;font-size:12px;"><b>' + _esc(r.tipo||'') + '</b>: ' + _esc(r.alias||'') + ' (' + _esc(r.url||'') + ')' + (r.fconsulta ? ' | Consulta: ' + _esc(r.fconsulta) : '') + '</div>'
+    let redesScreenHTML = redes.map(r =>
+        '<div style="padding:3px 0;border-bottom:1px solid #bdd7ee;font-size:12px;display:flex;align-items:center;gap:8px;">' + (r.foto ? '<img src="' + r.foto + '" style="width:40px;height:40px;object-fit:cover;border:1px solid #bdd7ee;border-radius:4px;">' : '') + '<span><b>' + _esc(r.tipo||'') + '</b>: ' + _esc(r.alias||'') + ' (' + _esc(r.url||'') + ')' + (r.fconsulta ? ' | Consulta: ' + _esc(r.fconsulta) : '') + '</span></div>'
     ).join('');
-    if (!redesHTML || (redes.length === 1 && !redes[0].url && !redes[0].alias && !redes[0].tipo)) redesHTML = '<div style="color:#777;padding:4px;">Sin redes sociales registradas</div>';
+    if (!redesScreenHTML || (redes.length === 1 && !redes[0].url && !redes[0].alias && !redes[0].tipo)) redesScreenHTML = '<div style="color:#777;padding:4px;">Sin redes sociales registradas</div>';
+    let redesPrintHTML = redes.filter(r => r.url || r.alias || r.tipo || r.foto).map(r =>
+        '<div style="display:inline-block;width:48%;vertical-align:top;box-sizing:border-box;margin:4px 1% 4px 0;page-break-inside:avoid;"><div style="font-size:11px;"><b>' + _esc(r.tipo||'') + '</b>: ' + _esc(r.alias||'') + ' (' + _esc(r.url||'') + ')' + (r.fconsulta ? ' | Consulta: ' + _esc(r.fconsulta) : '') + '</div>' + (r.foto ? '<div class="fotos-ficha-grid" style="justify-content:flex-start;margin:4px 0;"><div class="foto-ficha" style="width:100%;height:145px;"><img src="' + r.foto + '"></div></div>' : '') + '</div>'
+    ).join('');
+    if (!redesPrintHTML) redesPrintHTML = '<div style="color:#777;padding:4px;">Sin redes sociales registradas</div>';
+    let redesHTML = '<div class="argos-redes-screen">' + redesScreenHTML + '</div><div class="argos-redes-print">' + redesPrintHTML + '</div>';
+
+    // Build fuentes institucionales HTML (pantalla = miniaturas / impresión = fotos grandes)
+    const fuentesInst = (d.fuentesInstitucionales || []).filter(f => f.tipo || f.nombre || f.foto);
+    let fuentesScreenHTML = fuentesInst.map(f =>
+        '<div style="padding:3px 0;border-bottom:1px solid #bdd7ee;font-size:12px;display:flex;align-items:center;gap:8px;">' + (f.foto ? '<img src="' + f.foto + '" style="width:40px;height:40px;object-fit:cover;border:1px solid #bdd7ee;border-radius:4px;">' : '') + '<span><b>' + _esc(f.tipo||'') + '</b>' + (f.nombre ? ': ' + _esc(f.nombre) : '') + (f.fconsulta ? ' | Consulta: ' + _esc(f.fconsulta) : '') + '</span></div>'
+    ).join('');
+    if (!fuentesScreenHTML) fuentesScreenHTML = '<div style="color:#777;padding:4px;">Sin fuentes institucionales registradas</div>';
+    let fuentesPrintHTML = fuentesInst.map(f =>
+        '<div style="display:inline-block;width:48%;vertical-align:top;box-sizing:border-box;margin:4px 1% 4px 0;page-break-inside:avoid;"><div style="font-size:11px;"><b>' + _esc(f.tipo||'') + '</b>' + (f.nombre ? ': ' + _esc(f.nombre) : '') + (f.fconsulta ? ' | Consulta: ' + _esc(f.fconsulta) : '') + '</div>' + (f.foto ? '<div class="fotos-ficha-grid" style="justify-content:flex-start;margin:4px 0;"><div class="foto-ficha" style="width:100%;height:145px;"><img src="' + f.foto + '"></div></div>' : '') + '</div>'
+    ).join('');
+    if (!fuentesPrintHTML) fuentesPrintHTML = '<div style="color:#777;padding:4px;">Sin fuentes institucionales registradas</div>';
+    let fuentesInstHTML = '<div class="argos-fuentes-screen">' + fuentesScreenHTML + '</div><div class="argos-fuentes-print">' + fuentesPrintHTML + '</div>';
 
     // Build armas list HTML
     const armas = (d.armasFuego && d.armasFuego.length) ? d.armasFuego : (d.arm_tipo ? [{tipo: d.arm_tipo, registro: d.arm_registro||'', licencia: d.arm_licencia||'', tenencia: d.arm_tenencia||'', estatus: d.arm_estatus||''}] : []);
@@ -7303,6 +7531,7 @@ async function mostrarFichaConsultada(d) {
 
         <div class="ficha-seccion-titulo" style="text-align:left;">17. Fuentes Consultadas</div>
         <div class="fila"><div class="celda-etiqueta">Fuentes Abiertas / Cerradas:</div><div class="celda-dato">Abiertas: ${_esc(d.fue_abiertas) || ''} | Cerradas: ${_esc(d.fue_cerradas) || ''}</div></div>
+        <div class="fila"><div class="celda-etiqueta">Fuentes Institucionales:</div><div class="celda-dato">${fuentesInstHTML}</div></div>
 
         <div class="ficha-seccion-titulo" style="text-align:left;">18. Vehículos Vinculados</div>
         ${vehsHTML}
@@ -7341,6 +7570,8 @@ function limpiarFormulario() {
     cargarFamiliares([]);
     // Reset tatuajes
     cargarTatuajes([]);
+    // Reset fuentes institucionales
+    cargarFuentesInstitucionales([]);
     // Reset vinculaciones
     vehiculosVinculados = [];
     extorsivosVinculados = [];
@@ -9112,6 +9343,13 @@ function rfBuscarPorTexto() {
                 if (red.tipo && red.tipo.toLowerCase().includes(texto)) return true;
             }
         }
+        // Buscar en fuentes institucionales
+        if (i.fuentesInstitucionales && Array.isArray(i.fuentesInstitucionales)) {
+            for (const fu of i.fuentesInstitucionales) {
+                if (fu.tipo && fu.tipo.toLowerCase().includes(texto)) return true;
+                if (fu.nombre && fu.nombre.toLowerCase().includes(texto)) return true;
+            }
+        }
         // Fallback: buscar en campos antiguos de redes
         if (i.red_url && i.red_url.toLowerCase().includes(texto)) return true;
         if (i.red_alias && i.red_alias.toLowerCase().includes(texto)) return true;
@@ -9449,6 +9687,41 @@ async function planBActualizarEstadisticas() {
         if (logEl) logEl.innerHTML = '<div style="color:#c62828;">❌ Error: ' + e.message + '</div>';
     }
 }
+</script>
+<!-- ARGOS - Visor de imágenes ampliadas (lightbox) -->
+<div id="argos-lightbox" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.88);align-items:center;justify-content:center;flex-direction:column;cursor:zoom-out;">
+    <img id="argos-lightbox-img" src="" alt="Imagen ampliada" style="max-width:92vw;max-height:86vh;border-radius:6px;box-shadow:0 8px 40px rgba(0,0,0,0.6);object-fit:contain;">
+    <div style="color:#fff;font-size:13px;margin-top:14px;opacity:0.8;">Toca fuera de la imagen o presiona ESC para cerrar</div>
+    <button type="button" id="argos-lightbox-close" title="Cerrar" style="position:absolute;top:18px;right:22px;background:#dc2626;color:#fff;border:none;border-radius:50%;width:42px;height:42px;font-size:20px;cursor:pointer;line-height:1;">✖</button>
+</div>
+<script>
+(function(){
+    var lb = document.getElementById('argos-lightbox');
+    var lbImg = document.getElementById('argos-lightbox-img');
+    var lbClose = document.getElementById('argos-lightbox-close');
+    function abrir(src){ if(!src) return; lbImg.src = src; lb.style.display = 'flex'; }
+    function cerrar(){ lb.style.display = 'none'; lbImg.src = ''; }
+    if (lb) {
+        lb.addEventListener('click', cerrar);
+        if (lbClose) lbClose.addEventListener('click', function(e){ e.stopPropagation(); cerrar(); });
+        lbImg.addEventListener('click', function(e){ e.stopPropagation(); });
+        document.addEventListener('keydown', function(e){ if(e.key==='Escape' && lb.style.display==='flex') cerrar(); });
+    }
+    // Delegación: cualquier imagen dentro de vistas/previews se puede ampliar
+    var SEL = '.red-foto-preview, .fuente-foto-preview, .tatuaje-foto-preview, #v-redes-list, #v-fuentes-list, #v-tatuajes-fotos, .tatuajes-fotos-grid, .tatuaje-vista-item, .foto-ficha, #detalle-persona-consultada, .vista-ficha';
+    document.addEventListener('click', function(e){
+        var img = e.target;
+        if (!img || img.tagName !== 'IMG' || !img.src) return;
+        if (img.closest && img.closest(SEL)) {
+            e.preventDefault();
+            abrir(img.src);
+        }
+    });
+    // Cursor de lupa para las imágenes ampliables
+    var style = document.createElement('style');
+    style.textContent = SEL.split(',').map(function(s){ return s.trim() + ' img'; }).join(', ') + ' { cursor: zoom-in; }';
+    document.head.appendChild(style);
+})();
 </script>
 </body>
 </html>
