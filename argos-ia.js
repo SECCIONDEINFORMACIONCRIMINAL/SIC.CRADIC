@@ -14,7 +14,7 @@
 
   /* ====== CONFIGURACION (EDITA ESTO) ====== */
   const CONFIG = {
-    PROXY_URL: 'https://argos-ia.tkautliz.workers.dev/', // <-- pega aqui la URL de tu Worker
+    PROXY_URL: 'https://argos-ia.tkautliz.workers.dev', // <-- URL de tu Worker
     MODEL: 'openai/gpt-oss-20b',
     MAX_HISTORY: 12,
     USER: 'Investigador',
