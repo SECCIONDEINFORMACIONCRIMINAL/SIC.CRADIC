@@ -18,6 +18,14 @@
     MODEL: 'openai/gpt-oss-20b',
     MAX_HISTORY: 12,
     USER: 'Investigador',
+    // Datos de SOPORTE mostrados cuando el usuario NO ha iniciado sesion:
+    SOPORTE: {
+      nombre: 'Soporte SIC ARGOS',
+      // TU numero de WhatsApp: codigo de pais + numero, SOLO digitos.
+      // Ej. Guatemala: '50240702190'. Mientras diga 00000000 no se mostrara el boton.
+      whatsapp: '50200000000',
+      mensaje: 'Hola, necesito ayuda con el sistema SIC ARGOS.',
+    },
   };
 
   const C = { navy:'#0b2545', navy2:'#13315c', gold:'#c9a227', cyan:'#00e5ff', txt:'#e8eef5' };
@@ -33,6 +41,17 @@
   function norm(s){return String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');}
   function getDb(){try{if(window.firebase&&firebase.database)return firebase.database();}catch(e){}try{return db;}catch(e){return null;}}
   async function node(path){var d=getDb();if(!d)return{};var s=await d.ref(path).once('value');return s.val()||{};}
+
+  /* ====== ESTADO DE SESION ====== */
+  function estaLogueado(){
+    try{ if(window.firebase && firebase.auth && firebase.auth().currentUser) return true; }catch(e){}
+    var appScr=document.getElementById('app-screen');
+    if(appScr && !appScr.classList.contains('oculto')) return true;
+    try{ if(window.usuarioSesionActual) return true; }catch(e){}
+    return false;
+  }
+  function waHref(){ var n=String(CONFIG.SOPORTE.whatsapp||'').replace(/\D/g,''); return 'https://wa.me/'+n+'?text='+encodeURIComponent(CONFIG.SOPORTE.mensaje||''); }
+  function tieneWhatsApp(){ var n=String(CONFIG.SOPORTE.whatsapp||''); return n.replace(/\D/g,'').length>=8 && n.indexOf('00000000')<0; }
 
   /* ====== ACCESO A DATOS (Firebase) ====== */
   async function getStats(){
@@ -109,13 +128,8 @@
     return partes.join('\n\n');
   }
   /* ====== LLAMADA A LA IA (via proxy seguro) ====== */
-  async function consultarIA(userText, contexto){
-    var sys={role:'system',content:
-      'Eres ARGOS, el asistente de inteligencia artificial del Sistema de Informacion Criminal (SIC ARGOS). '
-      +'Te diriges a '+CONFIG.USER+'. Respondes SIEMPRE en espanol, de forma profesional, clara y concisa. '
-      +'Usa EXCLUSIVAMENTE la informacion del CONTEXTO para hablar de fichas, vehiculos, numeros extorsivos o estadisticas; '
-      +'si el contexto no contiene el dato, dilo claramente y NO inventes. '
-      +'Para redacciones (informes, oficios) entrega el texto final listo para usar.\n\nCONTEXTO:\n'+contexto};
+  async function consultarIA(userText, systemContent){
+    var sys={role:'system',content: systemContent};
     var msgs=[sys].concat(history.slice(-CONFIG.MAX_HISTORY),[{role:'user',content:userText}]);
     var r=await fetch(CONFIG.PROXY_URL,{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({model:CONFIG.MODEL,messages:msgs,max_tokens:600})});
@@ -136,6 +150,32 @@
     return {url:url, clean:clean};
   }
 
+  /* ====== SOPORTE (usuario sin sesion) ====== */
+  function botonWhatsApp(){
+    var a=document.createElement('a'); a.href=waHref(); a.target='_blank'; a.rel='noopener';
+    a.className='aia-wa'; a.textContent='\ud83d\udcac Escribir por WhatsApp'; return a;
+  }
+  function accionSoporte(tipo){
+    if(tipo==='whatsapp'){
+      addMsg('user','Contactar por WhatsApp');
+      var b=addMsg('bot', tieneWhatsApp()
+        ? ('Con gusto. Escribe a <strong>'+esc(CONFIG.SOPORTE.nombre)+'</strong> por WhatsApp y te atenderemos lo antes posible:')
+        : 'El contacto de WhatsApp aun no ha sido configurado por el administrador.');
+      if(tieneWhatsApp()) b.appendChild(botonWhatsApp());
+    } else if(tipo==='password'){
+      addMsg('user','Cambiar / recuperar contrasena');
+      var b2=addMsg('bot','Para cambiar o recuperar tu contrasena:<br>'
+        +'1. Verifica que tu usuario este <strong>Activo</strong>.<br>'
+        +'2. Por seguridad, el restablecimiento lo realiza el <strong>administrador</strong> del sistema.<br>'
+        +'3. Solicitalo indicando tu nombre de usuario.');
+      if(tieneWhatsApp()){ var p=document.createElement('div'); p.style.marginTop='6px'; p.textContent='Solicitalo aqui:'; b2.appendChild(p); b2.appendChild(botonWhatsApp()); }
+    } else if(tipo==='login'){
+      addMsg('user','\u00bfComo ingreso al sistema?');
+      addMsg('bot','Para ingresar, escribe tu <strong>usuario</strong> y <strong>contrasena</strong> en la pantalla de inicio y pulsa <strong>INGRESAR</strong>. Si tu usuario no esta activo o no lo recuerdas, contacta al administrador.');
+    }
+    var w=document.getElementById('aia-msgs'); if(w) w.scrollTop=w.scrollHeight;
+  }
+
   /* ====== MENSAJES EN LA INTERFAZ ====== */
   function addMsg(who, htmlOrNode){
     var wrap=document.getElementById('aia-msgs');
@@ -153,9 +193,10 @@
     inp.value=''; inp.style.height='auto';
     addMsg('user', esc(text));
     busy=true; setEstado('procesando');
+    var logueado=estaLogueado();
 
-    // Comando de imagen
-    if(/(genera|crea|dibuja|haz|hazme)\b[\s\S]*?(imagen|foto|dibujo|retrato)/i.test(text)){
+    // Comando de imagen (solo con sesion iniciada)
+    if(logueado && /(genera|crea|dibuja|haz|hazme)\b[\s\S]*?(imagen|foto|dibujo|retrato)/i.test(text)){
       var pend=addMsg('bot','Generando imagen...');
       var info=generarImagen(text);
       var img=new Image(); img.className='aia-img'; img.alt=info.clean; img.src=info.url;
@@ -166,14 +207,35 @@
       return;
     }
 
-    // Consulta a la IA con contexto de la base de datos
     var pend2=addMsg('bot',''); pend2.appendChild(loader());
     try{
-      var ctx=await recuperarContexto(text);
-      var reply=await consultarIA(text, ctx);
+      var systemContent;
+      if(logueado){
+        var ctx=await recuperarContexto(text);
+        systemContent=
+          'Eres ARGOS, el asistente de inteligencia artificial del Sistema de Informacion Criminal (SIC ARGOS). '
+          +'Te diriges a '+CONFIG.USER+'. Respondes SIEMPRE en espanol, de forma profesional, clara y concisa. '
+          +'Usa EXCLUSIVAMENTE la informacion del CONTEXTO para hablar de fichas, vehiculos, numeros extorsivos o estadisticas; '
+          +'si el contexto no contiene el dato, dilo claramente y NO inventes. '
+          +'Para redacciones (informes, oficios) entrega el texto final listo para usar.\n\nCONTEXTO:\n'+ctx;
+      } else {
+        systemContent=
+          'Eres el asistente de SOPORTE del sistema SIC ARGOS. El usuario NO ha iniciado sesion, por lo que NO tienes acceso a fichas ni a ningun dato del sistema. '
+          +'Ayuda UNICAMENTE con: como iniciar sesion, recuperar o cambiar la contrasena, problemas de acceso y datos de contacto de soporte. '
+          +'Si preguntan por fichas, personas, vehiculos o numeros, responde con amabilidad que primero deben iniciar sesion con sus credenciales. '
+          +'Se breve y profesional. Responde SIEMPRE en espanol.'
+          +(tieneWhatsApp()?(' Contacto de soporte: '+CONFIG.SOPORTE.nombre+', WhatsApp '+String(CONFIG.SOPORTE.whatsapp).replace(/\D/g,'')+'.'):'');
+      }
+      var reply=await consultarIA(text, systemContent);
       pend2.innerHTML=md(reply);
+      if(!logueado && tieneWhatsApp()) pend2.appendChild(botonWhatsApp());
     }catch(e){
-      pend2.textContent='\u26a0\ufe0f Error: '+e.message+'. Verifica la URL del proxy (CONFIG.PROXY_URL) o tu conexion.';
+      if(!logueado){
+        pend2.innerHTML='En este momento no puedo procesar tu consulta. '+(tieneWhatsApp()?'Puedes escribirnos por WhatsApp:':'Intenta de nuevo mas tarde.');
+        if(tieneWhatsApp()) pend2.appendChild(botonWhatsApp());
+      } else {
+        pend2.textContent='\u26a0\ufe0f Error: '+e.message+'. Verifica la conexion o vuelve a intentar.';
+      }
     }
     finalizar();
 
@@ -205,6 +267,8 @@
     +'.aia-bub code{background:#02060d;padding:1px 5px;border-radius:4px;color:'+C.cyan+';font-size:12px}'
     +'.aia-img{width:100%;border-radius:8px;margin:2px 0}'
     +'.aia-link{display:inline-block;margin-top:6px;color:'+C.cyan+';font-size:12px}'
+    +'.aia-wa{display:inline-block;margin-top:8px;background:#25d366;color:#04140a;font-weight:700;text-decoration:none;padding:8px 14px;border-radius:10px;font-size:12px}'
+    +'.aia-wa:hover{filter:brightness(1.08)}'
     +'.aia-chips{display:flex;flex-wrap:wrap;gap:6px;padding:0 14px 8px}'
     +'.aia-chip{background:#0a1626;border:1px solid '+C.navy2+';color:'+C.cyan+';border-radius:14px;padding:5px 10px;font-size:11px;cursor:pointer}'
     +'.aia-chip:hover{border-color:'+C.gold+';color:'+C.gold+'}'
@@ -228,12 +292,7 @@
       '<div class="aia-head"><div><div class="t">A.R.G.O.S \u00b7 IA</div><div class="s" id="aia-status">Asistente en linea</div></div>'
       +'<button class="aia-x" type="button" title="Cerrar">\u2715</button></div>'
       +'<div id="aia-msgs"></div>'
-      +'<div class="aia-chips">'
-      +'<span class="aia-chip" data-q="\u00bfCuantas fichas hay registradas en el sistema?">\u00bfCuantas fichas hay?</span>'
-      +'<span class="aia-chip" data-q="Buscar persona: ">Buscar persona</span>'
-      +'<span class="aia-chip" data-q="Buscar vehiculo con placa ">Buscar por placa</span>'
-      +'<span class="aia-chip" data-q="Redacta un oficio formal sobre ">Redactar oficio</span>'
-      +'</div>'
+      +'<div class="aia-chips" id="aia-chips"></div>'
       +'<div class="aia-foot"><textarea id="aia-input" rows="1" placeholder="Escribe tu consulta..."></textarea>'
       +'<button id="aia-send" type="button" title="Enviar">\u27a4</button></div>';
     document.body.appendChild(panel);
@@ -243,30 +302,72 @@
     var inp=document.getElementById('aia-input');
     inp.addEventListener('keydown', function(e){ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); enviar(); }});
     inp.addEventListener('input', function(){ inp.style.height='auto'; inp.style.height=Math.min(inp.scrollHeight,80)+'px'; });
-    var chips=panel.querySelectorAll('.aia-chip');
-    for(var i=0;i<chips.length;i++){ (function(ch){ ch.addEventListener('click', function(){
-      var q=ch.getAttribute('data-q'); inp.value=q; inp.focus();
-      if(q.indexOf('Cuantas')>=0) enviar();
-    }); })(chips[i]); }
+  }
+
+  function renderChips(modo){
+    var cont=document.getElementById('aia-chips'); if(!cont) return;
+    cont.innerHTML='';
+    var inp=document.getElementById('aia-input');
+    var defs = modo==='soporte'
+      ? [ {t:'Cambiar contrasena', action:'password'},
+          {t:'\ud83d\udcac WhatsApp', action:'whatsapp'},
+          {t:'\u00bfComo ingreso?', action:'login'} ]
+      : [ {t:'\u00bfCuantas fichas hay?', q:'\u00bfCuantas fichas hay registradas en el sistema?', send:true},
+          {t:'Buscar persona', q:'Buscar persona: '},
+          {t:'Buscar por placa', q:'Buscar vehiculo con placa '},
+          {t:'Redactar oficio', q:'Redacta un oficio formal sobre '} ];
+    defs.forEach(function(d){
+      var ch=document.createElement('span'); ch.className='aia-chip'; ch.textContent=d.t;
+      ch.addEventListener('click', function(){
+        if(d.action){ accionSoporte(d.action); return; }
+        inp.value=d.q; inp.focus();
+        if(d.send) enviar();
+      });
+      cont.appendChild(ch);
+    });
   }
 
   function toggle(){
     panelOpen=!panelOpen;
     document.getElementById('aia-panel').classList.toggle('open', panelOpen);
-    if(panelOpen && !document.getElementById('aia-msgs').children.length){
-      addMsg('bot','Hola '+esc(CONFIG.USER)+'. Soy <strong>ARGOS</strong>, tu asistente del Sistema de Informacion Criminal. Puedo consultar fichas de personas, vehiculos y numeros extorsivos, darte estadisticas, redactar textos y generar imagenes. \u00bfEn que te ayudo?');
-      getStats().catch(function(){});
+    if(panelOpen){
+      var modo = estaLogueado() ? 'full' : 'soporte';
+      renderChips(modo);
+      var st=document.getElementById('aia-status');
+      if(st) st.textContent = modo==='soporte' ? 'Soporte y ayuda' : 'Asistente en linea';
+      if(!document.getElementById('aia-msgs').children.length){
+        if(modo==='full'){
+          addMsg('bot','Hola '+esc(CONFIG.USER)+'. Soy <strong>ARGOS</strong>, tu asistente del Sistema de Informacion Criminal. Puedo consultar fichas de personas, vehiculos y numeros extorsivos, darte estadisticas, redactar textos y generar imagenes. \u00bfEn que te ayudo?');
+          getStats().catch(function(){});
+        } else {
+          addMsg('bot','Hola \ud83d\udc4b Soy el asistente de <strong>SIC ARGOS</strong>. Aun no has iniciado sesion, pero puedo ayudarte con el acceso al sistema. \u00bfQue necesitas?<br>\u2022 Cambiar o recuperar tu contrasena<br>\u2022 Ayuda para ingresar<br>\u2022 Contactar a soporte por WhatsApp');
+        }
+      }
+      setTimeout(function(){ var i=document.getElementById('aia-input'); if(i) i.focus(); }, 100);
     }
-    if(panelOpen) setTimeout(function(){ var i=document.getElementById('aia-input'); if(i) i.focus(); }, 100);
   }
 
-  function setEstado(s){ var el=document.getElementById('aia-status'); if(el) el.textContent = s==='procesando' ? 'Procesando...' : 'Asistente en linea'; }
+  function resetChat(){
+    history=[]; statsCache=null;
+    var w=document.getElementById('aia-msgs'); if(w) w.innerHTML='';
+    if(panelOpen){ panelOpen=false; toggle(); } // reabrir para refrescar bienvenida/chips segun modo
+  }
+
+  function setEstado(s){ var el=document.getElementById('aia-status'); if(!el) return; if(s==='procesando'){ el.textContent='Procesando...'; return; } el.textContent = estaLogueado() ? 'Asistente en linea' : 'Soporte y ayuda'; }
   function loader(){ var d=document.createElement('span'); d.className='aia-dots'; d.innerHTML='<span></span><span></span><span></span>'; return d; }
 
   function init(){
     if(!CONFIG.PROXY_URL || CONFIG.PROXY_URL.indexOf('TU-WORKER')>=0)
       console.warn('[ARGOS IA] Configura CONFIG.PROXY_URL con la URL de tu Cloudflare Worker.');
     buildUI();
+    try{
+      if(window.firebase && firebase.auth){
+        var prev = !!firebase.auth().currentUser;
+        firebase.auth().onAuthStateChanged(function(u){
+          var now=!!u; if(now!==prev){ prev=now; resetChat(); }
+        });
+      }
+    }catch(e){}
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', init); else init();
 })();
