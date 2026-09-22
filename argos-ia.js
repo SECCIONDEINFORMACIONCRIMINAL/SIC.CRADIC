@@ -340,7 +340,7 @@
           addMsg('bot','Hola '+esc(CONFIG.USER)+'. Soy <strong>ARGOS</strong>, tu asistente del Sistema de Informacion Criminal. Puedo consultar fichas de personas, vehiculos y numeros extorsivos, darte estadisticas, redactar textos y generar imagenes. \u00bfEn que te ayudo?');
           getStats().catch(function(){});
         } else {
-          addMsg('bot','Hola \ud83d\udc4b Soy el asistente de <strong>SIC ARGOS</strong>. Aun no has iniciado sesion, pero puedo ayudarte con el acceso al sistema. \u00bfQue necesitas?<br>\u2022 Cambiar o recuperar tu contrasena<br>\u2022 Ayuda para ingresar<br>\u2022 Contactar a soporte por WhatsApp');
+          addMsg('bot','Hola \ud83d\udc4b Soy el asistente de <strong>ARGOS</strong>. Aun no has iniciado sesion, pero puedo ayudarte con el acceso al sistema. \u00bfQue necesitas?<br>\u2022 Cambiar o recuperar tu contrasena<br>\u2022 Ayuda para ingresar<br>\u2022 Contactar a soporte por WhatsApp');
         }
       }
       setTimeout(function(){ var i=document.getElementById('aia-input'); if(i) i.focus(); }, 100);
