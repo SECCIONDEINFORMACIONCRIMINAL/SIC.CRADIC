@@ -20,11 +20,11 @@
     USER: 'Investigador',
     // Datos de SOPORTE mostrados cuando el usuario NO ha iniciado sesion:
     SOPORTE: {
-      nombre: 'Soporte SIC ARGOS',
+      nombre: 'Soporte ARGOS',
       // TU numero de WhatsApp: codigo de pais + numero, SOLO digitos.
       // Ej. Guatemala: '50240702190'. Mientras diga 00000000 no se mostrara el boton.
-      whatsapp: '50200000000',
-      mensaje: 'Hola, necesito ayuda con el sistema SIC ARGOS.',
+      whatsapp: '50240702190',
+      mensaje: 'Hola, necesito ayuda con el sistema ARGOS.',
     },
   };
 
