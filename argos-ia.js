@@ -226,13 +226,18 @@
     if(_upscaler) return Promise.resolve(_upscaler);
     if(_upLoading) return _upLoading;
     _upLoading=(async function(){
+      // 1) TensorFlow.js  2) modelo por defecto (ESRGAN)  3) motor UpscalerJS
       if(!window.tf) await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js');
-      if(!window.Upscaler) await loadScript('https://cdn.jsdelivr.net/npm/upscaler@1.0.0-beta.19/dist/browser/umd/upscaler.min.js');
+      if(!window.DefaultUpscalerJSModel) await loadScript('https://cdn.jsdelivr.net/npm/@upscalerjs/default-model@1.0.0/dist/umd/index.min.js');
+      if(!window.Upscaler) await loadScript('https://cdn.jsdelivr.net/npm/upscaler@1.0.0/dist/browser/umd/upscaler.min.js');
       var U = window.Upscaler && (window.Upscaler.default || window.Upscaler);
+      var M = window.DefaultUpscalerJSModel && (window.DefaultUpscalerJSModel.default || window.DefaultUpscalerJSModel);
       if(typeof U!=='function') throw new Error('motor IA no disponible');
-      _upscaler=new U();
+      if(!M) throw new Error('modelo IA no disponible');
+      _upscaler=new U({ model: M });
       return _upscaler;
     })();
+    _upLoading.catch(function(){ _upLoading=null; }); // permite reintentar si fallo la carga
     return _upLoading;
   }
   // Ampliacion clasica (respaldo): escala con suavizado de alta calidad y aplica
