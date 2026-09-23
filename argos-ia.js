@@ -241,7 +241,7 @@
     return _upLoading;
   }
   // Ampliacion clasica (respaldo): escala con suavizado de alta calidad y aplica
-  // un ligero enfoque (unsharp) para que se vea mas nitida.
+  // una mascara de enfoque (unsharp mask) fuerte para que se vea mas nitida.
   function canvasUpscale(img, factor){
     factor=factor||2;
     var w=img.naturalWidth||img.width, h=img.naturalHeight||img.height;
@@ -252,8 +252,26 @@
     var ctx=c.getContext('2d');
     ctx.imageSmoothingEnabled=true; ctx.imageSmoothingQuality='high';
     ctx.drawImage(img,0,0,tw,th);
-    try{ sharpen(ctx,tw,th,0.5); }catch(e){}
+    try{ unsharpMask(c, 1.3, 1.8); }
+    catch(e){ try{ sharpen(ctx,tw,th,0.6); }catch(e2){} }
     return c.toDataURL('image/png');
+  }
+  // Unsharp mask: resta una version desenfocada para realzar bordes y detalle.
+  function unsharpMask(canvas, amount, radius){
+    var w=canvas.width, h=canvas.height, ctx=canvas.getContext('2d');
+    var bc=document.createElement('canvas'); bc.width=w; bc.height=h;
+    var bctx=bc.getContext('2d');
+    if(!('filter' in bctx)) throw new Error('sin filtro');
+    bctx.filter='blur('+radius+'px)'; bctx.drawImage(canvas,0,0); bctx.filter='none';
+    var orig=ctx.getImageData(0,0,w,h), blur=bctx.getImageData(0,0,w,h);
+    var o=orig.data, b=blur.data;
+    for(var i=0;i<o.length;i+=4){
+      for(var ch=0;ch<3;ch++){
+        var v=o[i+ch]+amount*(o[i+ch]-b[i+ch]);
+        o[i+ch]=v<0?0:v>255?255:v;
+      }
+    }
+    ctx.putImageData(orig,0,0);
   }
   function sharpen(ctx,w,h,amount){
     var src=ctx.getImageData(0,0,w,h), out=ctx.createImageData(w,h);
@@ -285,7 +303,7 @@
     cont.appendChild(estado); cont.appendChild(loader());
     var dataUrl=await fileToDataUrl(file);
     var img=await loadImg(dataUrl);
-    var salida, metodo, mp=img.naturalWidth*img.naturalHeight;
+    var salida, metodo, motivo='', mp=img.naturalWidth*img.naturalHeight;
     try{
       if(mp>4000000) throw new Error('imagen muy grande');
       estado.textContent='Aplicando super-resolucion con IA (la primera vez puede tardar unos segundos)...';
@@ -293,6 +311,8 @@
       salida=await up.upscale(img, {patchSize:64, padding:4});
       metodo='ia';
     }catch(e){
+      motivo=(e&&e.message)?String(e.message):'error';
+      try{ if(window.console) console.warn('[ARGOS IA] super-resolucion IA no disponible:', e); }catch(_e){}
       estado.textContent='Ampliando y afinando la imagen...';
       salida=canvasUpscale(img,2);
       metodo='canvas';
@@ -302,7 +322,8 @@
     var r=new Image(); r.className='aia-img'; r.alt='Imagen mejorada'; r.src=salida; cont.appendChild(r);
     var cap=document.createElement('div'); cap.className='aia-cap';
     cap.textContent=(metodo==='ia' ? 'Mejorada con super-resolucion IA' : 'Ampliada y afinada')
-      +' \u2014 '+out.naturalWidth+'\u00d7'+out.naturalHeight+' px (original '+img.naturalWidth+'\u00d7'+img.naturalHeight+' px).';
+      +' \u2014 '+out.naturalWidth+'\u00d7'+out.naturalHeight+' px (original '+img.naturalWidth+'\u00d7'+img.naturalHeight+' px).'
+      +(metodo==='canvas' && motivo ? ' [IA no disponible: '+motivo+']' : '');
     cont.appendChild(cap);
     var a=document.createElement('a'); a.href=salida; a.download='argos-mejorada.png';
     a.className='aia-link'; a.textContent='Descargar imagen mejorada'; cont.appendChild(a);
