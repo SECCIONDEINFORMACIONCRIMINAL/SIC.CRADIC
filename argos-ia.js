@@ -221,24 +221,60 @@
       document.head.appendChild(s);
     });
   }
-  var _upscaler=null, _upLoading=null;
-  function ensureUpscaler(){
-    if(_upscaler) return Promise.resolve(_upscaler);
-    if(_upLoading) return _upLoading;
-    _upLoading=(async function(){
-      // 1) TensorFlow.js  2) modelo por defecto (ESRGAN)  3) motor UpscalerJS
-      if(!window.tf) await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js');
-      if(!window.DefaultUpscalerJSModel) await loadScript('https://cdn.jsdelivr.net/npm/@upscalerjs/default-model@1.0.0/dist/umd/index.min.js');
-      if(!window.Upscaler) await loadScript('https://cdn.jsdelivr.net/npm/upscaler@1.0.0/dist/browser/umd/upscaler.min.js');
-      var U = window.Upscaler && (window.Upscaler.default || window.Upscaler);
-      var M = window.DefaultUpscalerJSModel && (window.DefaultUpscalerJSModel.default || window.DefaultUpscalerJSModel);
-      if(typeof U!=='function') throw new Error('motor IA no disponible');
-      if(!M) throw new Error('modelo IA no disponible');
-      _upscaler=new U({ model: M });
-      return _upscaler;
-    })();
-    _upLoading.catch(function(){ _upLoading=null; }); // permite reintentar si fallo la carga
-    return _upLoading;
+  // ===== Motor de super-resolucion IA AISLADO en un iframe =====
+  // La app ya carga face-api.js, que trae su PROPIA version (antigua) de
+  // TensorFlow.js. Cargar UpscalerJS (que necesita TF.js moderno) en la misma
+  // pagina provoca un choque de versiones ('n is not a function'). Solucion:
+  // ejecutar UpscalerJS dentro de un iframe oculto con su propio TF.js,
+  // completamente aislado, sin tocar el reconocimiento facial de la app.
+  var TFJS_URL='https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js';
+  var MODEL_URL='https://cdn.jsdelivr.net/npm/@upscalerjs/default-model@1.0.0/dist/umd/index.min.js';
+  var UPSCALER_URL='https://cdn.jsdelivr.net/npm/upscaler@1.0.0/dist/browser/umd/upscaler.min.js';
+  var _frameReady=null, _frameWin=null, _msgSeq=0, _pendUp={}, _msgBound=false;
+  function bindUpMessages(){
+    if(_msgBound) return; _msgBound=true;
+    window.addEventListener('message', function(ev){
+      var d=ev&&ev.data; if(!d||typeof d!=='object') return;
+      if(d.type==='argos-up-ready'){ _frameWin=ev.source; if(_onFrameReady){ _onFrameReady(); } return; }
+      if(d.type==='argos-up-result'){ var p=_pendUp[d.id]; if(p){ delete _pendUp[d.id]; if(d.ok) p.res(d.src); else p.rej(new Error(d.error||'error IA')); } }
+    });
+  }
+  var _onFrameReady=null;
+  function initUpscaleFrame(){
+    if(_frameReady) return _frameReady;
+    bindUpMessages();
+    _frameReady=new Promise(function(resolve,reject){
+      var settled=false;
+      var to=setTimeout(function(){ if(!settled){ settled=true; reject(new Error('el motor IA tardo demasiado en cargar')); } }, 30000);
+      _onFrameReady=function(){ if(!settled){ settled=true; clearTimeout(to); resolve(_frameWin); } };
+      var s='<scr'+'ipt';
+      var html=''
+        +'<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>'
+        +s+' src="'+TFJS_URL+'"></scr'+'ipt>'
+        +s+' src="'+MODEL_URL+'"></scr'+'ipt>'
+        +s+' src="'+UPSCALER_URL+'"></scr'+'ipt>'
+        +s+'>(function(){var up=null;function g(){if(!up){var U=window.Upscaler&&(window.Upscaler.default||window.Upscaler);var M=window.DefaultUpscalerJSModel&&(window.DefaultUpscalerJSModel.default||window.DefaultUpscalerJSModel);if(typeof U!=="function")throw new Error("motor IA no disponible");if(!M)throw new Error("modelo IA no disponible");up=new U({model:M});}return up;}'
+        +'window.addEventListener("message",function(ev){var d=ev.data||{};if(d.type!=="argos-up-run")return;var id=d.id;var im=new Image();im.onload=function(){Promise.resolve().then(g).then(function(u){return u.upscale(im,{patchSize:64,padding:4});}).then(function(x){parent.postMessage({type:"argos-up-result",id:id,ok:true,src:x},"*");}).catch(function(e){parent.postMessage({type:"argos-up-result",id:id,ok:false,error:String(e&&e.message||e)},"*");});};im.onerror=function(){parent.postMessage({type:"argos-up-result",id:id,ok:false,error:"no se pudo leer la imagen"},"*");};im.src=d.src;});'
+        +'parent.postMessage({type:"argos-up-ready"},"*");})();</scr'+'ipt>'
+        +'</body></html>';
+      var frame=document.createElement('iframe');
+      frame.setAttribute('aria-hidden','true'); frame.title='argos-sr';
+      frame.style.cssText='position:absolute;left:-9999px;top:-9999px;width:0;height:0;border:0;visibility:hidden';
+      frame.srcdoc=html;
+      document.body.appendChild(frame);
+    });
+    _frameReady.catch(function(){ _frameReady=null; }); // permite reintentar
+    return _frameReady;
+  }
+  function upscaleViaFrame(dataUrl){
+    return initUpscaleFrame().then(function(win){
+      return new Promise(function(res,rej){
+        var id=++_msgSeq;
+        var to=setTimeout(function(){ if(_pendUp[id]){ delete _pendUp[id]; rej(new Error('el motor IA tardo demasiado')); } }, 90000);
+        _pendUp[id]={ res:function(v){ clearTimeout(to); res(v); }, rej:function(e){ clearTimeout(to); rej(e); } };
+        win.postMessage({type:'argos-up-run', id:id, src:dataUrl}, '*');
+      });
+    });
   }
   // Ampliacion clasica (respaldo): escala con suavizado de alta calidad y aplica
   // una mascara de enfoque (unsharp mask) fuerte para que se vea mas nitida.
@@ -307,8 +343,7 @@
     try{
       if(mp>4000000) throw new Error('imagen muy grande');
       estado.textContent='Aplicando super-resolucion con IA (la primera vez puede tardar unos segundos)...';
-      var up=await ensureUpscaler();
-      salida=await up.upscale(img, {patchSize:64, padding:4});
+      salida=await upscaleViaFrame(dataUrl);
       metodo='ia';
     }catch(e){
       motivo=(e&&e.message)?String(e.message):'error';
