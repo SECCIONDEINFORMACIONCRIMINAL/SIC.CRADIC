@@ -193,6 +193,127 @@
     };
   }
 
+  /* ====== MEJORAR (SUPER-RESOLUCION) DE FOTOS SUBIDAS ====== */
+  // Permite subir una foto propia y aumentarle la resolucion. Intenta
+  // super-resolucion con IA (UpscalerJS/TensorFlow.js, 100% en el navegador);
+  // si no puede cargarse, usa una ampliacion + afinado con canvas como respaldo.
+  function fileToDataUrl(file){
+    return new Promise(function(res,rej){
+      var r=new FileReader();
+      r.onload=function(){res(r.result);};
+      r.onerror=function(){rej(new Error('no se pudo leer el archivo'));};
+      r.readAsDataURL(file);
+    });
+  }
+  function loadImg(src){
+    return new Promise(function(res,rej){
+      var i=new Image();
+      i.onload=function(){res(i);};
+      i.onerror=function(){rej(new Error('imagen invalida'));};
+      i.src=src;
+    });
+  }
+  function loadScript(src){
+    return new Promise(function(res,rej){
+      var s=document.createElement('script'); s.src=src; s.async=true;
+      s.onload=function(){res();};
+      s.onerror=function(){rej(new Error('no se pudo cargar recurso'));};
+      document.head.appendChild(s);
+    });
+  }
+  var _upscaler=null, _upLoading=null;
+  function ensureUpscaler(){
+    if(_upscaler) return Promise.resolve(_upscaler);
+    if(_upLoading) return _upLoading;
+    _upLoading=(async function(){
+      if(!window.tf) await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js');
+      if(!window.Upscaler) await loadScript('https://cdn.jsdelivr.net/npm/upscaler@1.0.0-beta.19/dist/browser/umd/upscaler.min.js');
+      var U = window.Upscaler && (window.Upscaler.default || window.Upscaler);
+      if(typeof U!=='function') throw new Error('motor IA no disponible');
+      _upscaler=new U();
+      return _upscaler;
+    })();
+    return _upLoading;
+  }
+  // Ampliacion clasica (respaldo): escala con suavizado de alta calidad y aplica
+  // un ligero enfoque (unsharp) para que se vea mas nitida.
+  function canvasUpscale(img, factor){
+    factor=factor||2;
+    var w=img.naturalWidth||img.width, h=img.naturalHeight||img.height;
+    var maxDim=2400, scale=factor;
+    if(w*scale>maxDim || h*scale>maxDim){ scale=Math.min(maxDim/w, maxDim/h); if(scale<1) scale=1; }
+    var tw=Math.max(1,Math.round(w*scale)), th=Math.max(1,Math.round(h*scale));
+    var c=document.createElement('canvas'); c.width=tw; c.height=th;
+    var ctx=c.getContext('2d');
+    ctx.imageSmoothingEnabled=true; ctx.imageSmoothingQuality='high';
+    ctx.drawImage(img,0,0,tw,th);
+    try{ sharpen(ctx,tw,th,0.5); }catch(e){}
+    return c.toDataURL('image/png');
+  }
+  function sharpen(ctx,w,h,amount){
+    var src=ctx.getImageData(0,0,w,h), out=ctx.createImageData(w,h);
+    var s=src.data, o=out.data;
+    var k=[0,-1,0,-1,5,-1,0,-1,0];
+    for(var y=0;y<h;y++){
+      for(var x=0;x<w;x++){
+        var i=(y*w+x)*4;
+        for(var ch=0;ch<3;ch++){
+          var sum=0, ki=0;
+          for(var ky=-1;ky<=1;ky++){
+            for(var kx=-1;kx<=1;kx++){
+              var yy=y+ky; if(yy<0)yy=0; else if(yy>=h)yy=h-1;
+              var xx=x+kx; if(xx<0)xx=0; else if(xx>=w)xx=w-1;
+              sum+=s[(yy*w+xx)*4+ch]*k[ki++];
+            }
+          }
+          var val=s[i+ch]*(1-amount)+sum*amount;
+          o[i+ch]=val<0?0:val>255?255:val;
+        }
+        o[i+3]=s[i+3];
+      }
+    }
+    ctx.putImageData(out,0,0);
+  }
+  async function mejorarFoto(file, cont){
+    cont.innerHTML='';
+    var estado=document.createElement('div'); estado.textContent='Analizando la imagen...';
+    cont.appendChild(estado); cont.appendChild(loader());
+    var dataUrl=await fileToDataUrl(file);
+    var img=await loadImg(dataUrl);
+    var salida, metodo, mp=img.naturalWidth*img.naturalHeight;
+    try{
+      if(mp>4000000) throw new Error('imagen muy grande');
+      estado.textContent='Aplicando super-resolucion con IA (la primera vez puede tardar unos segundos)...';
+      var up=await ensureUpscaler();
+      salida=await up.upscale(img, {patchSize:64, padding:4});
+      metodo='ia';
+    }catch(e){
+      estado.textContent='Ampliando y afinando la imagen...';
+      salida=canvasUpscale(img,2);
+      metodo='canvas';
+    }
+    var out=await loadImg(salida);
+    cont.innerHTML='';
+    var r=new Image(); r.className='aia-img'; r.alt='Imagen mejorada'; r.src=salida; cont.appendChild(r);
+    var cap=document.createElement('div'); cap.className='aia-cap';
+    cap.textContent=(metodo==='ia' ? 'Mejorada con super-resolucion IA' : 'Ampliada y afinada')
+      +' \u2014 '+out.naturalWidth+'\u00d7'+out.naturalHeight+' px (original '+img.naturalWidth+'\u00d7'+img.naturalHeight+' px).';
+    cont.appendChild(cap);
+    var a=document.createElement('a'); a.href=salida; a.download='argos-mejorada.png';
+    a.className='aia-link'; a.textContent='Descargar imagen mejorada'; cont.appendChild(a);
+    var w=document.getElementById('aia-msgs'); if(w) w.scrollTop=w.scrollHeight;
+  }
+  async function iniciarMejora(file){
+    if(busy) return;
+    if(!file || !/^image\//.test(file.type||'')){ addMsg('bot','Ese archivo no parece una imagen. Sube una foto (JPG o PNG).'); return; }
+    busy=true; setEstado('procesando');
+    addMsg('user','\ud83d\uddbc\ufe0f '+esc(file.name||'foto'));
+    var cont=addMsg('bot','');
+    try{ await mejorarFoto(file, cont); }
+    catch(e){ cont.textContent='No pude procesar la imagen ('+(e&&e.message?e.message:'error')+'). Intenta con otra foto.'; }
+    busy=false; setEstado('');
+  }
+
   /* ====== SOPORTE (usuario sin sesion) ====== */
   function botonWhatsApp(){
     var a=document.createElement('a'); a.href=waHref(); a.target='_blank'; a.rel='noopener';
@@ -239,7 +360,7 @@
     var logueado=estaLogueado();
 
     // Comando de imagen (solo con sesion iniciada)
-    if(logueado && /(genera|crea|dibuja|haz|hazme)\b[\s\S]*?(imagen|foto|dibujo|retrato)/i.test(text)){
+    if(logueado && /(gener\w*|crea\w*|dibuj\w*|ilustr\w*|haz|hazme)[\s\S]*?(im[a\u00e1]gen\w*|foto\w*|dibujo|retrato)/i.test(text)){
       var pend=addMsg('bot','');
       var info=generarImagen(text);
       pintarImagen(pend, info, text, finalizar);
@@ -319,6 +440,9 @@
     +'#aia-input:focus{border-color:'+C.cyan+'}'
     +'#aia-send{background:'+C.navy2+';border:1px solid '+C.gold+';color:'+C.gold+';border-radius:10px;width:44px;font-size:18px;cursor:pointer}'
     +'#aia-send:hover{background:'+C.gold+';color:'+C.navy+'}'
+    +'#aia-upload{background:'+C.navy2+';border:1px solid '+C.cyan+';color:'+C.cyan+';border-radius:10px;width:40px;font-size:16px;cursor:pointer}'
+    +'#aia-upload:hover{background:'+C.cyan+';color:'+C.navy+'}'
+    +'.aia-cap{font-size:11px;color:#9fb3c8;margin-top:5px}'
     +'.aia-dots span{display:inline-block;width:6px;height:6px;margin:0 2px;border-radius:50%;background:'+C.cyan+';animation:aiabl 1s infinite}'
     +'.aia-dots span:nth-child(2){animation-delay:.2s}.aia-dots span:nth-child(3){animation-delay:.4s}'
     +'@keyframes aiabl{0%,60%,100%{opacity:.25}30%{opacity:1}}'
@@ -335,7 +459,10 @@
       +'<button class="aia-x" type="button" title="Cerrar">\u2715</button></div>'
       +'<div id="aia-msgs"></div>'
       +'<div class="aia-chips" id="aia-chips"></div>'
-      +'<div class="aia-foot"><textarea id="aia-input" rows="1" placeholder="Escribe tu consulta..."></textarea>'
+      +'<div class="aia-foot">'
+      +'<button id="aia-upload" type="button" title="Subir foto para mejorar su resolucion">\ud83d\udcce</button>'
+      +'<input type="file" id="aia-file" accept="image/*" style="display:none">'
+      +'<textarea id="aia-input" rows="1" placeholder="Escribe tu consulta..."></textarea>'
       +'<button id="aia-send" type="button" title="Enviar">\u27a4</button></div>';
     document.body.appendChild(panel);
 
@@ -344,6 +471,18 @@
     var inp=document.getElementById('aia-input');
     inp.addEventListener('keydown', function(e){ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); enviar(); }});
     inp.addEventListener('input', function(){ inp.style.height='auto'; inp.style.height=Math.min(inp.scrollHeight,80)+'px'; });
+    var upBtn=document.getElementById('aia-upload');
+    var fileInp=document.getElementById('aia-file');
+    if(upBtn && fileInp){
+      upBtn.addEventListener('click', function(){
+        if(busy) return;
+        if(!estaLogueado()){ addMsg('bot','Para mejorar una foto primero debes iniciar sesion en el sistema.'); return; }
+        fileInp.value=''; fileInp.click();
+      });
+      fileInp.addEventListener('change', function(){
+        var f=fileInp.files && fileInp.files[0]; if(f) iniciarMejora(f);
+      });
+    }
   }
 
   function renderChips(modo){
@@ -357,10 +496,12 @@
       : [ {t:'\u00bfCuantas fichas hay?', q:'\u00bfCuantas fichas hay registradas en el sistema?', send:true},
           {t:'Buscar persona', q:'Buscar persona: '},
           {t:'Buscar por placa', q:'Buscar vehiculo con placa '},
+          {t:'\ud83d\udcce Mejorar una foto', action:'upload'},
           {t:'Redactar oficio', q:'Redacta un oficio formal sobre '} ];
     defs.forEach(function(d){
       var ch=document.createElement('span'); ch.className='aia-chip'; ch.textContent=d.t;
       ch.addEventListener('click', function(){
+        if(d.action==='upload'){ var fi=document.getElementById('aia-file'); if(fi){ fi.value=''; fi.click(); } return; }
         if(d.action){ accionSoporte(d.action); return; }
         inp.value=d.q; inp.focus();
         if(d.send) enviar();
@@ -379,7 +520,7 @@
       if(st) st.textContent = modo==='soporte' ? 'Soporte y ayuda' : 'Asistente en linea';
       if(!document.getElementById('aia-msgs').children.length){
         if(modo==='full'){
-          addMsg('bot','Hola '+esc(CONFIG.USER)+'. Soy <strong>ARGOS</strong>, tu asistente del Sistema de Informacion Criminal. Puedo consultar fichas de personas, vehiculos y numeros extorsivos, darte estadisticas, redactar textos y generar imagenes. \u00bfEn que te ayudo?');
+          addMsg('bot','Hola '+esc(CONFIG.USER)+'. Soy <strong>ARGOS</strong>, tu asistente del Sistema de Informacion Criminal. Puedo consultar fichas de personas, vehiculos y numeros extorsivos, darte estadisticas, redactar textos, generar imagenes y <strong>mejorar la resolucion de fotos que subas</strong> (boton \ud83d\udcce). \u00bfEn que te ayudo?');
           getStats().catch(function(){});
         } else {
           addMsg('bot','Hola \ud83d\udc4b Soy el asistente de <strong>ARGOS</strong>. Aun no has iniciado sesion, pero puedo ayudarte con el acceso al sistema. \u00bfQue necesitas?<br>\u2022 Cambiar o recuperar tu contrasena<br>\u2022 Ayuda para ingresar<br>\u2022 Contactar a soporte por WhatsApp');
