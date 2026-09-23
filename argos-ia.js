@@ -144,10 +144,53 @@
   }
 
   /* ====== GENERACION DE IMAGENES (Pollinations, gratis) ====== */
-  function generarImagen(desc){
+  // opts.hd -> genera en alta resolucion (mas grande + mejora + modelo flux)
+  // opts.seed -> reutiliza la misma semilla para obtener LA MISMA imagen en HD
+  function generarImagen(desc, opts){
+    opts = opts || {};
     var clean=desc.replace(/^(genera|crea|dibuja|haz|hazme)\s+(una\s+)?(imagen|foto|dibujo|retrato)\s+(de\s+)?/i,'').trim()||desc;
-    var url='https://image.pollinations.ai/prompt/'+encodeURIComponent(clean)+'?width=768&height=768&nologo=true';
-    return {url:url, clean:clean};
+    var hd = !!opts.hd;
+    var seed = (opts.seed!=null) ? opts.seed : Math.floor(Math.random()*1e9);
+    var w = hd ? 1280 : 768;
+    var h = hd ? 1280 : 768;
+    var params = 'width='+w+'&height='+h+'&nologo=true&seed='+seed;
+    if(hd) params += '&enhance=true&model=flux'; // mayor detalle/calidad
+    var url='https://image.pollinations.ai/prompt/'+encodeURIComponent(clean)+'?'+params;
+    return {url:url, clean:clean, seed:seed, hd:hd};
+  }
+
+  // Pinta una imagen generada dentro de 'cont'. Si no es HD, agrega el boton
+  // "Convertir a alta resolucion" que la regenera mas grande con la misma semilla.
+  function pintarImagen(cont, info, originalText, onReady){
+    cont.innerHTML='';
+    cont.appendChild(loader());
+    var img=new Image(); img.className='aia-img'; img.alt=info.clean; img.src=info.url;
+    img.onload=function(){
+      cont.innerHTML='';
+      cont.appendChild(img);
+      var a=document.createElement('a'); a.href=info.url; a.target='_blank'; a.rel='noopener';
+      a.className='aia-link'; a.textContent = info.hd ? 'Abrir / descargar (alta resolucion)' : 'Abrir / descargar imagen';
+      cont.appendChild(a);
+      if(!info.hd){
+        var btn=document.createElement('button'); btn.type='button'; btn.className='aia-hd';
+        btn.textContent='\ud83d\udd0d Convertir a alta resolucion';
+        btn.addEventListener('click', function(){
+          if(busy) return;
+          btn.disabled=true; btn.textContent='Mejorando a alta resolucion...';
+          var hdInfo=generarImagen(originalText, {hd:true, seed:info.seed});
+          var cont2=addMsg('bot','');
+          pintarImagen(cont2, hdInfo, originalText, null);
+        });
+        cont.appendChild(document.createElement('br'));
+        cont.appendChild(btn);
+      }
+      var w=document.getElementById('aia-msgs'); if(w) w.scrollTop=w.scrollHeight;
+      if(onReady) onReady();
+    };
+    img.onerror=function(){
+      cont.textContent='No pude generar la imagen (revisa tu conexion).';
+      if(onReady) onReady();
+    };
   }
 
   /* ====== SOPORTE (usuario sin sesion) ====== */
@@ -197,13 +240,9 @@
 
     // Comando de imagen (solo con sesion iniciada)
     if(logueado && /(genera|crea|dibuja|haz|hazme)\b[\s\S]*?(imagen|foto|dibujo|retrato)/i.test(text)){
-      var pend=addMsg('bot','Generando imagen...');
+      var pend=addMsg('bot','');
       var info=generarImagen(text);
-      var img=new Image(); img.className='aia-img'; img.alt=info.clean; img.src=info.url;
-      img.onload=function(){pend.innerHTML=''; pend.appendChild(img);
-        var a=document.createElement('a'); a.href=info.url; a.target='_blank'; a.rel='noopener';
-        a.textContent='Abrir / descargar imagen'; a.className='aia-link'; pend.appendChild(a); finalizar();};
-      img.onerror=function(){pend.textContent='No pude generar la imagen (revisa tu conexion).'; finalizar();};
+      pintarImagen(pend, info, text, finalizar);
       return;
     }
 
@@ -267,6 +306,9 @@
     +'.aia-bub code{background:#02060d;padding:1px 5px;border-radius:4px;color:'+C.cyan+';font-size:12px}'
     +'.aia-img{width:100%;border-radius:8px;margin:2px 0}'
     +'.aia-link{display:inline-block;margin-top:6px;color:'+C.cyan+';font-size:12px}'
+    +'.aia-hd{display:inline-block;margin-top:8px;background:'+C.navy2+';border:1px solid '+C.gold+';color:'+C.gold+';border-radius:10px;padding:7px 12px;font-size:12px;cursor:pointer;font-family:inherit}'
+    +'.aia-hd:hover:not(:disabled){background:'+C.gold+';color:'+C.navy+'}'
+    +'.aia-hd:disabled{opacity:.6;cursor:default}'
     +'.aia-wa{display:inline-block;margin-top:8px;background:#25d366;color:#04140a;font-weight:700;text-decoration:none;padding:8px 14px;border-radius:10px;font-size:12px}'
     +'.aia-wa:hover{filter:brightness(1.08)}'
     +'.aia-chips{display:flex;flex-wrap:wrap;gap:6px;padding:0 14px 8px}'
