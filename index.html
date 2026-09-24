@@ -4505,6 +4505,8 @@
                     <button class="btn-accion" id="btn-agregar-extorsivo" onclick="mostrarFormularioExtorsivo()" style="background:#27ae60;color:white;border:none;padding:10px 18px;border-radius:6px;cursor:pointer;font-weight:bold;display:none;">➕ Agregar Caso</button>
                     <button class="btn-accion" id="btn-importar-extorsivos" onclick="importarExcelExtorsivos()" style="background:#e67e22;color:white;border:none;padding:10px 18px;border-radius:6px;cursor:pointer;font-weight:bold;display:none;">📥 Importar Excel</button>
                     <input type="file" id="importar-extorsivos-file" accept=".xlsx,.xls" style="display:none" onchange="procesarImportarExcelExtorsivos(event)">
+                    <button class="btn-accion" id="btn-reemplazar-extorsivos" onclick="reemplazarTodoExtorsivos()" style="background:#c0392b;color:white;border:none;padding:10px 18px;border-radius:6px;cursor:pointer;font-weight:bold;display:none;">🔄 Reemplazar Todo</button>
+                    <input type="file" id="reemplazar-extorsivos-file" accept=".xlsx,.xls" style="display:none" onchange="procesarReemplazarExcelExtorsivos(event)">
                     <button class="btn-accion btn-imprimir" onclick="argosPrintFicha('extorsivos-tabla-wrap')" style="background:#c9a227;color:white;border:none;padding:10px 18px;border-radius:6px;cursor:pointer;font-weight:bold;">🖨️ Imprimir</button>
                 </div>
 
@@ -5581,6 +5583,9 @@ function aplicarPermisosRol() {
     const _btnImBaseExt = document.getElementById('btn-importar-base-ext');
     if (_btnAgBaseExt && btnAgregarExt) _btnAgBaseExt.style.display = btnAgregarExt.style.display;
     if (_btnImBaseExt && btnImportarExt) _btnImBaseExt.style.display = btnImportarExt.style.display;
+    // Botón "Reemplazar Todo": SOLO Administrador General (acción destructiva)
+    const _btnReempExt = document.getElementById('btn-reemplazar-extorsivos');
+    if (_btnReempExt) _btnReempExt.style.display = (usuarioSesionActual.rol === 'Administrador General') ? 'inline-block' : 'none';
 }
 
 function cerrarSesion() {
@@ -8882,6 +8887,122 @@ function procesarImportarExcelExtorsivos(event) {
             alert('Error al procesar el archivo Excel: ' + err.message);
             const btnImportar = document.getElementById('btn-importar-extorsivos');
             if (btnImportar) btnImportar.textContent = '📥 Importar Excel';
+            event.target.value = '';
+        }
+    };
+    reader.readAsArrayBuffer(file);
+}
+
+// --- Reemplazar TODO: borra el nodo completo y sube el Excel desde cero (sin duplicar) ---
+function reemplazarTodoExtorsivos() {
+    if (!usuarioSesionActual || usuarioSesionActual.rol !== 'Administrador General') {
+        alert('Solo el Administrador General puede reemplazar toda la base extorsiva.');
+        return;
+    }
+    document.getElementById('reemplazar-extorsivos-file').click();
+}
+
+function procesarReemplazarExcelExtorsivos(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    if (!usuarioSesionActual || usuarioSesionActual.rol !== 'Administrador General') {
+        alert('Solo el Administrador General puede reemplazar toda la base extorsiva.');
+        event.target.value = '';
+        return;
+    }
+    if (!confirm('⚠️ REEMPLAZAR TODO:\n\nEsto BORRARÁ TODOS los casos extorsivos actuales y los sustituirá por el contenido del Excel (sin duplicar nada).\n\nEsta acción NO se puede deshacer. ¿Desea continuar?')) {
+        event.target.value = '';
+        return;
+    }
+    if (!confirm('CONFIRMACIÓN FINAL:\n\nSe eliminarán ' + numerosExtorsivosGlobal.length + ' registros existentes y se cargará el Excel desde cero.\n\n¿Está TOTALMENTE seguro?')) {
+        event.target.value = '';
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+            const sheetName = workbook.SheetNames[0];
+            const sheet = workbook.Sheets[sheetName];
+            const rows = XLSX.utils.sheet_to_json(sheet, { defval: '', raw: false });
+
+            if (rows.length === 0) {
+                alert('El archivo Excel está vacío.');
+                event.target.value = '';
+                return;
+            }
+
+            // Mapa COMPLETO (todas las columnas): Columna Excel -> campo Firebase, derivado de BASE_EXT_CAMPOS
+            const MAP = {};
+            BASE_EXT_CAMPOS.forEach(function(campo) {
+                if (campo && campo.k && campo.x) MAP[campo.x] = campo.k;
+            });
+
+            const records = [];
+            rows.forEach(function(row) {
+                const obj = {};
+                Object.keys(MAP).forEach(function(colName) {
+                    const fbKey = MAP[colName];
+                    const val = row[colName];
+                    if (val !== undefined && val !== null && String(val).trim() !== '') {
+                        obj[fbKey] = String(val).trim();
+                    }
+                });
+                if (obj.telefonoExtorsionista) {
+                    obj.empresaTelefonia = detectarTelefonia(obj.telefonoExtorsionista);
+                }
+                if (Object.keys(obj).length > 0) records.push(obj);
+            });
+
+            if (records.length === 0) {
+                alert('No se encontraron registros válidos en el Excel.');
+                event.target.value = '';
+                return;
+            }
+
+            const btn = document.getElementById('btn-reemplazar-extorsivos');
+            const origText = btn ? btn.textContent : '';
+            if (btn) { btn.textContent = '⏳ Borrando datos...'; btn.disabled = true; }
+
+            // 1) Borrar TODO el nodo  2) Subir por lotes (push genera claves únicas => sin duplicados)
+            db.ref('numerosExtorsivos').remove()
+                .then(function() {
+                    let imported = 0, errors = 0;
+                    const CHUNK = 100;
+                    function pushChunk(idx) {
+                        if (idx >= records.length) {
+                            if (btn) { btn.textContent = origText; btn.disabled = false; }
+                            alert('✅ Reemplazo completado:\n• Registros en Excel: ' + records.length + '\n• Cargados: ' + imported + '\n• Errores: ' + errors);
+                            event.target.value = '';
+                            return;
+                        }
+                        const batch = records.slice(idx, idx + CHUNK);
+                        const promises = batch.map(function(rec) {
+                            return db.ref('numerosExtorsivos').push(rec)
+                                .then(function() { imported++; })
+                                .catch(function(err) { errors++; console.error('Error subiendo registro:', err); });
+                        });
+                        Promise.all(promises).then(function() {
+                            if (btn) btn.textContent = '⏳ Subiendo ' + Math.min(idx + CHUNK, records.length) + '/' + records.length;
+                            pushChunk(idx + CHUNK);
+                        });
+                    }
+                    pushChunk(0);
+                })
+                .catch(function(err) {
+                    console.error('Error al borrar el nodo:', err);
+                    if (btn) { btn.textContent = origText; btn.disabled = false; }
+                    alert('Error al borrar los datos actuales: ' + err.message);
+                    event.target.value = '';
+                });
+
+        } catch (err) {
+            console.error('Error procesando Excel:', err);
+            alert('Error al procesar el archivo Excel: ' + err.message);
+            const btn = document.getElementById('btn-reemplazar-extorsivos');
+            if (btn) { btn.textContent = '🔄 Reemplazar Todo'; btn.disabled = false; }
             event.target.value = '';
         }
     };
