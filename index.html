@@ -8902,6 +8902,28 @@ function reemplazarTodoExtorsivos() {
     document.getElementById('reemplazar-extorsivos-file').click();
 }
 
+// Reconecta el escucha en vivo del nodo extorsivo (se pausa durante la carga masiva para acelerarla)
+function _reattachExtorsivosListener() {
+    db.ref('numerosExtorsivos').off();
+    db.ref('numerosExtorsivos').on('value', function(snapshot) {
+        numerosExtorsivosGlobal = [];
+        if (snapshot.exists()) {
+            snapshot.forEach(function(child) {
+                var caso = child.val();
+                caso._key = child.key;
+                numerosExtorsivosGlobal.push(caso);
+            });
+        }
+        extorsivosCargados = true;
+        if (typeof actualizarEstadisticasExtorsivos === 'function') actualizarEstadisticasExtorsivos();
+        if (typeof actualizarContadores === 'function') actualizarContadores();
+        if (typeof llenarDatalistExtorsivos === 'function') llenarDatalistExtorsivos();
+        var modExt = document.getElementById('modulo-extorsivos');
+        if (modExt && !modExt.classList.contains('oculto') && typeof buscarNumeroExtorsivo === 'function') buscarNumeroExtorsivo();
+        if (typeof _argosDataLoaded === 'object') { _argosDataLoaded.extorsivos = true; }
+    });
+}
+
 function procesarReemplazarExcelExtorsivos(event) {
     const file = event.target.files[0];
     if (!file) return;
@@ -8934,17 +8956,22 @@ function procesarReemplazarExcelExtorsivos(event) {
                 return;
             }
 
-            // Mapa COMPLETO (todas las columnas): Columna Excel -> campo Firebase, derivado de BASE_EXT_CAMPOS
+            // Normaliza encabezados (mayúsculas, sin saltos de línea ni espacios extra)
+            // para que columnas como "MONTO REQUERIDO\nINICIAL O UNICO" SIEMPRE coincidan.
+            function _normHdr(s) { return String(s).replace(/\s+/g, ' ').trim().toUpperCase(); }
+
+            // Mapa COMPLETO (todas las columnas) normalizado: encabezado Excel -> campo Firebase
             const MAP = {};
             BASE_EXT_CAMPOS.forEach(function(campo) {
-                if (campo && campo.k && campo.x) MAP[campo.x] = campo.k;
+                if (campo && campo.k && campo.x) MAP[_normHdr(campo.x)] = campo.k;
             });
 
             const records = [];
             rows.forEach(function(row) {
                 const obj = {};
-                Object.keys(MAP).forEach(function(colName) {
-                    const fbKey = MAP[colName];
+                Object.keys(row).forEach(function(colName) {
+                    const fbKey = MAP[_normHdr(colName)];
+                    if (!fbKey) return;
                     const val = row[colName];
                     if (val !== undefined && val !== null && String(val).trim() !== '') {
                         obj[fbKey] = String(val).trim();
@@ -8966,33 +8993,42 @@ function procesarReemplazarExcelExtorsivos(event) {
             const origText = btn ? btn.textContent : '';
             if (btn) { btn.textContent = '⏳ Borrando datos...'; btn.disabled = true; }
 
-            // 1) Borrar TODO el nodo  2) Subir por lotes (push genera claves únicas => sin duplicados)
+            // Pausar el escucha en vivo para evitar recargas repetidas (era lo que volvía lento el proceso)
+            db.ref('numerosExtorsivos').off();
+
+            const baseRef = db.ref('numerosExtorsivos');
+            const CHUNK = 400;
+            let imported = 0, errors = 0;
+
+            function subirLote(idx) {
+                if (idx >= records.length) {
+                    _reattachExtorsivosListener(); // reconectar y refrescar la vista
+                    if (btn) { btn.textContent = origText; btn.disabled = false; }
+                    alert('✅ Reemplazo completado:\n• Registros en Excel: ' + records.length + '\n• Cargados: ' + imported + '\n• Errores: ' + errors);
+                    event.target.value = '';
+                    return;
+                }
+                const batch = records.slice(idx, idx + CHUNK);
+                const updates = {};
+                batch.forEach(function(rec) {
+                    const key = baseRef.push().key; // genera clave única SIN escribir en red
+                    updates[key] = rec;
+                });
+                baseRef.update(updates)
+                    .then(function() { imported += batch.length; })
+                    .catch(function(err) { errors += batch.length; console.error('Error subiendo lote:', err); })
+                    .then(function() {
+                        if (btn) btn.textContent = '⏳ Subiendo ' + Math.min(idx + CHUNK, records.length) + '/' + records.length;
+                        subirLote(idx + CHUNK);
+                    });
+            }
+
+            // 1) Borrar TODO el nodo  2) Subir en lotes grandes (una sola escritura por lote => mucho más rápido, sin duplicados)
             db.ref('numerosExtorsivos').remove()
-                .then(function() {
-                    let imported = 0, errors = 0;
-                    const CHUNK = 100;
-                    function pushChunk(idx) {
-                        if (idx >= records.length) {
-                            if (btn) { btn.textContent = origText; btn.disabled = false; }
-                            alert('✅ Reemplazo completado:\n• Registros en Excel: ' + records.length + '\n• Cargados: ' + imported + '\n• Errores: ' + errors);
-                            event.target.value = '';
-                            return;
-                        }
-                        const batch = records.slice(idx, idx + CHUNK);
-                        const promises = batch.map(function(rec) {
-                            return db.ref('numerosExtorsivos').push(rec)
-                                .then(function() { imported++; })
-                                .catch(function(err) { errors++; console.error('Error subiendo registro:', err); });
-                        });
-                        Promise.all(promises).then(function() {
-                            if (btn) btn.textContent = '⏳ Subiendo ' + Math.min(idx + CHUNK, records.length) + '/' + records.length;
-                            pushChunk(idx + CHUNK);
-                        });
-                    }
-                    pushChunk(0);
-                })
+                .then(function() { subirLote(0); })
                 .catch(function(err) {
                     console.error('Error al borrar el nodo:', err);
+                    _reattachExtorsivosListener();
                     if (btn) { btn.textContent = origText; btn.disabled = false; }
                     alert('Error al borrar los datos actuales: ' + err.message);
                     event.target.value = '';
