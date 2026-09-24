@@ -1526,6 +1526,14 @@
         .extorsivos-form-body label { font-size: 13px; }
         .extorsivos-form-body input, .extorsivos-form-body select, .extorsivos-form-body textarea { font-size: 13px; }
 
+        /* Formulario INLINE de la Base de Extorsiones (dos columnas, siempre visible) */
+        #base-ext-form-inline { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2px 24px; margin-top: 10px; }
+        #base-ext-form-inline .grupo-form,
+        #base-ext-form-inline .seccion-form-titulo { opacity: 1 !important; }
+        #base-ext-form-inline .seccion-form-titulo { grid-column: 1 / -1; margin: 16px 0 8px; }
+        #base-ext-form-inline .grupo-form.gf-full { grid-column: 1 / -1; }
+        @media (max-width: 700px) { #base-ext-form-inline { grid-template-columns: 1fr; } }
+
         .extorsivos-form-footer {
             padding: 15px 22px;
             background: #f9f9f9;
@@ -3644,6 +3652,7 @@
             <button class="nav-btn" id="btn-tab-crear-vehiculo" onclick="cambiarModulo('crear-vehiculo')">🚗 Crear / Editar Vehículo</button>
             <button class="nav-btn" id="btn-tab-fichas-vehiculos" onclick="cambiarModulo('fichas-vehiculos')">🚘 FICHAS VEHÍCULOS</button>
             <button class="nav-btn" id="btn-tab-extorsivos" onclick="cambiarModulo('extorsivos')">🚨 NÚMEROS EXTORSIVOS</button>
+            <button class="nav-btn" id="btn-tab-base-extorsiones" onclick="cambiarModulo('base-extorsiones')">🗃️ BASE DE EXTORSIONES</button>
             <button class="nav-btn" id="btn-tab-usuarios" onclick="cambiarModulo('usuarios')">👤 USUARIOS</button>
             <button class="nav-btn" id="btn-tab-seccion" onclick="cambiarModulo('seccion')">🏢 SECCIÓN</button>
             <button class="nav-btn" id="btn-tab-biblioteca" onclick="cambiarModulo('biblioteca')">📚 BIBLIOTECA</button>
@@ -3721,6 +3730,10 @@
                     <div class="dashboard-card" onclick="cambiarModulo('extorsivos')" id="dash-card-extorsivos">
                         <span class="dashboard-card-icon">🚨</span>
                         <span class="dashboard-card-label">Números Extorsivos</span>
+                    </div>
+                    <div class="dashboard-card" onclick="cambiarModulo('base-extorsiones')" id="dash-card-base-extorsiones">
+                        <span class="dashboard-card-icon">🗃️</span>
+                        <span class="dashboard-card-label">Base de Extorsiones</span>
                     </div>
                     <div class="dashboard-card" onclick="cambiarModulo('usuarios')" id="dash-card-usuarios">
                         <span class="dashboard-card-icon">👤</span>
@@ -4527,6 +4540,42 @@
                 <div class="extorsivos-paginacion" id="extorsivos-paginacion"></div>
 
                 <p style="font-size:11px;color:#95a5a6;margin-top:12px;" id="extorsivos-contador">0 casos cargados</p>
+            </div>
+
+            <!-- ================= MÓDULO 6B: BASE DE EXTORSIONES (base completa) ================= -->
+            <div id="modulo-base-extorsiones" class="card-modulo oculto" style="width: 100%;">
+                <h2>🗃️ Base de Extorsiones (Registro Completo)</h2>
+                <p style="font-size:13px;color:#5a6b7b;margin:-6px 0 14px;">Base con <strong>todos los campos</strong> del caso de extorsión. Los registros que agregue o importe aquí alimentan automáticamente el módulo <strong>Números Extorsivos</strong>.</p>
+
+                <div class="extorsivos-panel-busqueda" style="flex-wrap:wrap;">
+                    <span id="base-ext-botones-superior" style="display:contents;">
+                        <button class="btn-accion" onclick="guardarCasoBaseExt(event)" style="background:#27ae60;color:white;border:none;padding:10px 18px;border-radius:6px;cursor:pointer;font-weight:bold;">💾 Guardar Caso</button>
+                        <button class="btn-accion" onclick="limpiarFormularioBaseExt()" style="background:#7f8c8d;color:white;border:none;padding:10px 18px;border-radius:6px;cursor:pointer;font-weight:bold;">🧹 Limpiar</button>
+                    </span>
+                    <button class="btn-accion" id="btn-importar-base-ext" onclick="importarExcelBaseExt()" style="background:#e67e22;color:white;border:none;padding:10px 18px;border-radius:6px;cursor:pointer;font-weight:bold;display:none;">📥 Importar Excel</button>
+                    <input type="file" id="importar-base-ext-file" accept=".xlsx,.xls" style="display:none" onchange="procesarImportarExcelBaseExt(event)">
+                    <button class="btn-accion" id="btn-exportar-base-ext" onclick="exportarExcelBaseExt()" style="background:#16a085;color:white;border:none;padding:10px 18px;border-radius:6px;cursor:pointer;font-weight:bold;">📤 Exportar Excel</button>
+                    <button class="btn-accion btn-imprimir" onclick="argosPrintFicha('modulo-base-extorsiones')" style="background:#c9a227;color:white;border:none;padding:10px 18px;border-radius:6px;cursor:pointer;font-weight:bold;">🖨️ Imprimir</button>
+                    <button class="btn-accion" id="btn-agregar-base-ext" style="display:none;">➕</button>
+                </div>
+
+                <div id="base-ext-sin-permiso" style="display:none;background:#fff3cd;border:1px solid #ffe69c;color:#856404;padding:14px;border-radius:8px;margin:10px 0;font-size:13px;">
+                    🔒 Solo los roles <strong>Administrador General</strong> e <strong>Ingresador Extorsivos</strong> pueden registrar casos en la Base de Extorsiones.
+                </div>
+
+                <div id="base-ext-edit-banner" style="display:none;background:#fdeec8;border:1px solid #e6c65b;color:#7a5b00;padding:12px 14px;border-radius:8px;margin:10px 0;font-size:13px;font-weight:bold;">
+                    ✏️ Está <strong>editando un caso existente</strong>. Modifique los campos y presione <strong>Guardar Caso</strong> para actualizarlo, o <strong>Cancelar edición</strong> para descartar.
+                    <button class="btn-accion" onclick="limpiarFormularioBaseExt()" style="margin-left:12px;background:#95a5a6;color:white;border:none;padding:6px 14px;border-radius:6px;cursor:pointer;font-weight:bold;">✕ Cancelar edición</button>
+                </div>
+
+                <form id="form-base-ext" onsubmit="guardarCasoBaseExt(event)">
+                    <div id="base-ext-form-inline"></div>
+                </form>
+
+                <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;" id="base-ext-botones-inferior">
+                    <button class="btn-accion" onclick="guardarCasoBaseExt(event)" style="background:#27ae60;color:white;border:none;padding:12px 26px;border-radius:6px;cursor:pointer;font-weight:bold;">💾 Guardar Caso</button>
+                    <button class="btn-accion" onclick="limpiarFormularioBaseExt()" style="background:#7f8c8d;color:white;border:none;padding:12px 26px;border-radius:6px;cursor:pointer;font-weight:bold;">🧹 Limpiar</button>
+                </div>
             </div>
 
             <!-- ================= MÓDULO 7: USUARIOS ================= -->
@@ -5465,6 +5514,7 @@ function aplicarPermisosRol() {
     const btnCrearVehiculo = document.getElementById('btn-tab-crear-vehiculo');
     const btnFichasVehiculos = document.getElementById('btn-tab-fichas-vehiculos');
     const btnExtorsivos = document.getElementById('btn-tab-extorsivos');
+    const btnBaseExt = document.getElementById('btn-tab-base-extorsiones');
     const btnUsuarios = document.getElementById('btn-tab-usuarios');
     const btnSeccion = document.getElementById('btn-tab-seccion');
     const btnBiblioteca = document.getElementById('btn-tab-biblioteca');
@@ -5472,6 +5522,7 @@ function aplicarPermisosRol() {
     // Biblioteca y Extorsivos visibles para todos los roles
     btnBiblioteca.style.display = 'inline-block';
     btnExtorsivos.style.display = 'inline-block';
+    if (btnBaseExt) btnBaseExt.style.display = 'inline-block';
 
     // Botón agregar caso extorsivo solo para Admin General e Ingresador Extorsivos
     const btnAgregarExt = document.getElementById('btn-agregar-extorsivo');
@@ -5525,6 +5576,11 @@ function aplicarPermisosRol() {
         if (uploadSection) uploadSection.classList.remove('oculto');
         cambiarModulo('dashboard');
     }
+    // Sincronizar botones de la BASE DE EXTORSIONES con los de NUMEROS EXTORSIVOS
+    const _btnAgBaseExt = document.getElementById('btn-agregar-base-ext');
+    const _btnImBaseExt = document.getElementById('btn-importar-base-ext');
+    if (_btnAgBaseExt && btnAgregarExt) _btnAgBaseExt.style.display = btnAgregarExt.style.display;
+    if (_btnImBaseExt && btnImportarExt) _btnImBaseExt.style.display = btnImportarExt.style.display;
 }
 
 function cerrarSesion() {
@@ -5556,7 +5612,7 @@ function cerrarSesion() {
 function cambiarModulo(modulo) {
     if (!usuarioSesionActual) return;
 
-    const modulos = ['dashboard', 'crear', 'fichas', 'crear-vehiculo', 'fichas-vehiculos', 'extorsivos', 'usuarios', 'seccion', 'biblioteca', 'reconocimiento-facial'];
+    const modulos = ['dashboard', 'crear', 'fichas', 'crear-vehiculo', 'fichas-vehiculos', 'extorsivos', 'base-extorsiones', 'usuarios', 'seccion', 'biblioteca', 'reconocimiento-facial'];
     modulos.forEach(m => {
         const el = document.getElementById(`modulo-${m}`);
         if (el) {
@@ -5598,6 +5654,7 @@ function cambiarModulo(modulo) {
     if (modulo === 'fichas') buscarPersona();
     if (modulo === 'fichas-vehiculos') buscarVehiculo();
     if (modulo === 'extorsivos') { cargarNumerosExtorsivos(); }
+    if (modulo === 'base-extorsiones') { cargarBaseExtorsiones(); }
     if (modulo === 'usuarios') renderizarTablaUsuarios();
     if (modulo === 'biblioteca') cargarDocumentosBiblioteca();
     if (modulo === 'reconocimiento-facial') rfInicializarModulo();
@@ -5632,20 +5689,21 @@ function actualizarDashboard() {
     show('dash-card-seccion');
 
     if (esAdmin) {
-        show('dash-card-crear'); show('dash-card-crear-vehiculo'); show('dash-card-extorsivos');
+        show('dash-card-crear'); show('dash-card-crear-vehiculo'); show('dash-card-extorsivos'); show('dash-card-base-extorsiones');
         show('dash-card-usuarios'); show('dash-card-biblioteca'); show('dash-card-reconocimiento-facial');
     } else if (esOperador) {
         show('dash-card-crear'); show('dash-card-crear-vehiculo');
     } else if (esAnalista) {
         // Analysts: search only
     } else if (esIngresadorExt) {
-        show('dash-card-extorsivos');
+        show('dash-card-extorsivos'); show('dash-card-base-extorsiones');
     }
 
     // Also check individual module assignments
     if (modulos.includes('crear')) show('dash-card-crear');
     if (modulos.includes('crear-vehiculo')) show('dash-card-crear-vehiculo');
     if (modulos.includes('extorsivos')) show('dash-card-extorsivos');
+    if (modulos.includes('extorsivos')) show('dash-card-base-extorsiones');
     if (modulos.includes('usuarios')) show('dash-card-usuarios');
     if (modulos.includes('biblioteca')) show('dash-card-biblioteca');
     if (modulos.includes('reconocimiento-facial')) show('dash-card-reconocimiento-facial');
@@ -8635,7 +8693,13 @@ function guardarCasoExtorsivo(e) {
 
 function editarCasoExtorsivo(key) {
     cerrarDetalleExtorsivo();
-    mostrarFormularioExtorsivo(key);
+    // Redirigir al modulo BASE DE EXTORSIONES para editar el caso con el formulario completo
+    if (!usuarioSesionActual || (usuarioSesionActual.rol !== 'Administrador General' && usuarioSesionActual.rol !== 'Ingresador Extorsivos')) {
+        alert('No tiene permisos para editar casos.');
+        return;
+    }
+    cambiarModulo('base-extorsiones');
+    editarCasoBaseExt(key);
 }
 
 function eliminarCasoExtorsivo(key) {
@@ -8788,7 +8852,7 @@ function procesarImportarExcelExtorsivos(event) {
             if (btnImportar) btnImportar.textContent = '⏳ Importando...';
 
             // Batch push to Firebase (chunks of 25)
-            const CHUNK = 25;
+            const CHUNK = 100;
             let imported = 0;
             let errors = 0;
 
@@ -8818,6 +8882,663 @@ function procesarImportarExcelExtorsivos(event) {
             alert('Error al procesar el archivo Excel: ' + err.message);
             const btnImportar = document.getElementById('btn-importar-extorsivos');
             if (btnImportar) btnImportar.textContent = '📥 Importar Excel';
+            event.target.value = '';
+        }
+    };
+    reader.readAsArrayBuffer(file);
+}
+
+const BASE_EXT_CAMPOS = [
+  {s:"Identificacion y Fecha"},
+  {"k": "noOrden", "l": "No. Orden", "x": "NO. ORDEN"},
+  {"k": "casoNo", "l": "Caso No.", "x": "CASO NO."},
+  {"k": "dia", "l": "Dia", "x": "DIA"},
+  {"k": "mes", "l": "Mes", "x": " MES"},
+  {"k": "anio", "l": "Año", "x": "AÑO"},
+  {"k": "horaRecepcion", "l": "Hora Recepción", "x": "HORA RECEPCION"},
+  {"k": "fecha2026", "l": "Fecha 2026", "x": "FECHA 2026"},
+  {"k": "diaSemana", "l": "Día de la Semana", "x": "DIA DE LA SEMANA"},
+  {"k": "rpiOficioRequerimiento", "l": "RPI / Oficio / Requerimiento", "x": "RPI/OFICIO/REQUERIMIENTO"},
+  {s:"Denuncia y Sector"},
+  {"k": "origenDenuncia", "l": "Origen de la Denuncia", "x": "ORIGEN DE LA DENUNCIA"},
+  {"k": "sectorAfectado", "l": "Extorsión a (Sector Afectado)", "x": "EXTORSION A (SECTOR AFECTADO)"},
+  {"k": "tipoSector", "l": "Tipo de Sector", "x": "TIPO DE SECTOR (TRANSPORTE URBANO, EXTRAURBANO, TAXI, MOTOTAXI)"},
+  {"k": "nombreComercio", "l": "Nombre del Comercio / Entidad", "x": "NOMBRE DEL COMERCIO, EMPRESA DE TRANSPORTE (ENTIDAD)"},
+  {s:"Denunciante / Victima"},
+  {"k": "nombreDenunciante", "l": "Nombre del Denunciante", "x": "NOMBRE DEL DENUNCIANTE"},
+  {"k": "edad", "l": "Edad", "x": "EDAD"},
+  {"k": "sexo", "l": "Sexo", "x": "SEXO"},
+  {"k": "ocupacion", "l": "Ocupación / Oficio", "x": "OCUPACION / OFICIO"},
+  {"k": "nacionalidad", "l": "Nacionalidad", "x": "NACIONALIDAD"},
+  {"k": "tipoDocumento", "l": "Tipo de Documento", "x": "TIPO DE DOCUMENTO (DPI, PASAPORTE, CREDENCIAL, LICENCIA)"},
+  {"k": "numeroIdentificacion", "l": "No. Identificación Personal", "x": "NUMERO DE IDENTIFICACION PERSONAL"},
+  {"k": "telefonoVictima", "l": "Teléfono(s) de la Víctima", "x": "TELEFONO(S)  DE LA VICTIMA"},
+  {"k": "direccionVictima", "l": "Dirección de la Víctima", "x": " DIRECCION DE LA VICTIMA"},
+  {"k": "coloniaAldeaCanton", "l": "Colonia, Aldea o Cantón", "x": "COLONIA, ALDEA O CANTON"},
+  {"k": "zona", "l": "Zona", "x": "ZONA"},
+  {"k": "areaUrbanaRural", "l": "Área Urbana/Rural", "x": "AREA URBANA/RURAL"},
+  {"k": "departamentoVictima", "l": "Departamento de la Víctima", "x": "DEPARTAMENTO DE LA VICTIMA"},
+  {"k": "municipioVictima", "l": "Municipio de la Víctima", "x": "MUNICIPIO DE LA VICTIMA"},
+  {"k": "com", "l": "Com.", "x": "COM."},
+  {s:"Datos del Hecho"},
+  {"k": "fechaHecho", "l": "Fecha del Hecho", "x": "FECHA DEL HECHO"},
+  {"k": "horaHecho", "l": "Hora del Hecho", "x": "HORA DEL HECHO"},
+  {"k": "horaCerrada", "l": "Hora Cerrada", "x": "HORA CERRADA"},
+  {"k": "medioUtilizado", "l": "Medio Utilizado", "x": "MEDIO UTILIZADO P/COMUNICACION DE LA EXTORSION"},
+  {"k": "telefonoExtorsionista", "l": "Teléfono(s) Extorsionista", "x": "TELEFONO(S)  EXTORSIONISTA"},
+  {"k": "empresaTelefonia", "l": "Empresa de Telefonía", "x": "EMPRESA DE TELEFONIA (TIGO, CLARO)"},
+  {"k": "telefonosVictimarios", "l": "Teléfonos Entregados por Victimarios", "x": "TELEFONOS ENTREGADOS POR LOS VICTIMARIOS"},
+  {"k": "cantTelefonosVictimarios", "l": "Cantidad Teléfonos Entregados", "x": "CANTIDAD TELEFONOS ENTREGADOS POR LOS VICTIMARIOS2"},
+  {"k": "cantLlamadasRecibidas", "l": "Cantidad de Llamadas Recibidas", "x": "CANTIDAD DE LLAMADAS RECIBIDAS (NÚMERICAS)"},
+  {"k": "telefonoReceptor", "l": "Teléfono Receptor", "x": "TELEFONO RECEPTOR"},
+  {"k": "direccionHecho", "l": "Dirección del Hecho", "x": "DIRECCION DEL HECHO"},
+  {"k": "coloniaAldeaCantonHecho", "l": "Colonia, Aldea o Cantón (Hecho)", "x": "COLONIA, ALDEA O CANTON2"},
+  {"k": "zonaHecho", "l": "Zona (Hecho)", "x": "ZONA2"},
+  {"k": "departamentoHecho", "l": "Departamento (Hecho)", "x": "DEPARTAMENTO"},
+  {"k": "municipioHecho", "l": "Municipio (Hecho)", "x": "MUNICIPIO"},
+  {"k": "comPnc", "l": "Com. PNC", "x": "COM. PNC"},
+  {"k": "movil", "l": "Móvil", "x": "MOVIL"},
+  {"k": "claseDelito", "l": "Clase de Delito", "x": "CLASE DELITO"},
+  {s:"Atentados"},
+  {"k": "cantAtentados", "l": "Cantidad de Atentados", "x": "CANTIDAD DE ATENTADOS"},
+  {"k": "noVictimarios", "l": "No. Victimarios", "x": "No. VICTIMARIOS"},
+  {"k": "nombreVictimaAtentado", "l": "Nombre Víctima del Atentado", "x": "NOMBRE DE LA VICTIMA DEL ATENTADO"},
+  {"k": "horaAtentado", "l": "Hora (Atentado)", "x": "HORA "},
+  {"k": "fechaAtentado", "l": "Fecha (Atentado)", "x": "FECHA"},
+  {"k": "lugarAtentado", "l": "Lugar (Atentado)", "x": "LUGAR "},
+  {"k": "resenaAtentado", "l": "Reseña del Atentado", "x": "RESEÑA DEL ATENTADO", "t": "ta"},
+  {s:"Montos y Pagos"},
+  {"k": "montoRequerido", "l": "Monto Requerido Inicial o Único", "x": "MONTO REQUERIDO\nINICIAL O UNICO"},
+  {"k": "montosRequeridosPeriodicos", "l": "Montos Requeridos Semanales/Mensuales", "x": "MONTOS REQUERIDOS SEMANALES, MENSUALES"},
+  {"k": "pagosAntesDenuncia", "l": "Realizó Pagos Antes de Denunciar", "x": "REALIZO PAGOS ANTES DE PONER LA DENUNCIA"},
+  {"k": "unicoPagoMonto", "l": "Único Pago (Monto)", "x": "UNICO PAGO (MONTO)"},
+  {"k": "pagosPeriodicosMonto", "l": "Pagos Periódicos (Monto)", "x": "PAGOS PERIODICOS (MONTO)"},
+  {"k": "montoPagado", "l": "Monto Pagado", "x": "MONTO PAGADO"},
+  {"k": "cantidadEvitoPagar", "l": "Cantidad que se Evitó Pagar", "x": "CANTIDAD QUE SE EVITO PAGAR"},
+  {"k": "cantPagosRealizados", "l": "Cantidad de Pagos Realizados", "x": "CANTIDAD DE PAGOS REALIZADOS "},
+  {"k": "noSePago", "l": "No se Pagó", "x": "NO SE PAGO"},
+  {"k": "descripcionPagos", "l": "Descripción de Pagos", "x": "DESCRIPCION DE PAGOS", "t": "ta"},
+  {s:"Bancos"},
+  {"k": "banrural", "l": "Banrural", "x": "BANRURAL"},
+  {"k": "bancoIndustrial", "l": "Banco Industrial", "x": "BANCO INDUSTRIAL"},
+  {"k": "gtContinental", "l": "G&T Continental", "x": "G&T CONTINENTAL"},
+  {"k": "bac", "l": "BAC", "x": "BAC"},
+  {"k": "bancoAzteca", "l": "Banco Azteca", "x": "BANCO AZTECA"},
+  {"k": "bam", "l": "BAM", "x": "BAM"},
+  {"k": "bantrab", "l": "Bantrab", "x": "BANTRAB"},
+  {"k": "depositoBanco", "l": "Depósito a Banco", "x": "DEPOSITO A BANCO"},
+  {"k": "noCuentaBancaria", "l": "No. de Cuenta Bancaria", "x": "NUMERO DE CUENTA BANCARIA"},
+  {"k": "nombreCuenta", "l": "Nombre de la Cuenta", "x": "NOMBRE DE LA CUENTA"},
+  {s:"Asignacion e Investigacion"},
+  {"k": "fechaAsignacion", "l": "Fecha de Asignación", "x": "FECHA DE ASIGNACION"},
+  {"k": "investigador", "l": "Investigador", "x": "INVESTIGADOR"},
+  {"k": "guardia", "l": "Guardia", "x": "GUARDIA"},
+  {"k": "delegacionInvestiga", "l": "Delegación / Unidad que Investiga", "x": "DELEGACION O UNIDAD QUE INVESTIGA"},
+  {"k": "fechaReasignacion", "l": "Fecha de Reasignación", "x": "FECHA DE REASIGNACION"},
+  {"k": "reasignadoA", "l": "Reasignado a", "x": "REASIGNADO A:"},
+  {"k": "guardia2", "l": "Guardia (2)", "x": "GUARDIA2"},
+  {s:"Detenidos / Organizacion"},
+  {"k": "cantDetenidos", "l": "Cantidad Detenidos", "x": "CANTIDAD DETENIDOS"},
+  {"k": "aprehendidoSindicado", "l": "Aprehendido / Sindicado", "x": "APREHENDIDO/SINDICADO"},
+  {"k": "nombresApellidos", "l": "Nombres y Apellidos", "x": "NOMBRES Y APELLIDOS"},
+  {"k": "alias", "l": "Alias", "x": "ALIAS"},
+  {"k": "organizacionDelictiva", "l": "Organización Delictiva", "x": "ORGANIZACIÓN DELICTIVA"},
+  {"k": "nombreClica", "l": "Nombre de la Clica", "x": "NOMBRE DE LA CLICA"},
+  {"k": "modoOperar", "l": "Modo de Operar", "x": "MODO DE OPERAR", "t": "ta"},
+  {"k": "pendientesCaptura", "l": "Pendientes de Captura", "x": "PENDIENTES   DE CAPTURA"},
+  {"k": "delincuentesFallecidos", "l": "Delincuentes Fallecidos", "x": "DELINCUENTES FALLECIDOS"},
+  {"k": "delincuentesHeridos", "l": "Delincuentes Heridos", "x": "DELICUENTES HERIDOS"},
+  {s:"Archivo e Informes"},
+  {"k": "fechaArchivo", "l": "Fecha de Archivo", "x": "FECHA DE ARCHIVO"},
+  {"k": "motivoArchivo", "l": "Motivo de Archivo", "x": "MOTIVO DE ARCHIVO", "t": "ta"},
+  {"k": "casoEnPoderDe", "l": "Caso en Poder de", "x": "CASO EN PODER DE:"},
+  {"k": "informadoA", "l": "Informado a", "x": "INFORMADO A:"},
+  {"k": "noOficio", "l": "No. de Oficio", "x": "No. DE  OFICIO"},
+  {"k": "fechaInformado", "l": "Fecha de Informado", "x": "FECHA DE INFORMADO:"},
+  {"k": "actaDenuncia", "l": "Acta de Denuncia", "x": "ACTA DE DENUNCIA"},
+  {"k": "informes", "l": "Informes (Preliminar, Avance, Final)", "x": "INFORMES (PRELIMINAR, AVANCE, FINAL)"},
+  {"k": "actasConsignacion", "l": "Acta(s) de Consignación", "x": "ACTA(S) DE CONSIGNACION"},
+  {"k": "notasInformativas", "l": "Notas Informativas para D.O.C.", "x": "NOTAS INFORMATIVAS PARA D. O. C."},
+  {"k": "archivadoPorMedioDe", "l": "Archivado por Medio de", "x": "ARCHIVADO POR MEDIO DE"},
+  {s:"Allanamientos y Aprehensiones"},
+  {"k": "cantAllanamientos", "l": "Cantidad de Allanamientos", "x": "CANTIDAD DE ALLANAMIENTOS "},
+  {"k": "descripcionAllanamientos", "l": "Descripción de Allanamientos", "x": "DESCRIPCION DE ALLANAMIENTOS", "t": "ta"},
+  {"k": "foliosRevisados", "l": "Folios Revisados", "x": "FOLIOS REVISADOS"},
+  {"k": "casosOperativizados", "l": "Casos Operativizados", "x": "CASOS OPERATIVISADOS"},
+  {"k": "allanamientosSolicitados", "l": "Allanamientos Solicitados", "x": "CANTIDAD NUMÉRICA DE ALLANAMIENTOS SOLICITADOS"},
+  {"k": "allanamientosEjecutados", "l": "Allanamientos Ejecutados", "x": "CANTIDAD NUMÉRICA DE ALLANAMIENTOS EJECUTADOS"},
+  {"k": "allanamientosNoAutorizados", "l": "Allanamientos Solicitados No Autorizados", "x": "CANTIDAD NUMÉRICA DE ALLANAMIENTOS SOLICITADOS NO AUTORIZADOS"},
+  {"k": "aprehensionesSolicitadas", "l": "Aprehensiones Solicitadas", "x": "CANTIDAD NUMÉRICA DE ORDENES DE APREHENSIONES SOLICITADAS"},
+  {"k": "aprehensionesEjecutadas", "l": "Aprehensiones Ejecutadas", "x": "CANTIDAD NUMÉRICA DE ORDENES DE APREHENSIONES EJECUTADAS"},
+  {"k": "aprehensionesNoAutorizadas", "l": "Aprehensiones Solicitadas No Autorizadas", "x": "CANTIDAD NUMÉRICA DE ORDENES DE APREHENSIONES SOLICITADAS NO AUTORIZADAS"},
+  {s:"Clasificacion y Otros"},
+  {"k": "trasladoDomicilio", "l": "Se Trasladó de Domicilio (Nunca Pagó)", "x": "SE TRASLADO DE DOMICILIO (NUNCA PAGO)"},
+  {"k": "orgCriminalAtribuye", "l": "Org. Criminal que se Atribuye la Extorsión", "x": "ORGANIZACIÓN CRIMINAL QUE SE ATRIBUYE LA EXTORSIÓN"},
+  {"k": "llamadaCarcel", "l": "Llamada Proveniente de la Cárcel", "x": "LLAMADA PROVENIENTE DE LA CARCEL"},
+  {"k": "denunciaHechoFalso", "l": "Denuncia Hecho Falso (Migrantes)", "x": "DENUNCIAS HECHO FALSO (MIGRANTES)"},
+  {"k": "denunciaNoExtorsion", "l": "Denuncia No es Extorsión (Chantaje, Estafa)", "x": "DENUNCIA NO ES EXTORSION (CHANTAJE, ESTAFA)"},
+  {"k": "estadoCaso", "l": "Estado del Caso", "x": "ESTADO DEL CASO2", "t": "sel"},
+  {"k": "resenaHecho", "l": "Reseña del Hecho", "x": "RESEÑA DEL HECHO", "t": "ta"},
+  {"k": "grupoVulnerable", "l": "Grupo Vulnerable (Personas con Discapacidad)", "x": "GRUPO VULNERABLE\n(PERSONAS CON DISCAPACIDAD)"},
+  {"k": "division", "l": "División", "x": "DIVISIÓN"},
+  {"k": "rangoEdad", "l": "Rango de Edad", "x": "RANGO DE EDAD"},
+  {"k": "columna1", "l": "Columna1", "x": "Columna1"}
+];
+
+// ==============================================================================
+// ===== MODULO: BASE DE EXTORSIONES (base completa de 122 campos) =====
+// Comparte el nodo Firebase 'numerosExtorsivos' y el arreglo numerosExtorsivosGlobal,
+// de modo que todo lo que se agrega/importa aqui ALIMENTA el modulo Numeros Extorsivos.
+// ==============================================================================
+const BASE_EXT_POR_PAGINA = 50;
+let baseExtPaginaActual = 1;
+let baseExtResultadosFiltrados = [];
+let editandoBaseExtKey = null;
+
+// Campos que permiten VARIOS valores dentro del MISMO caso (no se duplica el caso).
+// Se guardan en un solo campo separados por ' / '.
+const BASE_EXT_MULTI = ['telefonoExtorsionista','telefonoVictima','telefonoReceptor','telefonosVictimarios','telefonoContacto','noCuentaBancaria','nombreCuenta'];
+
+function bextSplitMulti(v) {
+    return String(v == null ? '' : v).split(/\s*[\/;]\s*|\r?\n/).map(s => s.trim()).filter(Boolean);
+}
+
+function bextMultiRowHtml(campo, v) {
+    const oninput = (campo.k === 'telefonoExtorsionista') ? ' oninput="actualizarTelefoniaPreviewBaseExt()"' : '';
+    return '<div class="bext-multi-row" style="display:flex;gap:6px;margin-bottom:6px;align-items:center;">' +
+        '<input type="text" class="bext-multi-input" value="' + _esc(v) + '"' + oninput + ' style="flex:1;">' +
+        '<button type="button" onclick="bextMultiAdd(this)" title="Agregar otro" style="background:#16a085;color:white;border:none;width:32px;height:32px;border-radius:6px;cursor:pointer;font-weight:bold;flex:none;font-size:16px;line-height:1;">+</button>' +
+        '<button type="button" onclick="bextMultiRemove(this)" title="Quitar" style="background:#e74c3c;color:white;border:none;width:32px;height:32px;border-radius:6px;cursor:pointer;font-weight:bold;flex:none;font-size:14px;line-height:1;">✕</button>' +
+        '</div>';
+}
+
+function bextMultiAdd(btn) {
+    const row = btn.closest('.bext-multi-row');
+    if (!row) return;
+    const clone = row.cloneNode(true);
+    const cinp = clone.querySelector('.bext-multi-input');
+    if (cinp) cinp.value = '';
+    row.parentNode.appendChild(clone);
+    if (cinp) cinp.focus();
+}
+
+function bextMultiRemove(btn) {
+    const row = btn.closest('.bext-multi-row');
+    const cont = btn.closest('.bext-multi');
+    if (!row || !cont) return;
+    const rows = cont.querySelectorAll('.bext-multi-row');
+    if (rows.length > 1) { row.remove(); }
+    else { const inp = row.querySelector('.bext-multi-input'); if (inp) inp.value = ''; }
+    if (cont.getAttribute('data-k') === 'telefonoExtorsionista') actualizarTelefoniaPreviewBaseExt();
+}
+
+function cargarBaseExtorsiones() {
+    renderFormularioBaseExtInline(null);
+}
+
+function renderFormularioBaseExtInline(caso) {
+    const cont = document.getElementById('base-ext-form-inline');
+    if (!cont) return;
+    const rol = usuarioSesionActual ? usuarioSesionActual.rol : '';
+    const puede = (rol === 'Administrador General' || rol === 'Ingresador Extorsivos');
+    const sinPermiso = document.getElementById('base-ext-sin-permiso');
+    const btnSup = document.getElementById('base-ext-botones-superior');
+    const btnInf = document.getElementById('base-ext-botones-inferior');
+    const form = document.getElementById('form-base-ext');
+    const banner = document.getElementById('base-ext-edit-banner');
+    if (!puede) {
+        if (sinPermiso) sinPermiso.style.display = 'block';
+        if (form) form.style.display = 'none';
+        if (btnSup) btnSup.style.display = 'none';
+        if (btnInf) btnInf.style.display = 'none';
+        if (banner) banner.style.display = 'none';
+        cont.innerHTML = '';
+        return;
+    }
+    if (sinPermiso) sinPermiso.style.display = 'none';
+    if (form) form.style.display = 'block';
+    if (btnSup) btnSup.style.display = 'contents';
+    if (btnInf) btnInf.style.display = 'flex';
+    editandoBaseExtKey = (caso && caso._key) ? caso._key : null;
+    if (banner) banner.style.display = editandoBaseExtKey ? 'block' : 'none';
+    const estados = ['ACTIVO','FASE DE INVESTIGACION','ARCHIVADO','INFORMADO','POR ESTABLECER'];
+    let camposHtml = '';
+    BASE_EXT_CAMPOS.forEach(campo => {
+        if (campo.s) {
+            camposHtml += '<div class="seccion-form-titulo">' + _esc(campo.s) + '</div>';
+            return;
+        }
+        const id = 'bext-' + campo.k;
+        const val = caso ? (caso[campo.k] || '') : '';
+        const req = (campo.k === 'telefonoExtorsionista') ? ' required' : '';
+        if (BASE_EXT_MULTI.indexOf(campo.k) !== -1) {
+            let valores = bextSplitMulti(val);
+            if (valores.length === 0) valores = [''];
+            let rows = '';
+            valores.forEach(v => { rows += bextMultiRowHtml(campo, v); });
+            camposHtml += '<div class="grupo-form gf-full"><label>' + _esc(campo.l) + ' <span style="color:#16a085;font-weight:normal;font-size:11px;">(puede agregar varios con +)</span></label>';
+            camposHtml += '<div class="bext-multi" data-k="' + campo.k + '">' + rows + '</div>';
+            if (campo.k === 'telefonoExtorsionista') camposHtml += '<span id="bext-telefonia-preview" style="font-size:12px;"></span>';
+            camposHtml += '</div>';
+        } else if (campo.t === 'ta') {
+            camposHtml += '<div class="grupo-form gf-full"><label>' + _esc(campo.l) + '</label><textarea id="' + id + '" rows="3">' + _esc(val) + '</textarea></div>';
+        } else if (campo.t === 'sel') {
+            let opts = '<option value="">— Seleccione —</option>';
+            estados.forEach(o => { opts += '<option value="' + o + '"' + (val===o?' selected':'') + '>' + o + '</option>'; });
+            camposHtml += '<div class="grupo-form"><label>' + _esc(campo.l) + '</label><select id="' + id + '">' + opts + '</select></div>';
+        } else {
+            camposHtml += '<div class="grupo-form"><label>' + _esc(campo.l) + '</label><input type="text" id="' + id + '" value="' + _esc(val) + '"' + req + '>';
+            camposHtml += '</div>';
+        }
+    });
+    cont.innerHTML = camposHtml;
+    actualizarTelefoniaPreviewBaseExt();
+}
+
+function limpiarFormularioBaseExt() {
+    renderFormularioBaseExtInline(null);
+    const cont = document.getElementById('modulo-base-extorsiones');
+    if (cont) cont.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function editarCasoBaseExt(key) {
+    if (usuarioSesionActual.rol !== 'Administrador General' && usuarioSesionActual.rol !== 'Ingresador Extorsivos') {
+        alert('No tiene permisos para editar casos.');
+        return;
+    }
+    const caso = numerosExtorsivosGlobal.find(c => c._key === key);
+    if (!caso) { alert('No se encontró el caso a editar.'); return; }
+    renderFormularioBaseExtInline(caso);
+    const banner = document.getElementById('base-ext-edit-banner');
+    if (banner) banner.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function buscarBaseExtorsion() {
+    const texto = (document.getElementById('base-ext-busqueda').value || '').toLowerCase().trim();
+    const claves = BASE_EXT_CAMPOS.filter(c => c.k).map(c => c.k);
+    baseExtResultadosFiltrados = numerosExtorsivosGlobal.filter(c => {
+        if (!texto) return true;
+        for (const k of claves) {
+            const v = (c[k] || '').toString().toLowerCase();
+            if (v.includes(texto)) return true;
+        }
+        return false;
+    });
+    baseExtResultadosFiltrados.sort((a, b) => {
+        const fa = a.fecha2026 || a.fechaHecho || '';
+        const fb = b.fecha2026 || b.fechaHecho || '';
+        return fb.localeCompare(fa);
+    });
+    baseExtPaginaActual = 1;
+    renderizarTablaBaseExt();
+}
+
+function renderizarTablaBaseExt() {
+    const tbody = document.getElementById('base-ext-resultados');
+    const noResult = document.getElementById('base-ext-no-result');
+    const pagDiv = document.getElementById('base-ext-paginacion');
+    const contador = document.getElementById('base-ext-contador');
+    const total = baseExtResultadosFiltrados.length;
+    const inicio = (baseExtPaginaActual - 1) * BASE_EXT_POR_PAGINA;
+    const fin = Math.min(inicio + BASE_EXT_POR_PAGINA, total);
+    const pagina = baseExtResultadosFiltrados.slice(inicio, fin);
+    if (contador) contador.textContent = total + ' casos encontrados de ' + numerosExtorsivosGlobal.length + ' totales';
+    if (total === 0) {
+        tbody.innerHTML = '';
+        noResult.style.display = 'block';
+        pagDiv.innerHTML = '';
+        return;
+    }
+    noResult.style.display = 'none';
+    const textoBusqueda = (document.getElementById('base-ext-busqueda').value || '').trim();
+    let html = '';
+    pagina.forEach((c, i) => {
+        const idx = inicio + i + 1;
+        const tel = c.telefonoExtorsionista || '—';
+        const emp = c.empresaTelefonia || detectarTelefonia(c.telefonoExtorsionista);
+        html += '<tr onclick="verDetalleBaseExt(\'' + c._key + '\')" title="Clic para ver detalle completo">';
+        html += '<td>' + idx + '</td>';
+        html += '<td>' + highlightTexto(c.casoNo || '—', textoBusqueda) + '</td>';
+        html += '<td><strong>' + highlightTexto(tel, textoBusqueda) + '</strong></td>';
+        html += '<td>' + badgeTelefonia(emp) + '</td>';
+        html += '<td>' + highlightTexto(c.claseDelito || '—', textoBusqueda) + '</td>';
+        html += '<td>' + highlightTexto(c.departamentoHecho || '—', textoBusqueda) + '</td>';
+        html += '<td>' + highlightTexto(c.municipioHecho || '—', textoBusqueda) + '</td>';
+        html += '<td>' + (c.fecha2026 || c.fechaHecho || '—') + '</td>';
+        html += '<td>' + highlightTexto(c.estadoCaso || '—', textoBusqueda) + '</td>';
+        html += '</tr>';
+    });
+    tbody.innerHTML = html;
+    const totalPag = Math.ceil(total / BASE_EXT_POR_PAGINA);
+    let pagHtml = '';
+    if (totalPag > 1) {
+        pagHtml += '<button onclick="baseExtPagina(1)" ' + (baseExtPaginaActual===1?'disabled':'') + '>⏮</button>';
+        pagHtml += '<button onclick="baseExtPagina(' + (baseExtPaginaActual-1) + ')" ' + (baseExtPaginaActual===1?'disabled':'') + '>◀</button>';
+        let startP = Math.max(1, baseExtPaginaActual - 3);
+        let endP = Math.min(totalPag, baseExtPaginaActual + 3);
+        for (let p = startP; p <= endP; p++) {
+            pagHtml += '<button onclick="baseExtPagina(' + p + ')" class="' + (p===baseExtPaginaActual?'pag-activa':'') + '">' + p + '</button>';
+        }
+        pagHtml += '<button onclick="baseExtPagina(' + (baseExtPaginaActual+1) + ')" ' + (baseExtPaginaActual===totalPag?'disabled':'') + '>▶</button>';
+        pagHtml += '<button onclick="baseExtPagina(' + totalPag + ')" ' + (baseExtPaginaActual===totalPag?'disabled':'') + '>⏭</button>';
+        pagHtml += '<span class="extorsivos-pag-info">Pág. ' + baseExtPaginaActual + ' de ' + totalPag + '</span>';
+    }
+    pagDiv.innerHTML = pagHtml;
+}
+
+function baseExtPagina(p) {
+    baseExtPaginaActual = p;
+    renderizarTablaBaseExt();
+    document.querySelector('#modulo-base-extorsiones .extorsivos-tabla-wrap')?.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function verDetalleBaseExt(key) {
+    const caso = numerosExtorsivosGlobal.find(c => c._key === key);
+    if (!caso) return;
+    let bodyHtml = '';
+    BASE_EXT_CAMPOS.forEach(campo => {
+        if (campo.s) {
+            bodyHtml += '<div style="grid-column:1/-1;padding:6px 0 2px;font-weight:bold;color:#0b2545;border-top:1px solid #cce;font-size:13px;">── ' + _esc(campo.s) + ' ──</div>';
+            return;
+        }
+        let val = caso[campo.k];
+        if (campo.k === 'empresaTelefonia' && (!val || val === '')) {
+            val = detectarTelefonia(caso.telefonoExtorsionista);
+        }
+        if (campo.k === 'empresaTelefonia') {
+            val = badgeTelefonia(val || '—');
+        } else {
+            val = (val === undefined || val === null || val === '') ? '—' : _esc(val);
+        }
+        bodyHtml += '<div class="extorsivos-detalle-campo">';
+        bodyHtml += '<div class="campo-label">' + _esc(campo.l) + '</div>';
+        bodyHtml += '<div class="campo-valor">' + val + '</div>';
+        bodyHtml += '</div>';
+    });
+    const isAdmin = usuarioSesionActual && usuarioSesionActual.rol === 'Administrador General';
+    const esIngresador = usuarioSesionActual && usuarioSesionActual.rol === 'Ingresador Extorsivos';
+    const puedeEditar = isAdmin || esIngresador;
+    let footerHtml = '';
+    if (puedeEditar) {
+        footerHtml += '<button onclick="editarCasoBaseExt(\'' + caso._key + '\')" style="background:#c9a227;color:white;border:none;padding:10px 18px;border-radius:6px;cursor:pointer;font-weight:bold;">✏️ Editar</button>';
+        if (isAdmin) {
+            footerHtml += '<button onclick="eliminarCasoBaseExt(\'' + caso._key + '\')" style="background:#e74c3c;color:white;border:none;padding:10px 18px;border-radius:6px;cursor:pointer;font-weight:bold;">🗑️ Eliminar</button>';
+        }
+    }
+    footerHtml += '<button onclick="cerrarDetalleBaseExt()" style="background:#95a5a6;color:white;border:none;padding:10px 18px;border-radius:6px;cursor:pointer;">Cerrar</button>';
+    const overlay = document.createElement('div');
+    overlay.className = 'extorsivos-detalle-overlay';
+    overlay.id = 'base-ext-detalle-overlay';
+    overlay.innerHTML =
+        '<div class="extorsivos-detalle-card">' +
+        '  <div class="extorsivos-detalle-header"><h3>🗃️ Detalle Completo — Base de Extorsiones</h3><button class="extorsivos-detalle-cerrar" onclick="cerrarDetalleBaseExt()">✕</button></div>' +
+        '  <div class="extorsivos-detalle-body">' + bodyHtml + '</div>' +
+        '  <div class="extorsivos-detalle-footer">' + footerHtml + '</div>' +
+        '</div>';
+    overlay.addEventListener('click', function(e) { if (e.target === overlay) cerrarDetalleBaseExt(); });
+    document.body.appendChild(overlay);
+}
+
+function cerrarDetalleBaseExt() {
+    const ov = document.getElementById('base-ext-detalle-overlay');
+    if (ov) ov.remove();
+}
+
+function mostrarFormularioBaseExt(key) {
+    if (usuarioSesionActual.rol !== 'Administrador General' && usuarioSesionActual.rol !== 'Ingresador Extorsivos') {
+        alert('No tiene permisos para agregar o editar casos.');
+        return;
+    }
+    editandoBaseExtKey = key || null;
+    const caso = key ? numerosExtorsivosGlobal.find(c => c._key === key) : null;
+    const titulo = key ? '✏️ Editar Caso (Base de Extorsiones)' : '➕ Agregar Caso a la Base de Extorsiones';
+    const estados = ['ACTIVO','FASE DE INVESTIGACION','ARCHIVADO','INFORMADO','POR ESTABLECER'];
+    let camposHtml = '';
+    BASE_EXT_CAMPOS.forEach(campo => {
+        if (campo.s) {
+            camposHtml += '<div class="seccion-form-titulo" style="margin:14px 0 8px;">' + _esc(campo.s) + '</div>';
+            return;
+        }
+        const val = caso ? (caso[campo.k] || '') : '';
+        const id = 'bext-' + campo.k;
+        const req = (campo.k === 'telefonoExtorsionista') ? ' required' : '';
+        if (campo.t === 'ta') {
+            camposHtml += '<div class="grupo-form"><label>' + _esc(campo.l) + '</label><textarea id="' + id + '" rows="3">' + _esc(val) + '</textarea></div>';
+        } else if (campo.t === 'sel') {
+            let opts = '<option value="">— Seleccione —</option>';
+            estados.forEach(o => { opts += '<option value="' + o + '"' + (val===o?' selected':'') + '>' + o + '</option>'; });
+            camposHtml += '<div class="grupo-form"><label>' + _esc(campo.l) + '</label><select id="' + id + '">' + opts + '</select></div>';
+        } else {
+            let extra = '';
+            if (campo.k === 'telefonoExtorsionista') extra = ' oninput="actualizarTelefoniaPreviewBaseExt()"';
+            camposHtml += '<div class="grupo-form"><label>' + _esc(campo.l) + '</label><input type="text" id="' + id + '" value="' + _esc(val) + '"' + req + extra + '>';
+            if (campo.k === 'telefonoExtorsionista') camposHtml += '<span id="bext-telefonia-preview" style="margin-left:10px;font-size:12px;"></span>';
+            camposHtml += '</div>';
+        }
+    });
+    const formHtml =
+        '<div class="extorsivos-form-card">' +
+        '  <div class="extorsivos-form-header"><h3>' + titulo + '</h3><button class="extorsivos-detalle-cerrar" onclick="cerrarFormularioBaseExt()">✕</button></div>' +
+        '  <div class="extorsivos-form-body">' +
+        '    <form id="form-base-ext" onsubmit="guardarCasoBaseExt(event)">' + camposHtml + '</form>' +
+        '  </div>' +
+        '  <div class="extorsivos-form-footer">' +
+        '    <button onclick="guardarCasoBaseExt(event)" style="background:#27ae60;color:white;border:none;padding:10px 22px;border-radius:6px;cursor:pointer;font-weight:bold;">💾 Guardar</button>' +
+        '    <button onclick="cerrarFormularioBaseExt()" style="background:#95a5a6;color:white;border:none;padding:10px 22px;border-radius:6px;cursor:pointer;">Cancelar</button>' +
+        '  </div>' +
+        '</div>';
+    const overlay = document.createElement('div');
+    overlay.className = 'extorsivos-form-overlay';
+    overlay.id = 'base-ext-form-overlay';
+    overlay.innerHTML = formHtml;
+    overlay.addEventListener('click', function(e) { if (e.target === overlay) cerrarFormularioBaseExt(); });
+    document.body.appendChild(overlay);
+    actualizarTelefoniaPreviewBaseExt();
+}
+
+function cerrarFormularioBaseExt() {
+    const ov = document.getElementById('base-ext-form-overlay');
+    if (ov) ov.remove();
+    editandoBaseExtKey = null;
+}
+
+function actualizarTelefoniaPreviewBaseExt() {
+    const inp = document.querySelector('.bext-multi[data-k="telefonoExtorsionista"] .bext-multi-input');
+    const tel = inp ? (inp.value || '') : (document.getElementById('bext-telefonoExtorsionista')?.value || '');
+    const prev = document.getElementById('bext-telefonia-preview');
+    if (prev) prev.innerHTML = badgeTelefonia(detectarTelefonia(tel));
+}
+
+function guardarCasoBaseExt(e) {
+    if (e) e.preventDefault();
+    if (usuarioSesionActual.rol !== 'Administrador General' && usuarioSesionActual.rol !== 'Ingresador Extorsivos') {
+        alert('No tiene permisos para guardar casos.');
+        return;
+    }
+    const telArr = [];
+    document.querySelectorAll('.bext-multi[data-k="telefonoExtorsionista"] .bext-multi-input').forEach(inp => {
+        const t = (inp.value || '').trim();
+        if (t) telArr.push(t);
+    });
+    const telefono = telArr.join(' / ');
+    if (!telefono) {
+        alert('El campo Teléfono(s) Extorsionista es obligatorio.');
+        return;
+    }
+    const datos = {};
+    BASE_EXT_CAMPOS.forEach(campo => {
+        if (!campo.k) return;
+        if (BASE_EXT_MULTI.indexOf(campo.k) !== -1) {
+            const cont = document.querySelector('.bext-multi[data-k="' + campo.k + '"]');
+            const arr = [];
+            if (cont) cont.querySelectorAll('.bext-multi-input').forEach(inp => {
+                const t = (inp.value || '').trim();
+                if (t) arr.push(t);
+            });
+            datos[campo.k] = arr.join(' / ');
+        } else {
+            const el = document.getElementById('bext-' + campo.k);
+            if (!el) return;
+            datos[campo.k] = (el.value || '').toString().trim();
+        }
+    });
+    datos.telefonoExtorsionista = telefono;
+    datos.empresaTelefonia = detectarTelefonia(telArr[0] || '');
+    if (editandoBaseExtKey) {
+        db.ref('numerosExtorsivos/' + editandoBaseExtKey).update(datos)
+            .then(() => { alert('Caso actualizado correctamente.'); renderFormularioBaseExtInline(null); })
+            .catch(err => { console.error('Error al actualizar:', err); alert('Error al actualizar el caso.'); });
+    } else {
+        db.ref('numerosExtorsivos').push(datos)
+            .then(() => { alert('Caso agregado correctamente a la Base de Extorsiones.'); renderFormularioBaseExtInline(null); })
+            .catch(err => { console.error('Error al guardar:', err); alert('Error al guardar el caso.'); });
+    }
+}
+
+function eliminarCasoBaseExt(key) {
+    if (usuarioSesionActual.rol !== 'Administrador General') return;
+    if (!confirm('¿Está seguro de eliminar este caso? Esta acción no se puede deshacer.')) return;
+    db.ref('numerosExtorsivos/' + key).remove()
+        .then(() => { alert('Caso eliminado.'); cerrarDetalleBaseExt(); })
+        .catch(err => { console.error('Error al eliminar:', err); alert('Error al eliminar el caso.'); });
+}
+
+function importarExcelBaseExt() {
+    if (usuarioSesionActual.rol !== 'Administrador General' && usuarioSesionActual.rol !== 'Ingresador Extorsivos') {
+        alert('No tiene permisos para importar datos.');
+        return;
+    }
+    document.getElementById('importar-base-ext-file').click();
+}
+
+function exportarExcelBaseExt() {
+    if (typeof XLSX === 'undefined') { alert('La libreria de Excel no esta disponible.'); return; }
+    const registros = numerosExtorsivosGlobal || [];
+    if (registros.length === 0) { alert('No hay registros para exportar.'); return; }
+    const campos = BASE_EXT_CAMPOS.filter(c => c.k);
+    const headers = campos.map(c => c.x);
+    const data = registros.map(c => {
+        const row = {};
+        campos.forEach(campo => {
+            let v = c[campo.k];
+            if (campo.k === 'empresaTelefonia' && (!v || v === '')) v = detectarTelefonia(c.telefonoExtorsionista);
+            row[campo.x] = (v === undefined || v === null) ? '' : v;
+        });
+        return row;
+    });
+    try {
+        const ws = XLSX.utils.json_to_sheet(data, { header: headers });
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'BASE EXTORSIONES');
+        const f = new Date();
+        const stamp = f.getFullYear() + ('0'+(f.getMonth()+1)).slice(-2) + ('0'+f.getDate()).slice(-2);
+        XLSX.writeFile(wb, 'BASE_DE_EXTORSIONES_' + stamp + '.xlsx');
+    } catch (err) {
+        console.error('Error al exportar Excel:', err);
+        alert('Error al exportar el Excel: ' + err.message);
+    }
+}
+
+function _normHeaderBaseExt(s) {
+    return String(s).replace(/\s+/g, ' ').trim().toUpperCase();
+}
+
+function procesarImportarExcelBaseExt(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    if (usuarioSesionActual.rol !== 'Administrador General' && usuarioSesionActual.rol !== 'Ingresador Extorsivos') {
+        alert('No tiene permisos para importar datos.');
+        event.target.value = '';
+        return;
+    }
+    // ¿Vaciar la base antes de importar? (recarga desde cero, sin duplicar)
+    const vaciarAntes = confirm('🔄 REEMPLAZAR / RECARGAR DESDE CERO:\n\n¿Desea VACIAR toda la base actual (Números Extorsivos / Base de Extorsiones) ANTES de importar este Excel?\n\n• Aceptar = BORRA TODOS los registros actuales y carga ÚNICAMENTE los del Excel (recomendado para recargar desde cero, sin duplicados).\n• Cancelar = solo AGREGA los registros del Excel a los que ya existen.\n\n⚠️ Si acepta, esta acción NO se puede deshacer.');
+    if (vaciarAntes) {
+        if (!confirm('⚠️ CONFIRMACIÓN FINAL:\nSe ELIMINARÁN TODOS los registros actuales y se cargarán desde cero los ' + '~' + '11,975 casos del Excel.\nEl campo NO. ORDEN se generará automáticamente (1, 2, 3, ...).\n\n¿Confirma VACIAR y RECARGAR?')) {
+            event.target.value = '';
+            return;
+        }
+    } else {
+        if (!confirm('IMPORTAR EXCEL (AGREGAR):\nEsto AGREGARÁ registros a la base existente (puede duplicar si ya existían).\nEl campo NO. ORDEN se generará automáticamente continuando la numeración.\n\n¿Desea continuar?')) {
+            event.target.value = '';
+            return;
+        }
+    }
+    // Mapa normalizado: encabezado Excel -> clave Firebase (los 122 campos)
+    const COL_MAP = {};
+    BASE_EXT_CAMPOS.forEach(campo => { if (campo.k) COL_MAP[_normHeaderBaseExt(campo.x)] = campo.k; });
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const sheetName = workbook.SheetNames[0];
+            const sheet = workbook.Sheets[sheetName];
+            const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+            if (rows.length === 0) { alert('El archivo Excel está vacío.'); event.target.value = ''; return; }
+            const records = [];
+            rows.forEach(row => {
+                const obj = {};
+                Object.keys(row).forEach(colName => {
+                    const fk = COL_MAP[_normHeaderBaseExt(colName)];
+                    if (!fk) return;
+                    const val = row[colName];
+                    if (val !== undefined && val !== null && String(val).trim() !== '') {
+                        obj[fk] = String(val).trim();
+                    }
+                });
+                if (obj.telefonoExtorsionista) obj.empresaTelefonia = detectarTelefonia(obj.telefonoExtorsionista);
+                if (Object.keys(obj).length > 0) records.push(obj);
+            });
+            if (records.length === 0) { alert('No se encontraron registros válidos en el Excel.'); event.target.value = ''; return; }
+            // NO. ORDEN automático (correlativo). Desde cero si se vació; si no, continúa desde el máximo actual.
+            let baseOrden = 0;
+            if (!vaciarAntes) {
+                (numerosExtorsivosGlobal || []).forEach(function(c) {
+                    var n = parseInt(String(c && c.noOrden || '').replace(/[^0-9]/g, ''), 10);
+                    if (!isNaN(n) && n > baseOrden) baseOrden = n;
+                });
+            }
+            records.forEach(function(rec, i) { rec.noOrden = String(baseOrden + i + 1); });
+            const btn = document.getElementById('btn-importar-base-ext');
+            const origText = btn ? btn.textContent : '';
+            if (btn) btn.textContent = '⏳ Importando...';
+            const CHUNK = 100;
+            let imported = 0, errors = 0;
+            function pushChunk(idx) {
+                if (idx >= records.length) {
+                    if (btn) btn.textContent = origText;
+                    alert('✅ Importación completada:\n• Registros procesados: ' + records.length + '\n• Exitosos: ' + imported + '\n• Errores: ' + errors);
+                    event.target.value = '';
+                    return;
+                }
+                const batch = records.slice(idx, idx + CHUNK);
+                const promises = batch.map(rec =>
+                    db.ref('numerosExtorsivos').push(rec).then(() => { imported++; }).catch(err => { errors++; console.error('Error importando registro:', err); })
+                );
+                Promise.all(promises).then(() => {
+                    if (btn) btn.textContent = '⏳ ' + Math.min(idx + CHUNK, records.length) + '/' + records.length;
+                    pushChunk(idx + CHUNK);
+                });
+            }
+            if (vaciarAntes) {
+                if (btn) btn.textContent = '🗑️ Vaciando base...';
+                db.ref('numerosExtorsivos').remove().then(function() {
+                    pushChunk(0);
+                }).catch(function(err) {
+                    console.error('Error al vaciar la base:', err);
+                    alert('Error al vaciar la base: ' + err.message + '\nNo se importó nada.');
+                    if (btn) btn.textContent = origText;
+                    event.target.value = '';
+                });
+            } else {
+                pushChunk(0);
+            }
+        } catch (err) {
+            console.error('Error procesando Excel:', err);
+            alert('Error al procesar el archivo Excel: ' + err.message);
+            const btn = document.getElementById('btn-importar-base-ext');
+            if (btn) btn.textContent = '📥 Importar Excel';
             event.target.value = '';
         }
     };
