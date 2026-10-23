@@ -4960,6 +4960,7 @@ let usuariosGlobal = [];
 let historialPersonasGlobal = [];
 let historialVehiculosGlobal = [];
 let numerosExtorsivosGlobal = [];
+let _extorsivosFBCargado = false; // Firebase (fuente autoritativa) ya cargó
 let extorsivosCargados = false;
 let listenersActivos = false; // evita registrar listeners duplicados
 
@@ -5237,17 +5238,27 @@ function _registrarListenersRTDB() {
                 buscarNumeroExtorsivo();
             }
         }
+        _extorsivosFBCargado = true;
         _argosDataLoaded.extorsivos = true; _argosCheckAllLoaded();
     });
 }
 
 // Evento de datos precargados: cuando la descompresión gzip termina
 window.addEventListener('extorsivosReady', function() {
-    if (window.EXTORSIVOS_DATA && window.EXTORSIVOS_DATA.length > 0) {
-        // Reemplazar datos con los del Excel (más completos)
+    if (!(window.EXTORSIVOS_DATA && window.EXTORSIVOS_DATA.length > 0)) return;
+    if (_extorsivosFBCargado) {
+        // Firebase ya cargó y es la fuente autoritativa: NO reemplazar.
+        // Solo añadir los casos embebidos cuyo casoNo no esté en Firebase.
+        const fbCasoNos = new Set(numerosExtorsivosGlobal.map(r => r.casoNo));
+        const soloEmbebidos = window.EXTORSIVOS_DATA
+            .filter(r => !fbCasoNos.has(r.casoNo))
+            .map(r => ({...r}));
+        numerosExtorsivosGlobal = numerosExtorsivosGlobal.concat(soloEmbebidos);
+    } else {
+        // Firebase aún no llega: usar el snapshot incrustado como carga inicial.
         numerosExtorsivosGlobal = window.EXTORSIVOS_DATA.map(r => ({...r}));
-        _initExtorsivosModule();
     }
+    _initExtorsivosModule();
 });
 
 // === FUNCIONES AUXILIARES ===
@@ -5378,22 +5389,25 @@ function _cargarImagenParaFaceApi(src) {
 }
 
 function _mergeExtorsivosFromFB(snapshot) {
-    if (snapshot.exists()) {
-        const fbMap = {};
-        snapshot.forEach(child => {
-            let caso = child.val();
-            caso._key = child.key;
-            fbMap[caso.casoNo] = caso;
-        });
-        for (const [casoNo, fbCaso] of Object.entries(fbMap)) {
-            const idx = numerosExtorsivosGlobal.findIndex(r => r.casoNo === casoNo);
-            if (idx >= 0) {
-                numerosExtorsivosGlobal[idx] = fbCaso;
-            } else {
-                numerosExtorsivosGlobal.push(fbCaso);
-            }
-        }
-    }
+    if (!snapshot.exists()) return;
+    // Firebase es la fuente autoritativa: CADA registro se cuenta UNA sola vez por su
+    // clave única (_key), SIN agrupar por casoNo. Antes se usaba fbMap[casoNo] y
+    // findIndex(casoNo), lo que fusionaba todas las filas que compartían número de caso
+    // (un mismo caso puede tener varios números extorsivos / víctimas), perdiendo registros.
+    const fbRecords = [];
+    const fbCasoNos = new Set();
+    snapshot.forEach(child => {
+        let caso = child.val();
+        caso._key = child.key;
+        fbRecords.push(caso);
+        if (caso.casoNo) fbCasoNos.add(caso.casoNo);
+    });
+    // Conservar los registros del snapshot incrustado SOLO si su casoNo no existe ya en
+    // Firebase (evita duplicar casos que ya están en la base en vivo).
+    const soloEmbebidos = numerosExtorsivosGlobal.filter(r =>
+        r._key && String(r._key).indexOf('ext_') === 0 && !fbCasoNos.has(r.casoNo)
+    );
+    numerosExtorsivosGlobal = fbRecords.concat(soloEmbebidos);
 }
 
 function _initExtorsivosModule() {
