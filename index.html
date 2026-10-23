@@ -4961,6 +4961,28 @@ let historialPersonasGlobal = [];
 let historialVehiculosGlobal = [];
 let numerosExtorsivosGlobal = [];
 let _extorsivosFBCargado = false; // Firebase (fuente autoritativa) ya cargó
+
+// === FIX LECTURA DE EXCEL GRANDE ===
+// Algunos Excel traen la dimensión declarada (!ref) TRUNCADA (p. ej. hasta la fila ~25988)
+// aunque tengan muchas más filas con datos. SheetJS solo recorre hasta ese !ref, por lo
+// que se perdían decenas de miles de filas. Esta función recalcula el rango REAL a partir
+// de TODAS las celdas presentes en la hoja para que se lean TODAS las filas.
+function _extRepararRango(ws) {
+    if (!ws) return;
+    var min = { r: Infinity, c: Infinity }, max = { r: -1, c: -1 };
+    Object.keys(ws).forEach(function(k) {
+        if (k[0] === '!') return;
+        var cell;
+        try { cell = XLSX.utils.decode_cell(k); } catch (e) { return; }
+        if (cell.r < min.r) min.r = cell.r;
+        if (cell.c < min.c) min.c = cell.c;
+        if (cell.r > max.r) max.r = cell.r;
+        if (cell.c > max.c) max.c = cell.c;
+    });
+    if (max.r >= 0) {
+        ws['!ref'] = XLSX.utils.encode_range({ s: min, e: max });
+    }
+}
 let extorsivosCargados = false;
 let listenersActivos = false; // evita registrar listeners duplicados
 
@@ -8764,6 +8786,7 @@ function procesarImportarExcelExtorsivos(event) {
             const workbook = XLSX.read(data, { type: 'array' });
             const sheetName = workbook.SheetNames[0];
             const sheet = workbook.Sheets[sheetName];
+            _extRepararRango(sheet); // forzar lectura de TODAS las filas (rango real)
             const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
 
             if (rows.length === 0) {
@@ -8962,6 +8985,7 @@ function procesarReemplazarExcelExtorsivos(event) {
             const workbook = XLSX.read(data, { type: 'array', cellDates: true });
             const sheetName = workbook.SheetNames[0];
             const sheet = workbook.Sheets[sheetName];
+            _extRepararRango(sheet); // forzar lectura de TODAS las filas (rango real)
             const rows = XLSX.utils.sheet_to_json(sheet, { defval: '', raw: false });
 
             if (rows.length === 0) {
@@ -9645,6 +9669,7 @@ function procesarImportarExcelBaseExt(event) {
             const workbook = XLSX.read(data, { type: 'array' });
             const sheetName = workbook.SheetNames[0];
             const sheet = workbook.Sheets[sheetName];
+            _extRepararRango(sheet); // forzar lectura de TODAS las filas (rango real)
             const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
             if (rows.length === 0) { alert('El archivo Excel está vacío.'); event.target.value = ''; return; }
             const records = [];
